@@ -165,7 +165,7 @@ for doc in store.as_retriever(search_kwargs={"k": 1}).invoke(question):
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
 <h2>Chapter 3 · Tools and MCP</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm ba hộp. <b>extract_company</b> và <b>calendar</b> hỏi CRM và lịch qua MCP: code gọi trực tiếp, không cần model. <b>company_info</b> lấy thêm người liên hệ và lịch sử từ CRM. <b>web_research</b> thì khác: model tự chọn tool, code của mình chạy tool đó.</p></details>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm ba hộp. <b>extract_company</b> tra CRM xem email đến từ công ty nào (lấy id); <b>calendar</b> dùng id đó hỏi lịch qua MCP: code gọi trực tiếp, không cần model. <b>company_info</b> lấy thêm người liên hệ và lịch sử từ CRM. <b>web_research</b> thì khác: model tự chọn tool, code của mình chạy tool đó.</p></details>
 <h3>The black box</h3>
 <p>This is how everyone is taught to give a model tools:</p>
 <pre class="static">client.chat.completions.create(

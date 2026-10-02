@@ -718,3 +718,6 @@ details.vi-note p { margin: 0; padding: 2px 14px 10px; font-size: 15.5px; }
 .fl-arr.lab.s { flex-basis: 46px; }
 .fl-guard { margin-left: calc(62px + 30%); }
 @media (max-width: 640px) { .fl-guard { margin-left: 0; } }
+/* arrow labels: a halo in the background colour, so a line never strikes through one */
+.an-edge text { paint-order: stroke; stroke: #FBFCFE; stroke-width: 5px; stroke-linejoin: round; }
+.anatomy.xray .an-edge text { stroke: var(--code-bg); }

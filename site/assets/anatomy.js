@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  var W = 1180, H = 494, TOP = 24;   // TOP: room above for the loop
+  var W = 1090, H = 494, TOP = 24;   // TOP: room above for the loop
 
   // each layer adds an idea, and the boxes of the real meeting-prep flow that use it
   var BEATS = [
@@ -24,7 +24,7 @@
       say: "company_info finds our past notes on this company; report_agent writes the brief from them.",
       xray: "embed(), one SQL query ORDER BY distance, the notes pasted into brief_prompt()." },
     { n: 3, name: "Tools and MCP", terms: "MCP · function calling",
-      say: "extract_company and calendar ask the CRM over MCP; company_info adds the CRM's people and history; web_research lets the model pick a tool.",
+      say: "extract_company asks the CRM who sent it (a company id); calendar and company_info use that id over MCP; web_research lets the model pick a tool.",
       xray: "MCP: JSON-RPC to another program. Function calling: the tools are text in the prompt; the model writes JSON; our code runs it." },
     { n: 4, name: "The loop", terms: "agent · ReAct",
       say: "web_research becomes the agent: search, read, decide it knows enough. The only box that loops.",
@@ -43,31 +43,32 @@
   // the boxes: where they sit, when they join, what they are · what they are in code
   var PARTS = [
     { id: "email", b: 1, x: 20, y: 200, w: 106, h: 64, name: "Email", sub: "read_email()", xr: "a dict", kind: "io" },
-    { id: "screen", b: 6, x: 156, y: 200, w: 104, h: 64, name: "screen", sub: "the gate", xr: "if attack:", kind: "harness" },
-    { id: "email_agent", b: 1, x: 296, y: 192, w: 156, h: 80, name: "email_agent", sub: "1 LLM call → JSON", xr: "parse(llm(prompt))" },
-    { id: "extract", b: 3, x: 492, y: 200, w: 164, h: 64, name: "extract_company", sub: "CRM · MCP", xr: "crm_find_company" },
-    { id: "web", b: 3, x: 700, y: 40, w: 196, h: 92, name: "web_research",
+    { id: "screen", b: 6, x: 166, y: 200, w: 104, h: 64, name: "screen", sub: "the gate", xr: "if attack:", kind: "harness" },
+    { id: "email_agent", b: 1, x: 330, y: 120, w: 170, h: 80, name: "email_agent", sub: "is it a lead? 1 LLM call", xr: "parse(llm(prompt))" },
+    { id: "extract", b: 3, x: 330, y: 300, w: 170, h: 64, name: "extract_company", sub: "who is it? CRM · MCP", xr: "crm_find_company" },
+    { id: "web", b: 3, x: 610, y: 40, w: 186, h: 92, name: "web_research",
       subs: { 3: "the model picks a tool", 4: "the agent: a loop", 5: "loop · small context", 6: "loop · read-only tools", 7: "3 researchers at once" },
       xr: "for turn: llm → tool" },
-    { id: "calendar", b: 3, x: 700, y: 200, w: 196, h: 64, name: "calendar", sub: "meetings · MCP", xr: "calendar_meetings" },
-    { id: "company_info", b: 2, x: 700, y: 330, w: 196, h: 92, name: "company_info",
-      subs: { 2: "our notes · RAG", 3: "notes · RAG + CRM · MCP" }, xr: "recall() + crm_*" },
-    { id: "memory", b: 5, x: 940, y: 40, w: 206, h: 64, name: "memory_agent", sub: "merge, each fact once", xr: "dict.fromkeys(facts)" },
-    { id: "report", b: 2, x: 940, y: 150, w: 206, h: 72, name: "report_agent", sub: "1 LLM call writes the brief", xr: "llm(brief_prompt())" },
-    { id: "check", b: 6, x: 940, y: 262, w: 206, h: 58, name: "check_brief", sub: "no leaks", xr: "if leaks(brief):", kind: "harness" },
-    { id: "approval", b: 6, x: 940, y: 352, w: 206, h: 70, name: "human_approval", sub: "a draft + a link · a person", xr: "save_draft; mail.send", kind: "harness" }
+    { id: "company_info", b: 2, x: 610, y: 186, w: 186, h: 92, name: "company_info",
+      subs: { 2: "what we know · RAG", 3: "notes (RAG) + CRM · MCP" }, xr: "recall() + crm_*" },
+    { id: "calendar", b: 3, x: 610, y: 330, w: 186, h: 64, name: "calendar", sub: "meetings booked · MCP", xr: "calendar_meetings" },
+    { id: "memory", b: 5, x: 860, y: 40, w: 206, h: 64, name: "memory_agent", sub: "merge, each fact once", xr: "dict.fromkeys(facts)" },
+    { id: "report", b: 2, x: 860, y: 150, w: 206, h: 72, name: "report_agent", sub: "1 LLM call writes the brief", xr: "llm(brief_prompt())" },
+    { id: "check", b: 6, x: 860, y: 262, w: 206, h: 58, name: "check_brief", sub: "no leaks", xr: "if leaks(brief):", kind: "harness" },
+    { id: "approval", b: 6, x: 860, y: 352, w: 206, h: 70, name: "human_approval", sub: "a draft + a link · a person", xr: "save_draft; mail.send", kind: "harness" }
   ];
 
-  // from · to · first layer · last layer (0: still there) · label · "v": top/bottom
+  // from · to · first layer · last layer (0: still there) · label (the data it carries) · "v": top/bottom
   var EDGES = [
-    { a: "email", b: "email_agent", from: 1, to: 5 },
+    { a: "email", b: "email_agent", from: 1, to: 5, label: "email" },
+    { a: "email", b: "extract", from: 3, to: 5, label: "sender" },
     { a: "email", b: "screen", from: 6 },
     { a: "screen", b: "email_agent", from: 6, label: "ok" },
-    { a: "email_agent", b: "company_info", from: 2, to: 2, label: "lead" },
-    { a: "email_agent", b: "extract", from: 3, label: "lead" },
-    { a: "extract", b: "web", from: 3 },
-    { a: "extract", b: "calendar", from: 3 },
-    { a: "extract", b: "company_info", from: 3 },
+    { a: "screen", b: "extract", from: 6, label: "ok" },
+    { a: "email_agent", b: "web", from: 3, label: "lead" },
+    { a: "email_agent", b: "company_info", from: 2, label: "lead" },
+    { a: "extract", b: "company_info", from: 3, label: "company" },
+    { a: "extract", b: "calendar", from: 3, label: "company" },
     { a: "company_info", b: "report", from: 2, to: 4 },
     { a: "calendar", b: "report", from: 3, to: 4 },
     { a: "web", b: "report", from: 3, to: 4 },
@@ -104,8 +105,11 @@
     }
     var x1 = A.x + A.w, y1 = A.y + A.h / 2, x2 = B.x, y2 = B.y + B.h / 2, mx = (x1 + x2) / 2;
     if (y1 === y2) return { d: "M" + x1 + " " + y1 + " L" + x2 + " " + y2, lx: mx, ly: y1 - 8, mid: true };
+    // the label sits near the start, where the arrows from one box are still apart
+    var t = 0.35, u = 1 - t, lx = u * u * u * x1 + 3 * u * u * t * mx + 3 * u * t * t * mx + t * t * t * x2;
+    var ly = u * u * u * y1 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y2;
     return { d: "M" + x1 + " " + y1 + " C" + mx + " " + y1 + " " + mx + " " + y2 + " " + x2 + " " + y2,
-             lx: mx, ly: (y1 + y2) / 2 - 8, mid: true };
+             lx: lx, ly: ly - 7, mid: true };
   }
 
   function draw(root, beat, xray) {
@@ -127,8 +131,8 @@
     // layer 7: the three boxes that run side by side
     if (beat >= 7) {
       var G = el("g", { "class": "an-par" + (beat === 7 ? " new" : "") });
-      G.appendChild(el("rect", { x: 688, y: -14, width: 220, height: 474, rx: 18 }));
-      G.appendChild(el("text", { x: 798, y: 452, "text-anchor": "middle" }, xray ? "ThreadPoolExecutor()" : "side by side"));
+      G.appendChild(el("rect", { x: 598, y: -14, width: 210, height: 474, rx: 18 }));
+      G.appendChild(el("text", { x: 703, y: 452, "text-anchor": "middle" }, xray ? "ThreadPoolExecutor()" : "side by side"));
       top.appendChild(G);
     }
 
