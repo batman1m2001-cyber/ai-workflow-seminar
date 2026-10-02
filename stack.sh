@@ -4,7 +4,7 @@
 #   ./stack.sh up       # docker (mail + db), seed, mocks, runner, the OperonX app, Studio
 #   ./stack.sh status   # what answers where
 #   ./stack.sh check    # every playground (mock model) + the meeting-prep golden eval
-#   ./stack.sh down     # stop what `up` started (the docker services keep running)
+#   ./stack.sh down     # stop everything `up` started, containers included (volumes kept)
 #   ./stack.sh tunnel   # public https URLs for the site and Studio (cloudflared quick tunnels)
 #
 # Everything is behind one password, so a tunnel never exposes the code runner or
@@ -24,6 +24,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 PREP="${MEETING_PREP_DIR:-$ROOT/../meeting-prep-projects}"
 STUDIO_DIR="${STUDIO_DIR:-$ROOT/../../operonx-studio}"
 STUDIO_PORT="${STUDIO_PORT:-8766}"
+QC="${QC_DIR:-$ROOT/../qc-snatcher}"
+QC_COMPOSE="$QC/seminar/docker-compose.yml"   # QC's Triton (BGE-M3) + pgvector, when present
 export PREP_DB_PORT="${PREP_DB_PORT:-5433}"
 export PREP_DB_URL="${PREP_DB_URL:-postgresql://prep:prep@127.0.0.1:$PREP_DB_PORT/prep}"
 RUN="$ROOT/.stack"
@@ -49,7 +51,9 @@ start() {   # name port dir command...
 
 up() {
   echo "world (mail :8025, db :$PREP_DB_PORT), model: ${SEMINAR_MODEL_MODE:-real}"
+  # this server hosts other services: the seminar's containers run only between up and down
   (cd "$PREP/meeting-prep-world" && docker compose up -d --quiet-pull >/dev/null && uv sync -q)
+  if [ -f "$QC_COMPOSE" ]; then docker compose -f "$QC_COMPOSE" up -d >/dev/null && echo "  QC triton + pgvector: up"; fi
   (cd "$ROOT" && uv sync -q)
   (cd "$PREP/meeting-prep-operonx" && uv sync -q)
   start runner 8000 "$ROOT" uv run python -m runner.server
@@ -71,7 +75,9 @@ down() {
     [ -e "$f" ] || continue
     pkill -P "$(cat "$f")" 2>/dev/null || true; kill "$(cat "$f")" 2>/dev/null || true; rm -f "$f"
   done
-  echo "stopped (docker: cd $PREP/meeting-prep-world && docker compose down)"
+  (cd "$PREP/meeting-prep-world" && docker compose stop >/dev/null 2>&1) || true
+  [ -f "$QC_COMPOSE" ] && { docker compose -f "$QC_COMPOSE" stop >/dev/null 2>&1 || true; }
+  echo "stopped: services, tunnels and the seminar's containers (volumes kept)"
 }
 
 status() {
