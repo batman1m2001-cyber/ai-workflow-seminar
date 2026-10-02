@@ -57,7 +57,8 @@ def brief_prompt(lead, notes):
     """The brief's prompt: the lead and our notes, pasted in."""
     evidence = "\n".join(f"- {n['content']}" for n in notes)
     return [{"role": "system", "content": "Write a one-page meeting brief for sales, in short bullets. "
-                                          "Use only the evidence; never write placeholders."},
+                                          "Use only the evidence. No placeholders like [Insert date]: "
+                                          "if a fact is missing, leave the line out."},
             {"role": "user", "content": f"Lead: {json.dumps(lead)}\n\nEvidence:\n{evidence}"}]
 
 

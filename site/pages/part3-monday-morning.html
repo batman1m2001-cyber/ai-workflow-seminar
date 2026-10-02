@@ -30,12 +30,12 @@
 
 <details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 15 phút</summary>
 <div class="speech">
-<p class="cue">[Trước buổi nói: <code>./stack.sh up</code> (mail, database, mocks, runner, <code>operonx-serve</code> :8200, Studio :8766) rồi <code>./stack.sh tunnel</code>. Tab 5 "The whole system, live" chạy live; luôn để sẵn bản ghi hình dự phòng. Mở sẵn Mailpit (http://127.0.0.1:8025) ở cửa sổ bên cạnh.]</p>
+<p class="cue">[Trước buổi nói: <code>./stack.sh up</code> (mail, database, mocks, runner, <code>operonx-serve</code> :8200, Studio :8766) rồi <code>./stack.sh tunnel</code>. Tab 6 "The whole system, live" chạy live; luôn để sẵn bản ghi hình dự phòng. Mở sẵn Mailpit (http://127.0.0.1:8025) ở cửa sổ bên cạnh.]</p>
 
 <h4>1 · Thứ Hai, 8 giờ sáng <small>(~1 phút · mở đầu trang, tab "Monday breaks it")</small></h4>
 <p>Part II kết thúc ở benchmark của chiều thứ Sáu. Trên giấy, mọi thứ đẹp: workflow pass nhiều hơn, rẻ hơn, nhanh hơn.</p>
 <p>Rồi sáng thứ Hai tới. 8 giờ sáng, 50 email đổ vào inbox cùng lúc. Trong đó có vài email là tấn công. Cái search API hôm nay chậm. Provider thì có rate limit. Và khi một cái brief nói sai, không ai trả lời được câu: tại sao nó lại nói vậy?</p>
-<p>Chương 11 tên là "Monday breaks it". Mình sẽ không nói lý thuyết. Mình lấy con agent ở Part I, cho nó cầm thêm một tool là <code>send_email</code>, bỏ hết harness đi, và phá nó ngay tại đây, từng thẻ một, chạy thật với inbox thật, web thật, và model thật.</p>
+<p>Chương 11 tên là "Monday breaks it". Mình sẽ không nói lý thuyết. Mình lấy chính con agent trong <code>agent.py</code> ở Part I, tháo cái harness của chương 6 ra, tức là bỏ <code>screen</code> và <code>guard</code>, để nó cầm mọi tool, kể cả <code>send_email</code>, và phá nó ngay tại đây, từng thẻ một, chạy thật với inbox thật, web thật, và model thật.</p>
 <p class="cue">[Đang ở tab "Monday breaks it". Chỉ vào sơ đồ: 50 emails → for email in inbox → agent(email) → search · read · send → brief.]</p>
 <p>Đây là con agent naive: một vòng for chạy qua inbox, mỗi email gọi agent một lần, và agent cầm mọi tool. Search, read, send. Không có harness gì hết. Mười lăm dòng code.</p>
 
@@ -95,19 +95,34 @@
 <p>Không có dòng nào nói về model. Toàn bộ là chuyện thực thi: chạy cái gì, khi nào, song song bao nhiêu, lỗi thì sao, ai được phép làm gì, và ghi lại những gì.</p>
 <p>Danh sách này engine-agnostic. Các bạn dùng engine nào cũng được, nhưng hãy cầm cái danh sách này mà đòi engine đó. Nếu agent của các bạn chạy production, thì chắc chắn có một thứ gì đó đang làm hết những việc này. Câu hỏi duy nhất là: thứ đó là một engine, hay là 150 dòng code cho mỗi con agent?</p>
 
-<h4>8 · Bức tranh toàn cảnh, nói cho công bằng <small>(~1,5 phút · tab "The landscape")</small></h4>
-<p class="cue">[Bấm "Next: 4 · The landscape →" hoặc chuyển sang tab "The landscape".]</p>
+<h4>8 · OperonX: workflow, giao cho một engine <small>(~3 phút · tab "OperonX", hai khung code cạnh nhau, bảng <code>@op</code> / <code>@graph</code> / <code>if_</code>)</small></h4>
+<p class="cue">[Bấm "Next: 4 · OperonX →" hoặc chuyển sang tab "OperonX". Chỉ vào khung bên trái trước.]</p>
+<p>Part I kết thúc bằng một câu: nhìn cái graph đi, những function nối với nhau bằng mũi tên, đó là một workflow. Và vừa rồi mình có một danh sách những gì một engine phải làm. Tab này nối hai thứ đó lại. Đây là OperonX, workflow engine mà tụi mình tự build, và giới thiệu nó cho đàng hoàng là một trong những lý do của buổi nói hôm nay.</p>
+<p>Bên trái là hàm <code>prepare()</code> trong <code>agent.py</code>, đúng cái file mình viết từ đầu ở Part I, tới chương 7. Python thường: <code>screen</code> ở cửa, rồi một LLM call đọc email, <code>recall</code> tìm ghi chú cũ, mở MCP, cho đội research chạy, <code>merge</code>, rồi viết brief. Từng bước một, cái này xong mới tới cái kia. Thứ tự nằm trong đầu người viết code, và Python chạy đúng thứ tự đó. Timeout, retry, trace: không có gì cả, trừ khi mình tự viết thêm, tức là quay lại cái tảng băng lúc nãy.</p>
+<p class="cue">[Chỉ sang khung bên phải. Lướt qua từng tên step: email_agent, extract_company_name, web_research_agent, calendar_agent, company_info_agent, memory_agent, report_agent, human_approval_gate.]</p>
+<p>Bên phải là hệ thống thật, meeting-prep, viết bằng OperonX: <code>@graph def prepare(mail, deliver)</code>. Các bạn đọc tên các step: <code>email_agent</code>, <code>extract_company_name</code>, <code>web_research_agent</code>, <code>calendar_agent</code>, <code>company_info_agent</code>, <code>memory_agent</code>, <code>report_agent</code>, <code>human_approval_gate</code>. Đúng tên các ô trong đề bài khóa học. Mình cố tình giữ nguyên tên để các bạn so được: cái sơ đồ bảy agent, viết thành code. Nhưng chữ "agent" trong tên không có nghĩa là ở đó có agent. Như ở Part II, chỉ web research là agent thật; còn lại là code, một LLM call, hoặc một con người.</p>
+<p class="cue">[Chỉ xuống bảng bên dưới, đi từng dòng.]</p>
+<p>Có bốn thứ cần nhớ. Một: <code>@op</code>. Một function bình thường, gắn <code>@op</code> lên, nó thành một step. <code>recall</code>, <code>screen</code>, <code>request_approval</code>: vẫn là function Python, test được như function Python.</p>
+<p>Hai: <code>@graph</code> và dấu <code>&gt;&gt;</code>. Wiring được viết một lần, ở một chỗ. Các bạn nhìn hai dòng cuối bên phải: <code>START &gt;&gt; email</code>, rồi <code>extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</code>. Ba step trong ngoặc vuông chạy cạnh nhau, và memory đợi cả ba xong mới chạy. Ở chương 7, muốn chạy song song mình phải tự viết code cho nó. Ở đây nó chỉ là một cặp ngoặc vuông.</p>
+<p>Ba: <code>if_</code>. Ngay sau email có một nhánh: <code>if_(email["lead"] == True, extract_company).else_(done)</code>. Không phải lead thì đi thẳng tới done. Đó là nhánh mà <b>code</b> chọn. Còn một agent node, như web research, là chỗ <b>model</b> chọn. Đúng câu hỏi của Part II: ở mỗi mũi tên, ai chọn bước tiếp theo? Ở đây các bạn đọc được câu trả lời ngay trong code.</p>
+<p>Bốn: engine. Mình không còn gọi các step theo thứ tự nữa. Engine chạy mỗi step ngay khi input của nó sẵn sàng. Lỗi là một giá trị, không phải một vụ nổ. Có timeout, có retry, có bounded parallelism. Và bao quanh nó: webhook và lịch chạy để khởi động một run, một golden set chặn deploy khi prompt mới tệ hơn, mỗi run là một trace, và Studio vẽ graph thẳng từ code. Nên cái hình các bạn sắp thấy ở tab cuối là cái đang chạy thật, chứ không phải một slide ai đó vẽ tay.</p>
+<p class="cue">[Chỉ vào câu cuối "Every Monday wound from tab 1 has a line in that list."]</p>
+<p>Nối lại tất cả. Part I kết thúc bằng câu "đó là một workflow". Sáng thứ Hai cho mình sáu vết thương, và vết thương nào cũng có một dòng trong danh sách engine. OperonX chính là cái danh sách đó, build thành thật. Khác biệt giữa <code>agent.py</code> và một hệ thống không nằm ở model. Nó nằm ở engine bao quanh model.</p>
+<p>Vậy tại sao tụi mình tự build, thay vì lấy cái có sẵn? Vì khi sở hữu engine, mình bẻ nó được ngay trong tuần: cần một kiểu trigger mới, một cách trace mới, một kiểu step mới, thì tuần đó có. Cái giá thì mình nói thẳng: tụi mình phải tự maintain nó. Tab tiếp theo, mình đặt nó cạnh các lựa chọn khác, cho công bằng.</p>
+
+<h4>9 · Bức tranh toàn cảnh, nói cho công bằng <small>(~1 phút · tab "The landscape")</small></h4>
+<p class="cue">[Bấm "Next: 5 · The landscape →" hoặc chuyển sang tab "The landscape".]</p>
 <p>Vậy chọn engine nào? Ba lựa chọn, nói thật lòng, và cái nào cũng mạnh nhất ở một chỗ.</p>
 <p>LangGraph là một engine tốt, và là engine được hỗ trợ tốt nhất: hệ sinh thái agent lớn nhất, tài liệu tốt, tuyển người dễ, có checkpoint, interrupt, LangSmith. Điểm yếu: state dict cộng reducer ở mọi step, graph nối bằng string, overhead mỗi step nặng hơn, và trigger, eval gate, job thì các bạn tự build.</p>
 <p>Nhóm Temporal, Restate, DBOS là vua của durable execution. Nếu một run phải sống sót qua nhiều ngày, đây là bên thắng. Nhưng chúng không được thiết kế cho LLM step, và hơi nặng cho mấy cái pipeline của một team.</p>
-<p>Còn OperonX là cái tụi mình tự build. Mạnh ở tốc độ, cú pháp gọn, job, eval và trigger có sẵn, và Studio vẽ ra đúng cái graph thật đang chạy. Cái giá thì mình nói luôn: cộng đồng nhỏ, phục vụ một team, và tụi mình phải tự maintain nó.</p>
+<p>Còn OperonX, cái các bạn vừa xem: mạnh ở tốc độ, cú pháp gọn, job, eval và trigger có sẵn, và Studio vẽ đúng cái graph thật đang chạy. Yếu ở chỗ cộng đồng nhỏ, phục vụ một team, và tụi mình tự maintain.</p>
 <p>Câu hỏi đúng không phải là "engine nào tốt nhất", mà là "team mình đang vật lộn với cái gì nhiều nhất". Số đo overhead và cùng một hệ thống build bằng cả hai engine nằm ở phần appendix, ai quan tâm thì xem sau buổi nói.</p>
 
-<h4>9 · Cả hệ thống, chạy live <small>(~3 phút · tab "The whole system, live")</small></h4>
-<p class="cue">[Bấm "Next: 5 · The whole system, live →" hoặc chuyển sang tab "The whole system, live". Bấm "Open the inbox" và "Open Studio", xếp hai cửa sổ cạnh trang.]</p>
+<h4>10 · Cả hệ thống, chạy live <small>(~3 phút · tab "The whole system, live")</small></h4>
+<p class="cue">[Bấm "Next: 6 · The whole system, live →" hoặc chuyển sang tab "The whole system, live". Bấm "Open the inbox" và "Open Studio", xếp hai cửa sổ cạnh trang.]</p>
 <p>Nói đủ rồi. Giờ mình cho các bạn xem cả hệ thống chạy thật. Một email của khách hàng, gửi đi ngay từ trang này. Các bạn nhìn hai chỗ: inbox, và Studio.</p>
 <p class="cue">[Chọn email của Linh (loại ✉, không phải ⚠ attack hay "not a lead") trong danh sách, bấm "Send as customer".]</p>
-<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph. Và các bạn nhìn Studio, nó sáng lên, từng zone một, với đúng tên các ô trong đề bài: email, extract company, rồi web research chạy cạnh calendar và company info, rồi memory gộp lại, report viết brief, và cuối cùng là human approval. Đó chính là cái sơ đồ bảy agent ở Part II, giờ đang chạy thật.</p>
+<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph. Và các bạn nhìn Studio, nó sáng lên, từng zone một, với đúng tên các ô trong đề bài: email, extract company, rồi web research chạy cạnh calendar và company info, rồi memory gộp lại, report viết brief, và cuối cùng là human approval. Đó chính là cái <code>@graph</code> ở tab OperonX, cũng là sơ đồ đề bài mà Part II đã vẽ lại, giờ đang chạy thật.</p>
 <p>Chỉ có web research là agent thật: mở nó ra, các bạn thấy ba research agent chạy song song, mỗi con một vòng lặp.</p>
 <p class="cue">[Chuyển sang inbox, mở email "[Approve?] Brief: …", bấm Approve.]</p>
 <p>Đây, email "Approve?" đã vào inbox. Một con người đọc brief, và bấm Approve. Brief đi tới đội sales, và được ghi vào memory. Đó là "a human must say yes" ở tảng băng, nhưng lần này là một step trong engine, chứ không phải hai mươi dòng viết tay.</p>
@@ -116,9 +131,9 @@
 <p class="cue">[Nếu demo live lỗi: mở bản ghi hình dự phòng và kể tiếp theo đúng thứ tự trên. Chỉ vào callout "The truth".]</p>
 <p>Và các bạn để ý điều này. Con agent mà mình build từ đầu ở Chương 4, cái vòng for quanh một LLM call, bây giờ chỉ là <b>một node</b> trong graph này. Nó vẫn là agent. Nhưng mọi thứ xung quanh nó là workflow, và engine chạy workflow đó: trigger, gate, các step song song, cái "đồng ý" của con người, một trace cho mỗi run.</p>
 
-<h4>10 · Chốt lại <small>(~30 giây · chuyển sang Epilogue)</small></h4>
-<p>Tóm lại Part III. Sáng thứ Hai không làm vỡ model, nó làm vỡ mọi thứ xung quanh model. Thứ chữa nó là một workflow engine, engine nào cũng được, miễn là làm đủ cái danh sách đó.</p>
-<p>Nhưng meeting prep vẫn là một demo. Phần cuối, mình cho các bạn thấy cùng pattern này trong những hệ thống chạy mỗi ngày, rồi mình trả lời câu hỏi lúc mở đầu.</p>
+<h4>11 · Chốt lại <small>(~30 giây · chuyển sang Epilogue)</small></h4>
+<p>Tóm lại Part III. Sáng thứ Hai không làm vỡ model, nó làm vỡ mọi thứ xung quanh model. Thứ chữa nó là một workflow engine, engine nào cũng được, miễn là làm đủ cái danh sách đó. Với tụi mình, engine đó là OperonX.</p>
+<p>Phần cuối ngắn thôi: mình quay lại câu hỏi lúc mở đầu, và mở cái bảng Decoder ra lần cuối.</p>
 <p class="cue">[Bấm "Next →" ở cuối trang để sang Epilogue · The decoder.]</p>
 </div>
 </details>

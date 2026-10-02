@@ -66,7 +66,8 @@ def brief_prompt(lead, notes, findings):
     """The brief's prompt: the lead, our notes and what research found, pasted in."""
     evidence = "\n".join(f"- {n['content']}" for n in notes) + f"\n- Research: {findings}"
     return [{"role": "system", "content": "Write a one-page meeting brief for sales, in short bullets. "
-                                          "Use only the evidence; never write placeholders."},
+                                          "Use only the evidence. No placeholders like [Insert date]: "
+                                          "if a fact is missing, leave the line out."},
             {"role": "user", "content": f"Lead: {json.dumps(lead)}\n\nEvidence:\n{evidence}"}]
 
 
@@ -215,7 +216,7 @@ QUESTIONS = ["what it does and sells", "recent news", "the people we will meet"]
 
 def research_team(server, tools, lead):
     """Many agents: the same loop, one per question, all at once."""
-    tasks = [f"Research {lead['company']} ({lead['domain']}) for a sales meeting: {q}." for q in QUESTIONS]
+    tasks = [f"Research {lead['company']} ({lead['domain']}) for a sales meeting: {q}. Use web_search, then fetch_page the best result, then answer." for q in QUESTIONS]
     with ThreadPoolExecutor() as pool:
         return list(pool.map(research, [server] * len(tasks), [tools] * len(tasks), tasks))
 

@@ -62,7 +62,8 @@ def brief_prompt(lead, notes, findings):
     """The brief's prompt: the lead, our notes and what research found, pasted in."""
     evidence = "\n".join(f"- {n['content']}" for n in notes) + f"\n- Research: {findings}"
     return [{"role": "system", "content": "Write a one-page meeting brief for sales, in short bullets. "
-                                          "Use only the evidence; never write placeholders."},
+                                          "Use only the evidence. No placeholders like [Insert date]: "
+                                          "if a fact is missing, leave the line out."},
             {"role": "user", "content": f"Lead: {json.dumps(lead)}\n\nEvidence:\n{evidence}"}]
 
 
@@ -165,7 +166,7 @@ def prepare(email):
     crm = start_mcp()
     tools = list_tools(crm) + LOCAL_TOOLS
     findings = research(crm, tools, f"Research {lead['company']} ({lead['domain']}) for a sales meeting: "
-                                    "the CRM first, then search the web and read the best page.")
+                                    "find it in the CRM, then web_search for news, then fetch_page the best result, then answer.")
     return llm(brief_prompt(lead, notes, findings))
 
 

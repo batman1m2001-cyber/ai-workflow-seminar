@@ -14,7 +14,7 @@
     { id: "part2-who-picks", n: "II", title: "Who picks the next step?", part: "Part II · Workflow or agent" },
     { id: "part3-monday-morning", n: "III", title: "Monday morning, and the engine", part: "Part III · Production" },
     { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" },
-    { id: "appendix", n: "+", title: "Engine numbers, real systems", part: "Appendix" }
+    { id: "appendix", n: "+", title: "Engine numbers", part: "Appendix" }
   ];
 
   var body = document.body;
