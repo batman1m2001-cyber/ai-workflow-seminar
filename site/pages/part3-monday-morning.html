@@ -26,7 +26,7 @@
 
 <p class="kicker">Part III · Production</p>
 <h1>Production: the engine at work</h1>
-<p class="lead">Part II was the theory. Now the real inbox on a Monday morning: what breaks, which part of the engine fixes it, and the whole system running live on OperonX.</p>
+<p class="lead">Part II was the theory. Now the real inbox on a Monday morning: what breaks, which part of the engine fixes it, the real system on OperonX, how Studio shows it running, and the whole thing live.</p>
 
 <div class="tabs">
   <div class="tab" data-name="Monday morning" data-chapter="11" data-say="The Part I agent, harness taken off, run over the real inbox at 8 am. Each failure is &lt;b&gt;silent&lt;/b&gt; or &lt;b&gt;total&lt;/b&gt;.">
@@ -52,23 +52,14 @@
   <tr><td>a human must say yes</td><td><b>around it</b>: a draft and a link</td><td><code>request_approval</code> → the <code>approve</code> graph</td></tr>
 </table>
   </div>
-  <div class="tab" data-name="The real system on OperonX" data-chapter="12" data-say="The course brief&#x27;s boxes as zones of one OperonX graph. Only &lt;b&gt;web research&lt;/b&gt; is an agent; every other edge is picked by code.">
-<figure class="mm"><pre class="mermaid">
-flowchart TB
-  M([email arrives]) --> E[email_agent<br/>gate · triage]
-  E -- "attack or not a lead" --> D([done])
-  E -- lead --> X[extract_company_name]
-  X --> W[["web_research_agent<br/>the agent, ×3"]]
-  X --> C[calendar_agent]
-  X --> I[company_info_agent]
-  W --> MEM[memory_agent<br/>merge in code]
-  C --> MEM
-  I --> MEM
-  MEM --> R[report_agent<br/>one LLM call · check]
-  R --> H[human_approval_gate<br/>a draft and a link]
-  H --> D
-  style W fill:#FFF6E0,stroke:#D9962B,stroke-width:2px
-</pre></figure>
+  <div class="tab" data-name="The real system on OperonX" data-chapter="12" data-say="Left: the course brief, as drawn. Right: &lt;b&gt;Studio&lt;/b&gt; drawing our OperonX graph &lt;b&gt;from the code&lt;/b&gt;: the same boxes, the same names, the same arrows.">
+<div class="bvs">
+  <figure class="brief-img"><img src="../assets/img/brief-flow.png" alt="The course brief's diagram of the meeting-prep assistant"><figcaption>The course brief, as drawn</figcaption></figure>
+  <figure class="brief-img"><img src="../assets/img/studio/flow.jpg" alt="OperonX Studio drawing the prepare graph: email, extract_company, then web_research, calendar and company_info side by side, memory, report, human_approval, done"><figcaption>Studio, drawing our <code>prepare</code> graph from the code</figcaption></figure>
+</div>
+  </div>
+  <div class="tab" data-name="Studio: watch it run" data-chapter="12" data-say="Studio is the engine&#x27;s window: the graph from the code, the services and jobs that start runs, every run as a trace, a dashboard, and the eval that gates each deploy.">
+<div class="tour"><div class="tour-steps"><button type="button" data-i="0" class=on><small>Build</small>Flow</button><button type="button" data-i="1"><small>Operate</small>Services &amp; jobs</button><button type="button" data-i="2"><small>Operate</small>Services</button><button type="button" data-i="3"><small>Observe</small>Runs</button><button type="button" data-i="4"><small>Observe</small>A trace</button><button type="button" data-i="5"><small>Observe</small>Replay</button><button type="button" data-i="6"><small>Monitor</small>Dashboard</button><button type="button" data-i="7"><small>Improve</small>Evals</button><button type="button" data-i="8"><small>Improve</small>Jobs</button></div><figure class="tour-shot"><div class="tour-slide" data-i="0"><a href="../assets/img/studio/flow.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/flow.jpg" alt="The graph, drawn from the code"></a><figcaption><b>The graph, drawn from the code</b> <span class="tour-part">engine part: graph · compiler</span><p>Every <code>@graph</code> becomes a canvas; nested graphs open in place. Edit the code, the drawing follows.</p></figcaption></div><div class="tour-slide" data-i="1" hidden><a href="../assets/img/studio/picker.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/picker.jpg" alt="What starts a run"></a><figcaption><b>What starts a run</b> <span class="tour-part">engine part: triggers</span><p>The project's graphs, its <b>services</b> (a mail webhook, an approve endpoint, an 8 am schedule) and its <b>jobs</b> (the golden eval).</p></figcaption></div><div class="tour-slide" data-i="2" hidden><a href="../assets/img/studio/services.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/services.jpg" alt="The running process"></a><figcaption><b>The running process</b> <span class="tour-part">engine part: triggers</span><p>One listener, three services bound to it: <code>webhook /mail</code>, <code>POST /approve</code>, <code>schedule 08:00</code>.</p></figcaption></div><div class="tour-slide" data-i="3" hidden><a href="../assets/img/studio/runs.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/runs.jpg" alt="Every run, recorded"></a><figcaption><b>Every run, recorded</b> <span class="tour-part">engine part: run store</span><p>Each email is one run: when, how long, what it cost. Linh's email is the 16.1 s one.</p></figcaption></div><div class="tour-slide" data-i="4" hidden><a href="../assets/img/studio/run-trace.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/run-trace.jpg" alt="Every node: its value, its time"></a><figcaption><b>Every node: its value, its time</b> <span class="tour-part">engine part: tracing</span><p>Linh's run as a tree: the gate, the triage, the three researchers, the brief. 11 LLM calls, 7.0k tokens, 232 executions.</p></figcaption></div><div class="tour-slide" data-i="5" hidden><a href="../assets/img/studio/run-workflow.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/run-workflow.jpg" alt="The run, on the graph"></a><figcaption><b>The run, on the graph</b> <span class="tour-part">engine part: tracing</span><p>The same run drawn on the workflow: the path it took, the time, errors and cost per node, and a replay.</p></figcaption></div><div class="tour-slide" data-i="6" hidden><a href="../assets/img/studio/monitor.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/monitor.jpg" alt="Where the time goes"></a><figcaption><b>Where the time goes</b> <span class="tour-part">engine part: metrics</span><p>Runs, error rate, p50 and p95 across all runs, and which op eats the time: <code>llm</code>, then <code>brief</code>.</p></figcaption></div><div class="tour-slide" data-i="7" hidden><a href="../assets/img/studio/evals.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/evals.jpg" alt="The gate before every deploy"></a><figcaption><b>The gate before every deploy</b> <span class="tour-part">engine part: eval gate</span><p>The golden set: 19 emails, 18 pass. A case that regressed is flagged before anyone ships the new prompt.</p></figcaption></div><div class="tour-slide" data-i="8" hidden><a href="../assets/img/studio/jobs.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/jobs.jpg" alt="The eval, run as a job"></a><figcaption><b>The eval, run as a job</b> <span class="tour-part">engine part: jobs</span><p>The golden eval is a job with its own history: every run, its status, how long it took.</p></figcaption></div></figure></div>
   </div>
   <div class="tab" data-name="Live" data-chapter="12" data-say="A customer email, sent from this page. Watch the &lt;b&gt;inbox&lt;/b&gt; and &lt;b&gt;Studio&lt;/b&gt;.">
     <div class="live">
@@ -195,12 +186,26 @@ def prepare(mail, deliver):
 
     START &gt;&gt; email &gt;&gt; if_(email[&quot;lead&quot;] == True, extract_company).else_(done)  # noqa: E712
     extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</pre>
-<p>Open it in <a href="http://127.0.0.1:8766" target="_blank" rel="noopener">Studio</a>: it draws this graph from the code, and every run is a trace you can click through.</p>
-<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · Live →</button></div>
+<p>Studio draws exactly this graph from the code: the brief's diagram and the running system are the same picture.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · Studio: watch it run →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
+<h2>Studio: the engine's window</h2>
+<p>Every part of the engine from Part II has a screen. Click through the steps above, in the order a team uses them:</p>
+<ol>
+  <li><b>Build</b>: the Flow view draws the graph from the code (graph · compiler).</li>
+  <li><b>Operate</b>: services and jobs start runs: a webhook, an HTTP endpoint, a schedule, a batch (triggers).</li>
+  <li><b>Observe</b>: every run is recorded; open one and read each node's value and time, or replay it on the graph (run store · tracing).</li>
+  <li><b>Monitor</b>: the dashboard: run counts, error rate, latency, and where the time goes (metrics).</li>
+  <li><b>Improve</b>: the golden set gates every deploy, and runs as a job with its own history (eval gate).</li>
+</ol>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · Live →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="5" hidden>
 <h2>The whole system, live</h2>
 <ol>
   <li>Pick Linh's email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>

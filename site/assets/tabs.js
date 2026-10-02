@@ -157,6 +157,22 @@
   document.querySelectorAll(".tabs").forEach(mount);
   // graphs outside tabs, too
   graphs(document);
+  // A tour (Part III's Studio screens): a step list beside one big screenshot.
+  document.querySelectorAll(".tour").forEach(function (t) {
+    var steps = [].slice.call(t.querySelectorAll(".tour-steps button"));
+    var slides = [].slice.call(t.querySelectorAll(".tour-slide"));
+    function show(i) {
+      steps.forEach(function (b, k) { b.classList.toggle("on", k === i); });
+      slides.forEach(function (s, k) { s.hidden = k !== i; });
+    }
+    steps.forEach(function (b, i) { b.onclick = function () { show(i); }; });
+    t.tabIndex = 0;
+    t.addEventListener("keydown", function (e) {
+      var cur = steps.findIndex(function (b) { return b.classList.contains("on"); });
+      if (e.key === "ArrowDown" && cur < steps.length - 1) { show(cur + 1); e.preventDefault(); e.stopPropagation(); }
+      if (e.key === "ArrowUp" && cur > 0) { show(cur - 1); e.preventDefault(); e.stopPropagation(); }
+    });
+  });
   document.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-reveal]");
     if (!b) return;

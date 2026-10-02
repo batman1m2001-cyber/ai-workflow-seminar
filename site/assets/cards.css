@@ -383,3 +383,26 @@ table.sdt td:first-child { font-weight: 700; color: var(--navy); white-space: no
   .sd-arrow.right span { writing-mode: horizontal-tb; transform: none; }
   .sd-grid2 { grid-template-columns: 1fr; }
 }
+
+/* ── Part III: the brief beside Studio, and the Studio tour ────────── */
+.bvs { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.bvs .brief-img img { max-height: 620px; }
+.tour { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 14px; outline: none; }
+.tour-steps { display: flex; flex-direction: column; gap: 4px; }
+.tour-steps button { text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 7px 10px; cursor: pointer; font: 700 14px "Be Vietnam Pro", sans-serif; color: var(--navy); }
+.tour-steps button small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); }
+.tour-steps button:hover { border-color: #9AABCB; }
+.tour-steps button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.tour-steps button.on small { color: #A9B8DA; }
+.tour-shot { margin: 0; }
+.tour-slide[hidden] { display: none; }
+.tour-slide img { display: block; width: 100%; max-height: 560px; object-fit: contain; object-position: top; border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: 0 6px 22px rgba(19,48,106,.10); }
+.tour-slide figcaption { padding: 10px 2px 0; }
+.tour-slide figcaption b { font-size: 17px; color: var(--navy); }
+.tour-part { margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--green-dk); background: var(--mint); border-radius: 999px; padding: 2px 10px; }
+.tour-slide figcaption p { margin: 4px 0 0; font-size: 15px; }
+@media (max-width: 860px) {
+  .bvs, .tour { grid-template-columns: 1fr; }
+  .tour-steps { flex-direction: row; overflow-x: auto; }
+  .tour-steps button { flex: none; }
+}
