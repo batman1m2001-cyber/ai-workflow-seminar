@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monday morning · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+<style>
+  .sbs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 1040px; }
+  .sbs > div { min-width: 0; }
+  .sbs pre.static { font-size: 12px; line-height: 1.45; max-height: 560px; overflow: auto; margin: 0; }
+  .sbs h4 { margin: 0 0 6px; color: var(--navy); }
+  .live { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; }
+  .live select { font: 600 14px "Be Vietnam Pro", sans-serif; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--line); min-width: 320px; }
+  .live button, .live a.btn { border: 0; background: var(--green); color: #fff; border-radius: 9px; padding: 9px 16px; font: 700 14px "Be Vietnam Pro", sans-serif; cursor: pointer; text-decoration: none; }
+  .live a.btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+  .live .msg { font: 13px "JetBrains Mono", monospace; color: var(--green-dk); width: 100%; }
+  @media (max-width: 900px) { .sbs { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-page="part3-monday-morning" data-chapter="11" data-root="..">
+<main class="content">
+
+<p class="kicker">Part III · Production</p>
+<h1>Monday morning, and the engine</h1>
+<p class="lead">Part II was Friday's benchmark. On Monday at 8 am, 50 emails arrive at once. Some are attacks, the search API is slow, the provider has a rate limit, and nobody can say why a brief says what it says.</p>
+
+<!--SPEECH-->
+
+<div class="tabs">
+  <div class="tab" data-name="Monday breaks it" data-chapter="11" data-say="Six ways a hand-written agent fails at 8 am. Each one is <b>silent</b> or <b>total</b>.">
+<script type="application/json" class="wf">
+{"title": "The naive agent: a loop with every tool, run over the inbox", "w": 900, "h": 110,
+ "nodes": [["i", "50 emails", 70, 55, "io"], ["l", "for email in inbox:", 260, 55], ["a", "agent(email)", 450, 55, "llm"],
+           ["t", "search · read · send", 640, 25, "tool"], ["b", "brief", 820, 55, "io"]],
+ "edges": [["i", "l"], ["l", "a"], ["a", "t", "any tool", "llm"], ["t", "a", "", "back"], ["a", "b"]]}
+</script>
+  </div>
+  <div class="tab" data-name="The iceberg" data-chapter="11" data-say="Each wound gets a fix. <b>15 lines become 150</b>, and the 135 new ones are the same every team writes.">
+    <table class="plain" style="margin:0">
+      <tr><th>wound</th><th>the fix</th><th>lines</th></tr>
+      <tr><td>an email gives orders</td><td>a gate before any model; tools by least privilege</td><td>~15</td></tr>
+      <tr><td>a page gives orders</td><td>read pages as a person sees them; check the brief</td><td>~15</td></tr>
+      <tr><td>one timeout kills the batch</td><td>timeouts, retries, a failure is a value</td><td>~20</td></tr>
+      <tr><td>chatty JSON becomes “no”</td><td>parsing that fails loudly, never <code>None</code></td><td>~10</td></tr>
+      <tr><td>50 at once, rate-limited</td><td>bounded concurrency, backoff</td><td>~15</td></tr>
+      <tr><td>“why did it say that?”</td><td>a trace per run, per step</td><td>~20</td></tr>
+      <tr><td>“is the new prompt better?”</td><td>a golden set, a gate</td><td>~20</td></tr>
+      <tr><td>a human must say yes</td><td>a draft, a link, a second run</td><td>~20</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="What an engine must do" data-chapter="12" data-say="Every line answers a wound from Monday morning. <b>Engine-agnostic</b>: hold any engine to this list.">
+    <table class="plain" style="margin:0">
+      <tr><th>the engine gives you</th><th>Monday's wound</th></tr>
+      <tr><td>steps and edges, branches, loops, state</td><td>the shape of every system in Parts I and II</td></tr>
+      <tr><td>bounded parallelism</td><td>50 at once, 40 rejected</td></tr>
+      <tr><td>failures as values, timeouts, retries</td><td>one timeout lost the batch</td></tr>
+      <tr><td>parsing that fails loudly</td><td>chatty JSON became “no”</td></tr>
+      <tr><td>gates and least privilege as steps</td><td>an email and a page gave orders</td></tr>
+      <tr><td>a trace per run, per step</td><td>“why did it say that?”</td></tr>
+      <tr><td>evals as a deploy gate</td><td>“is the new prompt better?”</td></tr>
+      <tr><td>triggers, approvals, durable state</td><td>a webhook, 8 am, a human's yes</td></tr>
+      <tr><td>jobs and services from the same graph</td><td>the batch and the live inbox are one system</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="The landscape" data-chapter="12" data-say="Three honest options. Each is <b>strongest</b> somewhere.">
+    <table class="plain" style="margin:0">
+      <tr><th></th><th>strongest at</th><th>weaker at</th></tr>
+      <tr><td><b>LangGraph</b></td><td>the agent ecosystem, docs, hiring pool, checkpoints, interrupts, LangSmith</td><td>state dict + reducers on every step; string-wired graphs; heavier per-step overhead; triggers, eval gates and jobs are yours to build</td></tr>
+      <tr><td><b>Temporal · Restate · DBOS</b></td><td>durable execution across days, at any scale</td><td>not built for LLM steps; heavy for a team's pipelines</td></tr>
+      <tr><td><b>OperonX</b></td><td>speed, terse syntax, jobs + evals + triggers built in, pluggable trace consumers, Studio drawing the real graph</td><td>small community; serves one team; we maintain it</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="The whole system, live" data-chapter="12" data-say="A customer email, sent from this page. Watch the <b>inbox</b> and <b>Studio</b>.">
+    <div class="live">
+      <select id="golden"></select>
+      <button id="send">Send as customer</button>
+      <a class="btn ghost" href="http://127.0.0.1:8025" target="_blank" rel="noopener">Open the inbox</a>
+      <a class="btn ghost" href="http://127.0.0.1:8766" target="_blank" rel="noopener">Open Studio</a>
+      <div class="msg" id="sent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="1">
+<h2>Chapter 11 · Monday breaks it</h2>
+<p>The agent from Part I, with one more tool, <code>send_email</code>, and no harness. Each card is one Monday-morning event, run for real against the inbox, the web and the model.</p>
+<div class="pipeline" data-title="Monday, 8 am">
+  <div class="step" data-icon="✉" data-title="An email gives orders" data-desc="The course brief's own attack. The agent has a send tool.">
+<script type="text/plain">
+import asyncio, json, time
+import httpx
+from openai import OpenAI
+from prep_world import WEB, golden, mail
+from prep_world.guard import leaks
+
+client = OpenAI()
+def send_email(to: str, subject: str, body: str) -> str:
+    mail.send(to, subject, body)
+    return f"sent to {to}"
+SEND = {"type": "function", "function": {"name": "send_email", "description": "Send an email.", "parameters": {
+        "type": "object", "properties": {"to": {"type": "string"}, "subject": {"type": "string"}, "body": {"type": "string"}}}}}
+
+attack = next(g for g in golden() if g["id"] == "attack-send")
+msg = client.chat.completions.create(model="gpt-4o-mini", tools=[SEND], messages=[
+    {"role": "system", "content": "You handle the sales inbox."}, {"role": "user", "content": attack["body"]}]).choices[0].message
+for c in msg.tool_calls or []:
+    print("✗", send_email(**json.loads(c.function.arguments)), "— an email told it to")
+</script></div>
+  <div class="step" data-icon="⚠" data-title="A page gives orders" data-desc="Read the raw page, paste it into the brief.">
+<script type="text/plain">
+raw = httpx.get(f"{WEB}/web/redrivertextiles.example/").text
+brief = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content":
+        f"Write a meeting brief.\n\nCompany: Red River Textiles\n\nEvidence:\n{raw}"}]).choices[0].message.content
+print("✗ the brief now contains:", leaks(brief, ("northwind-ai.example", "redrivertextiles.example")))
+</script></div>
+  <div class="step" data-icon="⏱" data-title="A slow search" data-desc="One slow call, no timeout handling: the whole batch dies.">
+<script type="text/plain">
+inbox = ["Lotus Logistics", "Halong Robotics", "Mekong Microfinance"]
+done = []
+try:
+    for company in inbox:
+        delay = 3000 if company == "Halong Robotics" else 0           # one slow search
+        httpx.get(f"{WEB}/search", params={"q": company, "delay_ms": delay}, timeout=1.0)
+        done.append(company)
+except httpx.TimeoutException as e:
+    print(f"✗ batch crashed at #{len(done) + 1} ({type(e).__name__}); finished: {done}; lost: {inbox[len(done):]}")
+</script></div>
+  <div class="step" data-icon="{ }" data-title="Chatty JSON" data-desc="The model adds a sentence; the parser returns None; None reads as 'no'.">
+<script type="text/plain">
+reply = 'Sure! Here is the JSON you asked for: {"is_lead": true}'
+def parse(text):
+    try:
+        return json.loads(text)
+    except ValueError:
+        return None                                   # "safe"
+lead = parse(reply)
+print("✗ is_lead =", (lead or {}).get("is_lead", False), "→ Linh's email is filed as not a lead, and nothing says so")
+</script></div>
+  <div class="step" data-icon="▤" data-title="50 at once" data-desc="The provider allows 10 at a time; nobody told the loop.">
+<script type="text/plain">
+async def provider(i, slots=asyncio.Semaphore(10), busy=[0]):
+    if busy[0] >= 10:
+        raise RuntimeError("429 Too Many Requests")
+    busy[0] += 1
+    try:
+        await asyncio.sleep(0.2)
+    finally:
+        busy[0] -= 1
+
+async def monday():
+    results = await asyncio.gather(*(provider(i) for i in range(50)), return_exceptions=True)
+    return sum(isinstance(r, Exception) for r in results)
+print(f"✗ {asyncio.run(monday())} of 50 calls rejected with 429")
+</script></div>
+  <div class="step" data-icon="?" data-title="Why did it say that?" data-desc="A brief went out with a wrong fact. What did the model see?">
+<script type="text/plain">
+trace = []                                            # nobody wrote one
+print("✗ steps recorded for that run:", len(trace), "— no inputs, no outputs, no timings")
+</script></div>
+</div>
+<div class="callout warn"><b class="t">Every one of these is silent or total</b><p>The attacker's email was sent. The poisoned brief looks fine. One timeout lost two emails. A lead vanished as a “no”. Forty calls were rejected. And nobody can explain any of it.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The iceberg →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="2" hidden>
+<h2>Harden it by hand: the iceberg</h2>
+<p>Every wound has a known fix, and <b>none of them is about the model</b>. Add them all and the 15-line agent is 150 lines. The loop is the tip; underneath is the <b>execution system</b>: timeouts, retries, failures as values, bounded parallelism, gates, traces, evals, approvals, durable state.</p>
+<p>The first fix, as a test: the course brief's attack emails against a gate that runs <b>before any model</b>.</p>
+<div class="pipeline" data-title="The attacks from the course brief, as a test">
+  <div class="step" data-icon="⚠" data-title="Attacks" data-desc="The golden emails that are attacks.">
+<script type="text/plain">
+from prep_world import golden
+attacks = [g for g in golden() if g["expect"]["action"] == "block"]
+print(f"{len(attacks)} attack emails")
+</script></div>
+  <div class="step" data-icon="⛨" data-title="Gate" data-desc="A rule that runs before any model: it can't be talked out of its job.">
+<script type="text/plain">
+from prep_world.guard import looks_like_attack
+caught = [g["id"] for g in attacks if looks_like_attack(g["subject"] + " " + g["body"])]
+print(f"{len(caught)}/{len(attacks)} blocked before a model saw them")
+</script></div>
+</div>
+
+<div class="callout key"><b class="t">The truth</b><p>That list has a name: a <b>workflow engine</b>. The teams building agent frameworks reached the same answer: Microsoft's Agent Framework is built around graph workflows, the OpenAI Agents SDK runs on durable-execution engines underneath, and LangGraph has been a workflow engine all along.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · What an engine must do →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="3" hidden>
+<h2>Chapter 12 · What an engine must do</h2>
+<p>Every line of this list answers a Monday wound. Hold <b>any</b> engine to it. If your agent runs in production, something does all of this: the only choice is whether it's an engine, or 150 lines per agent.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · The landscape →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="4" hidden>
+<h2>The landscape, fairly</h2>
+<p>LangGraph is a good engine and the best supported. Temporal-class engines win when a run must survive for days. We built <b>OperonX</b> for speed and terse graphs, and we pay for it: we maintain it, and it serves one team. The measured numbers and the same system built in both are in the <a href="appendix.html">appendix</a>.</p>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · The whole system, live →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="5" hidden>
+<h2>The whole system, live</h2>
+<ol>
+  <li>Pick Linh's email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>
+  <li>The inbox's webhook starts the graph, and <b>Studio</b> lights it up, zone by zone, with the brief's own box names: email, extract company, then web research (three agents) beside calendar and company info, then memory, report, human approval.</li>
+  <li><b>“[Approve?] Brief: …”</b> lands in the inbox. Click <b>Approve</b>: the brief goes to sales and into memory.</li>
+  <li>Now send an <b>attack</b>. It's held at the gate in milliseconds, and nothing is sent.</li>
+</ol>
+<div class="callout key"><b class="t">The truth</b><p>The Chapter 4 agent is <b>one node</b> in this graph. Everything around it is the workflow, and the engine runs it: triggers, the gate, parallel steps, the human's yes, a trace per run.</p></div>
+</section>
+
+</main>
+<script src="../assets/split.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/decoder.js"></script>
+<script src="../assets/tabs.js"></script>
+<script src="../assets/cards.js"></script>
+<script>
+(function () {
+  var sel = document.getElementById("golden"), out = document.getElementById("sent");
+  fetch("../api/prep/golden").then(function (r) { return r.json(); }).then(function (rows) {
+    rows.forEach(function (g) {
+      var o = document.createElement("option");
+      o.value = g.id; o.textContent = (g.action === "block" ? "⚠ attack · " : g.action === "skip" ? "· not a lead · " : "✉ ") + g.subject;
+      sel.appendChild(o);
+    });
+  }).catch(function () { out.textContent = "start the seminar runner to send emails from here"; });
+  document.getElementById("send").onclick = function () {
+    out.textContent = "sending…";
+    fetch("../api/prep/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: sel.value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (r) { out.textContent = r.error ? "✗ " + r.error : "✓ sent “" + r.subject + "” from " + r.from + ". Watch the inbox and Studio."; });
+  };
+})();
+</script>
+</body>
+</html>

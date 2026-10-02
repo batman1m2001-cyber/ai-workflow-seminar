@@ -204,3 +204,29 @@ figure.wf figcaption { font-size: 13.5px; font-weight: 800; color: var(--navy); 
 figure.wf { max-width: 100%; overflow-x: auto; }
 figure.wf svg { max-width: 100%; height: auto; }
 @media (max-width: 640px) { .wf-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+
+/* ── Part II: the brief beside the redrawn graph, and the measured pair ── */
+.wf-legend .io::before { background: #fff; border-color: var(--line); border-radius: 8px; }
+.brief-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 22px; align-items: start; }
+.brief-img { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.brief-img img { display: block; width: 100%; max-height: 640px; object-fit: contain; }
+.brief-img figcaption { font-size: 13.5px; font-weight: 800; color: var(--navy); text-align: center; padding-top: 6px; }
+.measure { display: grid; grid-template-columns: minmax(150px, 1fr) 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
+.measure .m-col { padding: 14px 16px; background: var(--soft); display: flex; flex-direction: column; gap: 2px; }
+.measure .m-col:first-child { grid-column: 2; }
+.measure .m-col b { font-size: 18px; color: var(--navy); }
+.measure .m-col span { font-size: 13px; color: var(--grey); }
+.measure .m-col.win { background: var(--mint); }
+.measure .m-col.win b { color: var(--green-dk); }
+.measure .m-row { display: contents; }
+.measure .m-row > * { padding: 12px 16px; border-top: 1px solid var(--line); font-size: 26px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.measure .m-row > i { font-style: normal; font-size: 15px; font-weight: 600; color: var(--grey); align-self: center; }
+.measure .m-row > span:last-child { color: var(--green-dk); background: #F7FFFA; }
+@media (max-width: 760px) {
+  .brief-pair { grid-template-columns: 1fr; }
+  .measure { grid-template-columns: 1.2fr 1fr 1fr; }
+  .measure .m-row > * { font-size: 18px; padding: 10px; }
+  .measure .m-col b { font-size: 14px; }
+}
+.hero-brief { max-width: 420px; margin: 8px 0 22px; }
+.hero-brief img { max-height: 520px; }

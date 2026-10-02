@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who picks the next step · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+</head>
+<body data-page="part2-who-picks" data-chapter="8" data-root="..">
+<main class="content">
+
+<p class="kicker">Part II · Workflow or agent</p>
+<h1>Who picks the next step?</h1>
+<p class="lead">Part I ended on a picture: functions joined by arrows. At each arrow, either <b>your code</b> picks the next step or <b>the model</b> does. Ask that one question of Linh's email, of the products you know, and of the course brief's seven agents. Then measure.</p>
+
+<!--SPEECH-->
+
+<div class="tabs">
+  <div class="tab" data-name="Who picks?" data-chapter="8" data-say="The same email twice. Left: <b>code</b> picks the path. Right: the <b>model</b> picks it, each turn (and loops on the results).">
+    <div class="wf-pair">
+<script type="application/json" class="wf">
+{"title": "Workflow: code picks the path", "w": 500, "h": 150,
+ "nodes": [["q", "email", 58, 75, "io"], ["c", "triage", 185, 75, "llm"], ["o", "search + read", 325, 28, "tool"], ["f", "skip", 325, 122], ["a", "brief", 445, 75, "llm"]],
+ "edges": [["q", "c"], ["c", "o", "if lead"], ["c", "f", "else"], ["o", "a"]]}
+</script>
+<script type="application/json" class="wf">
+{"title": "Agent: the model picks the path", "w": 500, "h": 150,
+ "nodes": [["q", "email", 58, 50, "io"], ["l", "LLM", 195, 50, "llm"], ["o", "web search", 380, 22, "tool"], ["p", "read page", 380, 75, "tool"], ["f", "CRM", 380, 128, "tool"], ["a", "brief", 195, 128, "io"]],
+ "edges": [["q", "l"], ["l", "o", "?", "llm"], ["l", "p", "?", "llm"], ["l", "f", "?", "llm"], ["l", "a", "done?", "llm"]]}
+</script>
+    </div>
+    <div class="wf-legend"><span>code step</span><span class="llm">LLM step</span><span class="tool">tool</span><span class="pick">the model picks this edge</span></div>
+  </div>
+  <div class="tab" data-name="The map" data-chapter="8" data-say="Not a line from “workflow” to “agent”: a map. Click a product below and see where it lands.">
+<svg class="map-svg" viewBox="0 0 900 470" role="img" aria-label="Two axes: structure fixed to dynamic, steps code to LLM; systems placed on the map">
+  <rect class="zone" x="92" y="250" width="330" height="168" rx="10"/>
+  <rect class="zone" x="560" y="40" width="300" height="150" rx="10"/>
+  <text class="zone-t" x="104" y="410">WORKFLOWS</text>
+  <text class="zone-t" x="848" y="180" text-anchor="end">AGENTS</text>
+  <line class="ax" x1="90" y1="420" x2="870" y2="420"/><polygon points="870,414 882,420 870,426" fill="currentColor"/>
+  <line class="ax" x1="90" y1="420" x2="90" y2="30"/><polygon points="84,30 90,18 96,30" fill="currentColor"/>
+  <text class="axt" x="96" y="446">structure: fixed in code</text>
+  <text class="axt" x="870" y="446" text-anchor="end">picked by the model, step by step →</text>
+  <text class="axt" x="72" y="414" transform="rotate(-90 72 414)">steps: plain code → LLM calls →</text>
+  <g class="pt"><circle cx="140" cy="385" r="7"/><text x="152" y="390">nightly ETL job</text></g>
+  <g class="pt"><circle cx="190" cy="215" r="7"/><text x="202" y="220">RAG pipeline</text></g>
+  <g class="pt"><circle cx="300" cy="245" r="7"/><text x="312" y="250">router</text></g>
+  <g class="pt"><circle cx="250" cy="160" r="7"/><text x="262" y="165">parallel checks</text></g>
+  <g class="pt hy"><circle cx="420" cy="215" r="7"/><text x="432" y="220">workflow with an agent node</text></g>
+  <g class="pt hy"><circle cx="470" cy="135" r="7"/><text x="482" y="140">evaluator–optimizer</text></g>
+  <g class="pt hy"><circle cx="590" cy="250" r="7"/><text x="602" y="255">agent with workflow tools</text></g>
+  <g class="pt hy"><circle cx="600" cy="105" r="7"/><text x="612" y="110">orchestrator–workers</text></g>
+  <g class="pt"><circle cx="700" cy="150" r="7"/><text x="712" y="155">ReAct agent</text></g>
+  <g class="bz" id="bz-copilot"><rect x="100" y="78" width="168" height="28" rx="14"/><text x="184" y="97" text-anchor="middle">Copilot autocomplete</text></g>
+  <g class="bz" id="bz-rag"><rect x="150" y="262" width="122" height="28" rx="14"/><text x="211" y="281" text-anchor="middle">RAG chatbot</text></g>
+  <g class="bz" id="bz-refund"><rect x="330" y="262" width="176" height="28" rx="14"/><text x="418" y="281" text-anchor="middle">our meeting-prep bot</text></g>
+  <g class="bz" id="bz-report"><rect x="160" y="340" width="148" height="28" rx="14"/><text x="234" y="359" text-anchor="middle">nightly QC report</text></g>
+  <g class="bz" id="bz-research"><rect x="560" y="56" width="132" height="28" rx="14"/><text x="626" y="75" text-anchor="middle">Deep Research</text></g>
+  <g class="bz" id="bz-claude"><rect x="736" y="46" width="112" height="28" rx="14"/><text x="792" y="65" text-anchor="middle">Claude Code</text></g>
+</svg>
+    <div class="chips">
+      <button data-reveal="bz-copilot">Copilot autocomplete</button><button data-reveal="bz-rag">RAG chatbot</button>
+      <button data-reveal="bz-refund">our meeting-prep bot</button><button data-reveal="bz-report">nightly QC report</button>
+      <button data-reveal="bz-research">Deep Research</button><button data-reveal="bz-claude">Claude Code</button>
+    </div>
+    <div class="map-legend"><i style="background:var(--navy);margin-left:0"></i>a known pattern<i style="background:var(--green)"></i>a hybrid<i style="background:#FFF7E8;border:1px solid #E0B25C"></i>a product (click to place)</div>
+  </div>
+
+  <div class="tab" data-name="The brief, redrawn" data-chapter="9" data-say="Left: the course brief, as drawn. Right: the same boxes, coloured by <b>who picks the next step</b>. Only one box needs the model to decide.">
+    <div class="brief-pair">
+      <figure class="brief-img"><img src="../assets/img/brief-flow.png" alt="The course brief's diagram: Email Inbox, New Customer Email, Email Agent, Extract Company Name, then Web Research Agent, Calendar Agent and Company Info Agent in parallel, Memory Agent, Report Agent, Human Approval, Send Brief / Save to KB"><figcaption>As the brief draws it: seven “agents”</figcaption></figure>
+      <div>
+<script type="application/json" class="wf">
+{"title": "Who picks each box's next step", "w": 520, "h": 560,
+ "nodes": [["m", "Email", 260, 30, "llm"], ["x", "Extract name", 260, 100],
+           ["w", "Web Research ↻", 95, 190, "llm"], ["c", "Calendar", 260, 190, "tool"], ["i", "Company Info", 425, 190, "tool"],
+           ["y", "Memory", 260, 290], ["r", "Report", 260, 380, "llm"], ["h", "Approval", 260, 460, "io"], ["s", "Send / save", 260, 530, "tool"]],
+ "edges": [["m", "x", "if lead"], ["x", "w"], ["x", "c"], ["x", "i"], ["w", "y"], ["c", "y"], ["i", "y"], ["y", "r"], ["r", "h"], ["h", "s", "click"]]}
+</script>
+        <div class="wf-legend"><span>code step</span><span class="llm">LLM call or agent</span><span class="tool">tool (MCP, database)</span><span class="io">a person</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="tab" data-name="When to use an agent" data-chapter="9" data-say="Give a step to an agent only when <b>all five</b> are true. Of the seven boxes, one passes.">
+    <table class="plain" style="margin:0">
+      <tr><th></th><th>open-ended path</th><th>high value per run</th><th>cheap to check</th><th>slow is fine</th><th>small blast radius</th><th></th></tr>
+      <tr><td>Email</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
+      <tr><td><b>Web research</b></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓ <small>(read-only tools)</small></td><td><b>agent</b></td></tr>
+      <tr><td>Company info</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
+      <tr><td>Calendar</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
+      <tr><td>Memory</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td>✗ <small>(writes the KB)</small></td><td>workflow</td></tr>
+      <tr><td>Report</td><td>✗</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>one LLM call</td></tr>
+      <tr><td>Approval</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>✗ <small>(sends email)</small></td><td>a gate, never a model</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="Measured" data-chapter="10" data-say="Both designs built for real, run on the same 19 golden emails, the same models and the same scorer.">
+    <div class="measure">
+      <div class="m-col"><b>The brief's 7 agents</b><span>meeting-prep-brd · 6 LLM agents, 8 MCP servers, a human gate</span></div>
+      <div class="m-col win"><b>One agent, inside a workflow</b><span>meeting-prep-operonx · web research is the agent; the rest are steps</span></div>
+      <div class="m-row"><i>briefs that pass</i><span>16 / 19</span><span>18 / 19</span></div>
+      <div class="m-row"><i>LLM calls per email</i><span>12.1</span><span>8.4</span></div>
+      <div class="m-row"><i>tokens per email</i><span>13,390</span><span>4,659</span></div>
+      <div class="m-row"><i>time, median</i><span>25 s</span><span>10 s</span></div>
+      <div class="m-row"><i>cost per 1,000 emails</i><span>$2.52</span><span>$1.08</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="1">
+<h2>Chapter 8 · Who picks the next step?</h2>
+<p>Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener"><i>Building effective agents</i></a> draws the line with one question:</p>
+<div class="callout navy"><p><b>Workflows</b> are systems where LLMs and tools are orchestrated through predefined code paths. <b>Agents</b> are systems where LLMs dynamically direct their own processes and tool usage.</p></div>
+<p>Run Linh's email both ways and count the calls.</p>
+<div class="pipeline" data-title="Workflow: code picks the path">
+  <div class="step" data-icon="✦" data-title="Triage" data-desc="One LLM call: is this a lead, and who is it?">
+<script type="text/plain">
+import json
+import httpx
+from openai import OpenAI
+from prep_world import WEB, golden
+from prep_world.guard import visible_text
+from prep_world.mail import as_email
+
+client, calls = OpenAI(), 0
+def llm(**kw):
+    global calls
+    calls += 1
+    return client.chat.completions.create(model="gpt-4o-mini", **kw).choices[0].message
+
+email = as_email(next(g for g in golden() if g["id"] == "lotus-intro"))
+lead = json.loads(llm(messages=[
+    {"role": "system", "content": 'Reply as JSON with keys "is_lead" and "company".'},
+    {"role": "user", "content": f"From: {email['from_name']} <{email['from']}>\n\n{email['text']}"}]).content)
+print(lead)
+</script></div>
+  <div class="step" data-icon="⑂" data-title="Route and research" data-desc="An if, then a fixed recipe: search, read the top result.">
+<script type="text/plain">
+if lead["is_lead"]:
+    hits = httpx.get(f"{WEB}/search", params={"q": f"{lead['company']} news"}).json()
+    facts = visible_text(httpx.get(hits[0]["url"]).text)
+else:
+    facts = None
+print(facts[:120] if facts else "skipped: not a lead")
+</script></div>
+  <div class="step" data-icon="✉" data-title="Brief" data-desc="One more LLM call writes it.">
+<script type="text/plain">
+brief = llm(messages=[{"role": "user", "content": f"Write a meeting brief.\n\nCompany: {lead['company']}\n\nEvidence:\n{facts}"}]).content
+print(brief[:160])
+print(f"model calls: {calls} · path picked by: code")
+</script></div>
+</div>
+
+<div class="pipeline" data-title="Agent: the model picks the path">
+  <div class="step" data-icon="⚒" data-title="Tools" data-desc="Three tools on offer; the model will choose.">
+<script type="text/plain">
+import inspect, json
+import httpx
+from openai import OpenAI
+from prep_world import WEB, db
+from prep_world.guard import visible_text
+
+def web_search(query: str) -> str:
+    """Search the web. Returns titles, links and snippets."""
+    return httpx.get(f"{WEB}/search", params={"q": query}).text
+
+def fetch_page(url: str) -> str:
+    """Read a web page: its visible text."""
+    return visible_text(httpx.get(url).text)
+
+def crm_lookup(domain: str) -> str:
+    """Find a company in our CRM by its email domain."""
+    return json.dumps(db.find_company(domain) or {})
+
+TOOLS = {f.__name__: f for f in (web_search, fetch_page, crm_lookup)}
+SCHEMAS = [{"type": "function", "function": {"name": n, "description": f.__doc__, "parameters": {"type": "object",
+            "properties": {p: {"type": "string"} for p in inspect.signature(f).parameters}}}} for n, f in TOOLS.items()]
+print(list(TOOLS))
+</script></div>
+  <div class="step" data-icon="↻" data-title="The loop" data-desc="Each turn, the model picks a tool or says it's done.">
+<script type="text/plain">
+client, calls = OpenAI(), 0
+messages = [{"role": "user", "content": "Prepare a brief on lotus-logistics.example. Find out about Lotus Logistics news."}]
+while True:
+    calls += 1
+    msg = client.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=SCHEMAS).choices[0].message
+    if not msg.tool_calls:
+        break
+    messages.append(msg.model_dump(exclude_none=True))
+    for c in msg.tool_calls:
+        print(f"model picked: {c.function.name}")
+        out = TOOLS[c.function.name](**json.loads(c.function.arguments))
+        messages.append({"role": "tool", "tool_call_id": c.id, "content": out})
+</script></div>
+  <div class="step" data-icon="✉" data-title="Answer" data-desc="The model decided it was done. Did it check the CRM?">
+<script type="text/plain">
+used = [m["tool_calls"][0]["function"]["name"] for m in messages if m.get("tool_calls")]
+print(msg.content[:120])
+print(f"model calls: {calls} · path picked by: the model · CRM checked: {'crm_lookup' in used}")
+</script></div>
+</div>
+
+<div class="callout key"><b class="t">The truth</b><p>Both are workflows: steps and arrows. The difference is <b>who picks each arrow</b>, your code or the model. That's a property of <b>each arrow</b>, not of a whole system, and most real systems mix both.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The map →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="2" hidden>
+<h2>The map</h2>
+<p>Two questions place any system: <b>how fixed is the structure?</b> (left to right) and <b>how much of the work is LLM calls?</b> (bottom to top). Plain code sits bottom-left, a coding agent top-right, and most of what ships lives in between.</p>
+<p><b>Room exercise:</b> click the products under the map one by one. Before each click, ask where it lands.</p>
+<div class="callout navy"><b class="t">Others reached the same view</b><p>HumanLayer's <a href="https://github.com/humanlayer/12-factor-agents" target="_blank" rel="noopener">12-factor agents</a>: production agents are mostly deterministic code with LLM steps sprinkled in, so <b>own your control flow</b>.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The brief, redrawn →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="3" hidden>
+<h2>Chapter 9 · The brief's seven agents, redrawn</h2>
+<p>The course brief asks for this assistant as <b>seven agents</b>. Ask each box the question: <i>who picks its next step?</i></p>
+<table>
+  <tr><th>the brief's box</th><th>who picks the next step</th><th>so it is</th></tr>
+  <tr><td>Email Agent</td><td>code: a gate, then one LLM call says “lead or not”</td><td>a step with one LLM call</td></tr>
+  <tr><td>Extract Company Name</td><td>code: look the sender's domain up in the CRM</td><td>a step</td></tr>
+  <tr><td><b>Web Research Agent</b></td><td><b>the model</b>: what to search, what to read, when it knows enough</td><td><b>an agent</b></td></tr>
+  <tr><td>Calendar Agent</td><td>code: one query, filtered by the company</td><td>a tool call</td></tr>
+  <tr><td>Company Info Agent</td><td>code: CRM and knowledge-base queries</td><td>tool calls</td></tr>
+  <tr><td>Memory Agent</td><td>code: merge and de-duplicate the facts</td><td>a step</td></tr>
+  <tr><td>Report Agent</td><td>code: one LLM call writes the brief, a check reads it</td><td>a step with one LLM call</td></tr>
+  <tr><td>Human Approval</td><td><b>a person</b> clicks Approve or Reject</td><td>a gate: a draft and a link</td></tr>
+</table>
+<div class="callout navy"><b class="t">Not a takedown</b><p>The brief's own <b>tool, eval and security harnesses</b> are exactly what a workflow gives you. And its one open-ended box is where an agent, even three in parallel (Chapter 7), really pays.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · When to use an agent →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="4" hidden>
+<h2>When should a step be an agent?</h2>
+<table class="plain">
+  <tr><td><b>Is the path open-ended?</b></td><td>you can't write the steps down in advance</td></tr>
+  <tr><td><b>Is each run worth a lot?</b></td><td>several model calls are cheap next to the outcome</td></tr>
+  <tr><td><b>Is the result cheap to check?</b></td><td>a person, a test or a rule can tell good from bad</td></tr>
+  <tr><td><b>Is slow fine?</b></td><td>seconds to minutes, not milliseconds</td></tr>
+  <tr><td><b>Is the blast radius small?</b></td><td>its tools can't send, pay or delete on their own</td></tr>
+</table>
+<p>Research passes all five: nobody can list in advance which pages matter, a good brief is worth a few calls, sales reads it anyway, nobody waits on it, and its tools only read. Every other box fails at least one, usually the first.</p>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · Measured →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="5" hidden>
+<h2>Chapter 10 · Measured: both built for real</h2>
+<p>We built the brief <b>exactly as drawn</b> (<code>meeting-prep-brd</code>: six LLM agents, each with its own MCP tools behind the six-step harness, Extract Company Name as one LLM call, Human Approval as a person) and the workflow (<code>meeting-prep-operonx</code>: one agent, the rest steps). Same 19 golden emails, same models, same scorer, real runs.</p>
+<table>
+  <tr><th></th><th>the brief's 7 agents</th><th>one agent, in a workflow</th></tr>
+  <tr><td>briefs that pass</td><td>16/19</td><td><b>18/19</b></td></tr>
+  <tr><td>LLM calls per email</td><td>12.1</td><td><b>8.4</b></td></tr>
+  <tr><td>tokens per email</td><td>13,390</td><td><b>4,659</b></td></tr>
+  <tr><td>time, median · 95th percentile</td><td>25.2 s · 35.4 s</td><td><b>9.6 s · 17.2 s</b></td></tr>
+  <tr><td>cost per 1,000 emails</td><td>$2.52</td><td><b>$1.08</b></td></tr>
+  <tr><td>security cases (4 attack emails)</td><td>all pass</td><td>all pass</td></tr>
+</table>
+<div class="callout warn"><b class="t">Why the seven agents lose facts</b><p>The research, calendar and company agents <b>find</b> the facts: they're in the traces. Then the <b>Memory Agent</b>, an LLM, rewrites everything into one summary, and some facts don't survive: the CRM's pilot history, or the IT manager who actually wrote. A merge written in code can't drop a fact.</p></div>
+<p>Open both in <a href="http://127.0.0.1:8766" target="_blank" rel="noopener">Studio</a>: <code>meeting-prep-brd</code> → <code>on_email</code>, and <code>meeting-prep-operonx</code> → <code>prepare</code>. The same boxes, the same names.</p>
+<div class="callout key"><b class="t">The truth</b><p>Agents are real. <b>Use them where the path can't be known, and run them inside a workflow.</b></p></div>
+<div class="handoff"><span>Still missing</span><p>That's Friday's benchmark. Now it's Monday, 8 am, and 50 emails arrive at once.</p></div>
+</section>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="../assets/split.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/decoder.js"></script>
+<script src="../assets/tabs.js"></script>
+<script src="../assets/cards.js"></script>
+</body>
+</html>

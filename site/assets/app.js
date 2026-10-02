@@ -9,14 +9,12 @@
   "use strict";
 
   var PAGES = [
-    { id: "index", title: "Start here", part: "Act 0 · The hook" },
-    { id: "act1-agent-world", title: "Build an agent", part: "Act 1 · The agent world" },
-    { id: "act2-all-workflows", title: "Look at the shape", part: "Act 2 · It's all workflows" },
-    { id: "act3-when-agents", title: "When agents pay", part: "Act 3 · When you DO want an agent" },
-    { id: "act4-monday-morning", title: "The agent meets the inbox", part: "Act 4 · Monday morning" },
-    { id: "act5-the-engine", title: "What runs the workflow", part: "Act 5 · The engine" },
-    { id: "act6-real-systems", title: "The same pattern, in production", part: "Act 6 · Real systems" },
-    { id: "act7-callback", title: "The decoder", part: "Act 7 · Callback" }
+    { id: "index", n: "★", title: "The email and the brief", part: "Prologue" },
+    { id: "part1-build-the-agent", n: "I", title: "Build the agent from scratch", part: "Part I · The agent, as it is" },
+    { id: "part2-who-picks", n: "II", title: "Who picks the next step?", part: "Part II · Workflow or agent" },
+    { id: "part3-monday-morning", n: "III", title: "Monday morning, and the engine", part: "Part III · Production" },
+    { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" },
+    { id: "appendix", n: "+", title: "Engine numbers, real systems", part: "Appendix" }
   ];
 
   var body = document.body;
@@ -54,7 +52,7 @@
     PAGES.forEach(function (p, k) {
       if (p.part !== part) { part = p.part; html += "<h6>" + esc(part) + "</h6>"; }
       html += '<a href="' + href(p) + '"' + (k === idx ? ' class="on"' : "") + '><span class="n">' +
-        (k === 0 ? "★" : p.id.split("-")[0].replace(/^act/, "")) + "</span><span>" + esc(p.title) + "</span></a>";
+        p.n + "</span><span>" + esc(p.title) + "</span></a>";
       n++;
     });
     side.innerHTML = html;

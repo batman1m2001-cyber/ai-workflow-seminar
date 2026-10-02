@@ -76,7 +76,7 @@
     });
     var alt = pl.querySelector(":scope > .playground");
     if (alt) alt.parentNode.removeChild(alt);
-    var altName = alt ? (pl.getAttribute("data-alt") || "In the agent world") : "";
+    var altName = alt ? (pl.getAttribute("data-alt") || "＋ The same in a framework") : "";
 
     pl.innerHTML =
       '<div class="pl-head"><div class="pl-title">' + esc(title) + "</div>" +

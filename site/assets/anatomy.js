@@ -1,4 +1,4 @@
-/* The agent anatomy: one SVG that grows over six beats, with an X-ray flip.
+/* The agent anatomy: one SVG that grows over seven chapters, with an X-ray flip.
  *
  *   <div class="anatomy" data-beat="1"></div>            ← → steps through the beats
  *   <div class="anatomy" data-beat="3" data-lock></div>  one beat, X-ray only
@@ -22,7 +22,7 @@
     { n: 2, name: "Knowledge", terms: "RAG",
       say: "The model doesn't know our history with this company, so we fetch our notes and put them in the prompt.",
       xray: "Embed, dot product, top-k: then paste the hits into the f-string." },
-    { n: 3, name: "Tools", terms: "function calling · MCP · code mode",
+    { n: 3, name: "Tools", terms: "function calling · MCP",
       say: "The model asks for actions: search the web, read a page, look the company up in the CRM over MCP.",
       xray: "A JSON schema pasted into the prompt, and a parser that reads the reply. Your code runs the tool." },
     { n: 4, name: "The loop", terms: "agent · ReAct",
@@ -33,7 +33,10 @@
       xray: "A function that assembles the prompt under a token budget. Memory and skills are files. A sub-agent is a tool whose body is another loop." },
     { n: 6, name: "The harness", terms: "harness engineering · durable agents · human-in-the-loop · guardrails",
       say: "Everything around the model: permissions, checkpoints, triggers, approvals, traces, evals.",
-      xray: "Everything that isn't the model: config, ifs, retries, logs, tests. Agent = Model + Harness." }
+      xray: "Everything that isn't the model: config, ifs, retries, logs, tests. Agent = Model + Harness." },
+    { n: 7, name: "Many agents", terms: "multi-agent · orchestrator · workers",
+      say: "Website, news, people: three questions, so three agents at once, and one step that merges their answers.",
+      xray: "The same loop called three times in asyncio.gather, then a function that merges. Functions joined by arrows: a workflow." }
   ];
 
   // x, y, w, h · beat it arrives · name · subtitle · what it is in code
@@ -46,11 +49,12 @@
     { id: "docs", b: 2, x: 50, y: 470, w: 130, h: 64, name: "Notes", sub: "CRM history", xr: "a table" },
     { id: "retriever", b: 2, x: 235, y: 470, w: 160, h: 64, name: "Retriever", sub: "pgvector", xr: "ORDER BY <=>" },
     { id: "tools", b: 3, x: 455, y: 470, w: 190, h: 104, name: "Tools", sub: "", xr: "schema → prompt", big: true,
-      chips: ["functions", "MCP", "sandbox"] },
+      chips: ["functions", "MCP"] },
     { id: "subagent", b: 5, x: 705, y: 490, w: 160, h: 64, name: "Sub-agent", sub: "own context", xr: "def tool(): loop()" },
     { id: "context", b: 5, x: 235, y: 120, w: 410, h: 92, name: "Context window", sub: "", xr: "trim(messages, budget)", big: true,
       chips: ["budget", "compaction", "tool-result clearing", "just-in-time"] },
     { id: "memory", b: 5, x: 50, y: 134, w: 130, h: 64, name: "Memory files", sub: "AGENTS.md", xr: "a .md file" },
+    { id: "team", b: 7, x: 920, y: 470, w: 130, h: 64, name: "3 agents", sub: "in parallel", xr: "gather(...)" },
     { id: "skills", b: 5, x: 705, y: 134, w: 160, h: 64, name: "Skills", sub: "loaded on demand", xr: "read on demand" }
   ];
 
@@ -67,7 +71,8 @@
     { a: "tools", b: "subagent", beat: 5, label: "delegate" },
     { a: "memory", b: "context", beat: 5 },
     { a: "skills", b: "context", beat: 5 },
-    { a: "context", b: "llm", beat: 5, label: "what the model sees", v: true, dx: 60 }
+    { a: "context", b: "llm", beat: 5, label: "what the model sees", v: true, dx: 60 },
+    { a: "team", b: "answer", beat: 7, label: "merge", v: true }
   ];
 
   var HARNESS = ["permissions · hooks", "checkpoints · resume", "triggers", "approvals", "traces", "evals"];
@@ -186,7 +191,7 @@
     var beat = +root.getAttribute("data-beat") || 1, xray = false, lock = root.hasAttribute("data-lock");
     var sections = root.hasAttribute("data-sections") ? [].slice.call(document.querySelectorAll("section.beat")) : [];
     var hash = /^#beat-(\d)$/.exec(location.hash);
-    if (sections.length && hash) beat = Math.min(6, Math.max(1, +hash[1]));
+    if (sections.length && hash) beat = Math.min(BEATS.length, Math.max(1, +hash[1]));
     root.innerHTML =
       '<div class="an-bar"><div class="an-beats"></div><span class="spacer"></span>' +
       '<button class="an-x" title="X-ray: what each part really is (X)">X-ray</button></div>' +
@@ -194,7 +199,7 @@
     var beats = root.querySelector(".an-beats"), stage = root.querySelector(".an-stage");
     if (lock) {
       root.classList.add("locked");
-      beats.innerHTML = "<span class=\"an-lock\">The agent so far · beat " + beat + " of 6</span>";
+      beats.innerHTML = "<span class=\"an-lock\">The agent so far · beat " + beat + " of " + BEATS.length + "</span>";
     }
     else BEATS.forEach(function (b) {
       var btn = document.createElement("button");
@@ -206,7 +211,7 @@
     root.tabIndex = 0;
     root.addEventListener("keydown", function (e) {
       if (lock) { if (e.key === "x" || e.key === "X") { xray = !xray; render(); } return; }
-      if (e.key === "ArrowRight" && beat < 6) { beat++; render(); e.preventDefault(); }
+      if (e.key === "ArrowRight" && beat < BEATS.length) { beat++; render(); e.preventDefault(); }
       if (e.key === "ArrowLeft" && beat > 1) { beat--; render(); e.preventDefault(); }
       if (e.key === "x" || e.key === "X") { xray = !xray; render(); }
     });
@@ -239,11 +244,15 @@
         if (on) s.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
       });
       if (history.replaceState) history.replaceState(null, "", "#beat-" + beat);
+      document.dispatchEvent(new CustomEvent("beatchange", { detail: { beat: beat } }));   // decoder.js listens
     }
     root.goto = function (n) { beat = n; render(); };
     if (sections.length) window.addEventListener("hashchange", function () {
       var m = /^#beat-(\d)$/.exec(location.hash);
-      if (m && +m[1] !== beat) root.goto(Math.min(6, Math.max(1, +m[1])));
+      if (m && +m[1] !== beat) root.goto(Math.min(BEATS.length, Math.max(1, +m[1])));
+    });
+    document.querySelectorAll(".beat-next.flip").forEach(function (btn) {   // "now flip the whole agent"
+      btn.onclick = function () { xray = true; render(); root.scrollIntoView({ behavior: "smooth", block: "start" }); };
     });
     document.querySelectorAll(".beat-next[data-go]").forEach(function (btn) {
       btn.onclick = function () {

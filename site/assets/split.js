@@ -4,7 +4,8 @@
  * plain markup:
  *   - a beat's agent-world code block (.playground) followed by its X-ray
  *     (.pipeline) become one block: the playground moves into the pipeline,
- *     where cards.js shows it as a tab beside "X-ray" and "Code", and the
+ *     where cards.js shows it as an extra tab ("＋ The same in LangChain")
+ *     beside "X-ray" and "Code", and the
  *     "In the agent world" heading above it and a bare "X-ray" one go;
  *   - any other code block is folded behind a "▶ Playground · title" button in
  *     place; opening it re-measures its editor.
@@ -50,7 +51,7 @@
       var head = pg.previousElementSibling;
       if (head && /^H[34]$/.test(head.tagName) && /agent world/i.test(head.textContent)) head.parentNode.removeChild(head);
       var tool = (pg.getAttribute("data-title") || "").split(":")[0];
-      next.setAttribute("data-alt", "The agent world" + (tool ? " · " + tool : ""));
+      next.setAttribute("data-alt", "＋ The same in " + (tool || "a framework"));
       next.appendChild(pg);
     });
   });
