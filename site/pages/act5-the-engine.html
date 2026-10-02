@@ -27,6 +27,78 @@
 <p class="kicker">Act 5 · The engine</p>
 <h1>What runs the workflow</h1>
 <p class="lead">Act 4's iceberg is the same for every team. So: what must an engine do, which one should you use, why did we build our own, and does it hold up with the whole system running live?</p>
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 16 phút</summary>
+<div class="speech">
+<p class="cue">[Trước buổi nói: <code>docker compose up -d</code>, <code>prep-seed</code>, <code>prep-mocks</code>, seminar runner, <code>operonx-serve</code> trong meeting-prep-operonx (port 8200), và Studio trên project đó (port 8766). Tab 4 chạy live; luôn để sẵn bản ghi hình dự phòng.]</p>
+<h4>1 · Từ tảng băng tới engine <small>(~1 phút · mở đầu trang)</small></h4>
+<p>Ở Act 4, các bạn đã thấy tảng băng. Phần nổi là con agent mười lăm dòng. Phần chìm là một trăm ba mươi lăm dòng mà team nào cũng phải tự viết lại.</p>
+<p>Act 5 trả lời bốn câu hỏi. Một: một engine thì phải làm được gì? Hai: nên dùng engine nào? Ba: tại sao team mình lại tự build một cái riêng? Và bốn, câu quan trọng nhất: khi cả hệ thống chạy live, ngay trước mặt các bạn, thì nó có đứng vững không?</p>
+
+<h4>2 · Một engine phải làm được gì <small>(~3 phút · tab "What an engine must do")</small></h4>
+<p class="cue">[Đang ở tab "What an engine must do". Đọc bảng từ trên xuống, chỉ từng dòng bên trái rồi sang cột "Monday's wound".]</p>
+<p>Các bạn nhìn bảng này. Bên trái là thứ engine cho mình. Bên phải là vết thương của sáng thứ Hai mà nó chữa. Mỗi dòng đều trả lời một vết thương.</p>
+<p>Dòng đầu: step và edge, branch, loop, state. Đó là hình dạng của mọi hệ thống mình đã xem ở Act 2. RAG, tool calling, agent, tất cả đều là những cái hình đó.</p>
+<p>Bounded parallelism: cái này trả lời vụ 50 cùng lúc, 40 bị từ chối. Failure là giá trị, có timeout, có retry: trả lời vụ một timeout làm mất cả batch. Parsing fail cho to: trả lời vụ JSON lắm lời biến thành chữ "không". Gate và least privilege, được làm thành những step thật sự trong graph: trả lời vụ một email và một trang web ra lệnh cho agent.</p>
+<p>Trace cho mỗi run, mỗi step: trả lời câu "tại sao nó nói vậy?". Eval làm deploy gate: trả lời câu "prompt mới có tốt hơn không?". Trigger, approval và durable state: một webhook, đúng 8 giờ sáng, và một cái "đồng ý" của con người. Và dòng cuối: job và service chạy từ cùng một graph. Vì cái batch chạy buổi sáng và cái inbox live thật ra là một hệ thống.</p>
+<p>Các bạn thấy không, không có dòng nào trong bảng này nói về model. Không có dòng nào nói "prompt hay hơn". Toàn bộ là chuyện thực thi: chạy cái gì, khi nào, song song bao nhiêu, lỗi thì sao, ai được phép làm gì, và ghi lại những gì.</p>
+<p>Mình muốn nói rõ một điều. Cái danh sách này mới là luận điểm thật sự của buổi nói chuyện hôm nay, hơn bất kỳ sản phẩm nào. Nó engine-agnostic. Các bạn dùng engine nào cũng được, nhưng hãy cầm cái danh sách này mà đòi engine đó.</p>
+<p>Nếu agent của các bạn chạy production, thì chắc chắn có một thứ gì đó đang làm hết những việc này. Câu hỏi duy nhất là: thứ đó là một engine, hay là 150 dòng code cho mỗi con agent?</p>
+
+<h4>3 · Bức tranh toàn cảnh, nói cho công bằng <small>(~2,5 phút · tab "The landscape")</small></h4>
+<p class="cue">[Bấm "Next: 2 · The landscape →" hoặc chuyển sang tab "The landscape".]</p>
+<p>Vậy chọn engine nào? Mình đưa ra ba lựa chọn, nói thật lòng. Và cái nào cũng mạnh nhất ở một chỗ nào đó.</p>
+<p>Đầu tiên là LangGraph. Mình nói thẳng: LangGraph là một engine tốt, và là engine được hỗ trợ tốt nhất. Hệ sinh thái agent lớn nhất, tài liệu tốt, tuyển người dễ, có checkpoint, có interrupt, có LangSmith. Nếu team các bạn đang dùng LangGraph và nó đang chạy tốt, thì đó là một lựa chọn rất hợp lý.</p>
+<p>Còn điểm yếu? State dict cộng với reducer ở mọi step. Graph được nối bằng string. Overhead mỗi step nặng hơn. Và trigger, eval gate, job: những cái đó các bạn phải tự build.</p>
+<p>Lựa chọn thứ hai là nhóm Temporal, Restate, DBOS. Đây là vua của durable execution: một run sống qua nhiều ngày, ở bất kỳ quy mô nào. Nếu một run phải sống sót qua nhiều ngày, thì đây là bên thắng. Nhưng chúng không được thiết kế cho LLM step, và hơi nặng cho mấy cái pipeline của một team.</p>
+<p>Lựa chọn thứ ba là OperonX, cái của tụi mình. Mạnh ở tốc độ, cú pháp gọn, job, eval và trigger có sẵn, trace consumer cắm vào được, và Studio vẽ ra đúng cái graph thật đang chạy. Điểm yếu thì mình cũng nói luôn: cộng đồng nhỏ, phục vụ một team, và tụi mình phải tự maintain nó.</p>
+<p>Các bạn để ý: không có lựa chọn nào thắng ở mọi cột. Câu hỏi đúng không phải là "engine nào tốt nhất", mà là "team mình đang vật lộn với cái gì nhiều nhất".</p>
+<p>Tụi mình dùng OperonX vì những lý do ở tab tiếp theo. Và tụi mình trả giá cho lựa chọn đó.</p>
+
+<h4>4 · Tại sao tụi mình build OperonX: tốc độ <small>(~2,5 phút · tab "Why we built OperonX", bảng benchmark)</small></h4>
+<p class="cue">[Bấm "Next: 3 · Why we built OperonX →" hoặc chuyển sang tab "Why we built OperonX".]</p>
+<p>Câu chữ trên tab này là: đo, chứ không phải tuyên bố. Mình có ba thứ để cho các bạn xem: overhead của engine, cùng một hệ thống build hai lần, và bốn cái gap của engine được vá trong một tuần.</p>
+<p>Đầu tiên là tốc độ. Mình nhấn mạnh: bảng này chỉ đo overhead của engine. Cùng những graph đó, không có LLM. Chain mười step: OperonX 0,2 mili giây, LangGraph 2,7 mili giây, khoảng mười lăm lần. Fan-out 50 việc, mỗi việc 10 mili giây, chạy song song: 15,7 so với 31, khoảng hai lần. Stream một nghìn item qua một step: 35 so với 172, khoảng năm lần. Loop một trăm vòng: 4,7 so với 37, khoảng tám lần. Và load, 500 chain cùng lúc: 105 mili giây so với 1.055, khoảng mười lần.</p>
+<p>Vì sao nhanh? Mỗi step chạy ngay khi input của nó sẵn sàng. Không phải chờ hết một vòng step, không phải merge toàn bộ state giữa các vòng.</p>
+<p>Nhưng mình phải nói cho công bằng. Một LLM call mất hàng trăm mili giây. Trong một cuộc hội thoại, nó nuốt chửng cái overhead này. Overhead chỉ có ý nghĩa khi các bạn chạy batch, ví dụ mười nghìn call mỗi đêm; khi streaming, như voice, có step cho từng chunk; và khi có rất nhiều step nhỏ. Tụi mình cũng đo trên golden set của meeting-prep: cả hai engine đều khoảng 14,5 giây. Vì model chiếm hết thời gian.</p>
+
+<h4>5 · Cùng một hệ thống, build hai lần <small>(~3 phút · beat 3, hai khối code cạnh nhau và bảng so sánh)</small></h4>
+<p class="cue">[Cuộn xuống "The same system, built twice". Chỉ vào khối code OperonX bên trái, rồi khối LangGraph bên phải.]</p>
+<p>Tốc độ thì chưa đủ thuyết phục. Nên tụi mình làm một việc công bằng hơn: build đúng hệ thống meeting-brief này hai lần, một lần bằng OperonX, một lần bằng LangGraph. Cả hai bản đều trả lời đủ 19 golden email.</p>
+<p>Bên trái là OperonX. Tiêu đề nói rồi: graph chính là code. Mỗi step là một dòng: screen, letter, triage, identify, crm, calendar, recall, ba con researcher cho website, news và people, rồi evidence, brief, check, approval. Và mấy dòng cuối là toàn bộ hình dạng: gate, nếu bị block thì đi stop, không thì đọc thư. Triage, nếu không phải lead thì skip. Identify fan-out ra crm, calendar, memory. Ba research agent chạy song song. Tất cả gom về evidence, rồi brief, check, và approval. Các bạn đọc nó như đọc cái sơ đồ.</p>
+<p>Bên phải là LangGraph. Đầu tiên là một state class, rồi các node được nối với nhau bằng tên, bằng string. Các bạn để ý dòng research, có một cái reducer, vì ba agent cùng ghi vào đó song song.</p>
+<p class="cue">[Chỉ vào bảng so sánh bên dưới. Nói to cột LangGraph: nó cũng pass.]</p>
+<p>Kết quả. Golden email: OperonX 19 trên 19, 14,5 giây. LangGraph cũng 19 trên 19, 14,4 giây. LangGraph pass, mình nói rõ điều đó.</p>
+<p>Số dòng code: OperonX 309, LangGraph 257. Nhưng 257 dòng đó làm ít việc hơn. Webhook, lịch chạy 8 giờ sáng, eval gate: OperonX có sẵn, LangGraph phải viết tay, và không có schedule. Approval sau khi restart: OperonX sống sót, vì bản nháp nằm trong database. LangGraph thì mất, với checkpointer in-memory.</p>
+<p>Và cái bẫy mỗi bên gặp phải. Bên OperonX: một input tạm thời chỉ có một người đọc. Bên LangGraph: <code>interrupt()</code> chạy lại node của nó, và email xin approval bị gửi đi hai lần. Cả hai engine đều có bẫy. Không có engine nào miễn phí.</p>
+
+<h4>6 · Tự build: lập luận của thời AI <small>(~1,5 phút · beat 3, bảng bốn gap và callout "The honest cost")</small></h4>
+<p class="cue">[Cuộn xuống "Build your own: the AI-era argument".]</p>
+<p>Lý do cuối cùng, và với mình là lý do quan trọng nhất. Ngành này thay đổi mỗi quý. Sở hữu engine nghĩa là mình có thể bẻ nó theo mục tiêu ngay trong tuần đó.</p>
+<p>Khi build cái demo các bạn sắp xem, tụi mình tìm ra bốn cái gap trong OperonX. Một: một agent nằm trong graph bị mất câu hỏi của nó. Đây là một bug engine thật: cell được merge của một nested graph làm rơi input và ghi đôi. Tụi mình sửa tận gốc, có test. Hai: <code>agent["final"]</code>, agent là một node, và step tiếp theo đọc câu trả lời của nó. Ba: <code>webhook(...)</code> và <code>schedule(...)</code>, để một run được khởi động bởi một email, hoặc bởi 8 giờ sáng. Bốn: <code>MCPClient.call_value</code>, lấy giá trị của một MCP tool, chứ không phải đoạn text.</p>
+<p>Cả bốn được sửa, test, và release thành bản 1.12.0, trước buổi nói này.</p>
+<p>Nhưng cái giá thật thì mình cũng nói thẳng. Tụi mình phải maintain nó, và nó phục vụ team của tụi mình. Nó không phải là sản phẩm cho tất cả mọi người. Lời khuyên của mình: chỉ build cái mà nếu không build thì các bạn sẽ phải vật lộn với nó.</p>
+
+<h4>7 · Cả hệ thống, chạy live <small>(~3,5 phút · tab "The whole system, live")</small></h4>
+<p class="cue">[Bấm "Next: 4 · The whole system, live →" hoặc chuyển sang tab "The whole system, live". Bấm "Open the inbox" và "Open Studio", xếp hai cửa sổ cạnh trang.]</p>
+<p>Nói đủ rồi. Giờ mình cho các bạn xem cả hệ thống chạy thật. Một email của khách hàng, gửi đi ngay từ trang này. Các bạn nhìn hai chỗ: inbox, và Studio.</p>
+<p class="cue">[Chọn một email ✉ trong danh sách (không phải loại ⚠ attack hay "not a lead"), bấm "Send as customer".]</p>
+<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph OperonX. Và các bạn nhìn Studio, nó sáng lên. Screen, rồi triage, rồi identify. Sau đó CRM, calendar và memory chạy song song bên cạnh ba research agent. Rồi tới brief, check, và cuối cùng là yêu cầu approval.</p>
+<p>Các bạn để ý: con agent ở Act 1 bây giờ chỉ là một node trong graph này. Nó vẫn là agent, nhưng nó sống bên trong một workflow.</p>
+<p class="cue">[Chuyển sang inbox, mở email "[Approve?] Brief: …", bấm Approve.]</p>
+<p>Đây, email "Approve?" đã vào inbox. Một con người đọc brief, và bấm Approve. Brief đi tới đội sales, và được ghi vào memory. Đó là "a human must say yes" của Act 4, nhưng lần này là một step trong engine, chứ không phải hai mươi dòng viết tay.</p>
+<p class="cue">[Quay lại trang, chọn một email ⚠ attack, bấm "Send as customer". Chỉ vào Studio.]</p>
+<p>Bây giờ mình gửi một email tấn công. Đúng cái loại email ở thẻ đầu tiên của Act 4. Các bạn xem: nó bị chặn ngay ở gate, trong vài mili giây. Không có gì được gửi đi. Không có model nào được đụng vào.</p>
+<p>Còn câu hỏi "prompt mới có tốt hơn không?" Mỗi lần deploy đều phải qua golden email, bằng lệnh <code>operonx-run golden</code>. Và mỗi run đều là một trace trong Studio.</p>
+<p>Mình kể một chuyện thật. Khi chuyển sang model in-house thật, golden set ra 18 trên 19, tức 94,7 phần trăm, qua ngưỡng deploy 90 phần trăm. Cái email trượt là gì? Model coi email của một đồng nghiệp là một sales lead. Mình không giấu chuyện đó. Đó chính là việc của eval: eval bắt được cái mà model làm sai, trước khi nó lên production. Nếu không có golden set, mình sẽ chỉ biết chuyện này khi có ai đó phàn nàn. Có golden set, mình biết nó trong vài phút, và mình quyết định có deploy hay không dựa trên một con số, chứ không phải dựa trên cảm giác.</p>
+<p>Đây cũng là câu trả lời cho câu hỏi "prompt mới có tốt hơn không?" ở Act 4. Các bạn đổi prompt, đổi model, đổi bất cứ thứ gì: chạy golden, nhìn con số, rồi mới deploy. Không cần tranh luận.</p>
+<p class="cue">[Nếu demo live lỗi: mở bản ghi hình dự phòng và kể tiếp theo đúng thứ tự trên.]</p>
+
+<h4>8 · Chốt lại <small>(~1 phút · chuyển sang Act 6)</small></h4>
+<p>Vậy tóm lại Act 5. Một engine phải làm được cái danh sách ở tab đầu. Chọn engine nào cũng được, LangGraph hoàn toàn ổn, nhưng hãy đòi nó làm đủ danh sách đó. Tụi mình build OperonX vì tốc độ, vì cú pháp, và vì có thể bẻ nó ngay trong tuần. Và các bạn vừa thấy cả hệ thống chạy thật: email vào, graph sáng lên, con người approve, kẻ tấn công bị chặn, eval canh cửa deploy.</p>
+<p>Nhưng đây vẫn là một demo. Câu hỏi tiếp theo là: cái pattern này có đứng vững trong những hệ thống thật không? Đó là Act 6: "The same pattern, in production".</p>
+<p class="cue">[Bấm "Next →" ở cuối trang để sang Act 6 · The same pattern, in production.]</p>
+</div>
+</details>
 
 <div class="tabs">
   <div class="tab" data-name="What an engine must do" data-say="Every line answers a wound from Monday morning. <b>Engine-agnostic</b>: hold any engine to this list.">
@@ -216,10 +288,6 @@ def build(checkpointer: Any = None):
 </ol>
 <p>The Act 1 agent is one node in this graph. The golden emails gate every deploy (<code>operonx-run golden</code>), and every run is a trace in Studio.</p>
 </section>
-
-<details class="notes"><summary>Presenter notes</summary>
-<p>About 16 minutes. Before the talk: <code>docker compose up -d</code>, <code>prep-seed</code>, <code>prep-mocks</code>, the seminar runner, <code>operonx-serve</code> in meeting-prep-operonx (port 8200), and Studio on that project (port 8766). Tab 4 runs live; keep the recorded fallback ready. Say the LangGraph column out loud: it passed too.</p>
-</details>
 
 </main>
 <script src="../assets/app.js"></script>

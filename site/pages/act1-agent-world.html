@@ -17,6 +17,97 @@
 <h1>Build an agent, one part at a time</h1>
 <p class="lead">At 8 am an email arrives from <b>Linh Tran, COO of Lotus Logistics</b>. Before Wednesday's call, sales wants a one-page <b>brief</b> on the company. We build the agent that writes it, one part per beat: first the way the agent world does (LangChain, LangGraph), then flipped to <b>X-ray</b> to see what the part really is.</p>
 
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 20 phút</summary>
+<div class="speech">
+<p class="cue">[Chuẩn bị: meeting-prep world phải đang chạy (<code>./stack.sh up</code>; cách cũ: <code>docker compose up</code>, <code>prep-seed</code>, <code>prep-mocks</code>). Mỗi beat: chạy khối LangChain trước, rồi mới chạy các thẻ X-ray. Khoảng 3 phút mỗi beat.]</p>
+
+<h4>1 · Mở đầu: email của Linh Tran <small>(~1 phút · phần lead)</small></h4>
+<p>Quay lại email lúc tám giờ sáng. Người gửi là Linh Tran, COO của Lotus Logistics. Thứ Tư này có cuộc gọi, và trước đó sales muốn một bản brief một trang về công ty này.</p>
+<p>Act này mình làm đúng một việc: build cái agent viết bản brief đó, mỗi beat thêm một phần. Và mỗi phần mình làm hai lần. Lần đầu, làm theo cách thế giới agent hay làm: LangChain, LangGraph. Lần hai, lật sang chế độ X-ray, để xem phần đó thật ra là cái gì bên dưới.</p>
+<p>Các bạn để ý cái sơ đồ phía trên: mỗi beat xong, agent của mình sẽ có thêm một mảnh.</p>
+<p>Mình nói trước luật chơi: mình không chê framework. LangChain, LangGraph đều là công cụ tốt, và rất nhiều bạn ở đây đang dùng. Mục tiêu của X-ray là để khi framework báo lỗi lúc hai giờ sáng, các bạn biết bên dưới nó đang làm gì. Sáu beat, mỗi beat khoảng ba phút. Bắt đầu nhé.</p>
+
+<h4>2 · Beat 1 · The call <small>(~3 phút · beat 1: khối LangChain, rồi 4 thẻ X-ray)</small></h4>
+<p>Mọi thứ bắt đầu từ một lần gọi model. Một prompt đi vào, text đi ra, rồi một output parser biến text đó thành dữ liệu. Ở đây dữ liệu mình cần rất đơn giản: công ty nào viết thư, và họ muốn gì?</p>
+<p>Đây là cách LangChain viết. Một ChatPromptTemplate, nối bằng dấu gạch đứng vào ChatOpenAI, rồi nối vào JsonOutputParser. Prompt, model, parser. Nhìn rất gọn, rất “framework”.</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: prompt | model | parser”. Chỉ vào kết quả: company, domain, intent, contact.]</p>
+<p>Ra rồi đó: company, domain, intent, contact. Giờ mình lật sang X-ray. Cùng việc đó, nhưng không có framework.</p>
+<p>Thẻ thứ nhất: email. Chỉ là email sáng nay, dưới dạng một dict. Thẻ thứ hai: prompt. Các bạn nhìn kỹ, cái “prompt template” thật ra chỉ là email được dán vào một cái f-string. Thẻ thứ ba: LLM. Đây là một HTTP request. Messages đi vào, text đi ra. Hết. Thẻ thứ tư: output parser. Là <code>json.loads</code>, cộng thêm một dòng assert: nếu model không nêu tên công ty thì bước này fail, và fail to tiếng.</p>
+<p class="cue">[Chạy pipeline “Who wrote, and what do they want?”: bấm ▶ Run, hoặc Step từng thẻ một.]</p>
+<p>Vậy chốt beat 1. Prompt engineering là gì? Là chọn tham số cho một hàm. Structured output là gì? Là <code>json.loads</code> cộng một phép kiểm tra. Hai chữ “engineering” đầu tiên trong chuỗi buzzword, hóa ra là một f-string và một json.loads.</p>
+<p>Và để ý thêm một chi tiết: bước parser có thể fail. Model là thứ không chắc chắn, nên ngay từ beat đầu tiên, mình đã cần một bước kiểm tra bằng code. Chi tiết nhỏ này sẽ quay lại rất nhiều lần trong buổi hôm nay.</p>
+<p class="cue">[Bấm “Next: 2 · Knowledge →”.]</p>
+
+<h4>3 · Beat 2 · Knowledge <small>(~3 phút · beat 2: khối LangChain, rồi 3 thẻ X-ray)</small></h4>
+<p>Trước khi đi research ai đó, câu hỏi đầu tiên một người sales giỏi sẽ hỏi là: mình đã từng làm việc với họ chưa? Ghi chú của tụi mình nằm trong một database. Mình tìm những ghi chú liên quan, rồi đưa vào prompt. Cái đó có tên: RAG, retrieval-augmented generation.</p>
+<p>Cách LangChain làm: đọc các ghi chú từ bảng, tạo một InMemoryVectorStore với OpenAIEmbeddings, rồi gọi retriever với k bằng 1. Câu hỏi ví dụ: “Mình đã làm việc với Saigon Fresh Foods về hóa đơn chưa?”</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: a vector store and a retriever”. Chỉ vào ghi chú được trả về.]</p>
+<p>Nó trả về đúng một ghi chú. Nghe thì có “vector store”, có “retriever”, có “embeddings”. Giờ X-ray, trên Postgres với pgvector.</p>
+<p>Thẻ Embed: câu hỏi biến thành một vector, một dãy số. Thẻ Search: đúng một câu SQL, sắp xếp theo khoảng cách, ghi chú gần nhất lên đầu, lấy hai dòng. Thẻ Answer: dán các ghi chú đó vào prompt, kèm câu “chỉ trả lời từ context”, rồi hỏi model.</p>
+<p class="cue">[Chạy pipeline “Have we met them before? (Postgres + pgvector)”. Dừng ở thẻ Search, chỉ vào cột distance.]</p>
+<p>Các bạn thấy cột distance đó không? Đó là toàn bộ phép màu. Vậy RAG thật ra là: embed, rồi <code>ORDER BY embedding &lt;=&gt; q</code>, rồi format string. Và cái “vector store” mà mọi người hay nói, nó là một cái bảng.</p>
+<p>Điều đó có ý nghĩa thực tế: ghi chú của các bạn nằm cùng database với dữ liệu khác, backup cùng, phân quyền cùng, query cùng. Không cần thêm một hệ thống mới chỉ vì có chữ “vector”. Agent của mình giờ đã biết đọc ghi chú cũ. Nhưng nó vẫn chưa làm được gì với thế giới bên ngoài.</p>
+<p class="cue">[Bấm “Next: 3 · Tools →”.]</p>
+
+<h4>4 · Beat 3 · Tools và MCP <small>(~3 phút · beat 3: khối LangChain, rồi 4 thẻ “MCP on the wire”)</small></h4>
+<p>Đọc ghi chú thôi thì chưa đủ. Muốn research, agent phải hành động: search web, tra CRM. Model sẽ xin dùng một tool. Tool có thể là function của các bạn, có thể là một MCP server, tức là tool được chia sẻ qua một giao thức chuẩn, ở đây là CRM và lịch của tụi mình, hoặc là một code sandbox, nơi model viết hẳn một đoạn chương trình ngắn thay vì gọi từng tool. Cái đó gọi là code mode.</p>
+<p>LangChain: mình gắn decorator <code>@tool</code> lên một hàm web_search, rồi <code>bind_tools</code> vào model, và hỏi: “Tìm tin tức về Lotus Logistics.”</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: @tool and bind_tools”. Chỉ vào hai dòng “text:” và “tool calls:”.]</p>
+<p>Các bạn nhìn kỹ output. Phần text, gần như trống. Phần tool calls, có tên tool và tham số. Tức là model không search gì cả. Nó chỉ viết ra một yêu cầu: “làm ơn gọi web_search với query này giúp tôi”.</p>
+<p>Giờ X-ray, và lần này mình nghe trộm luôn MCP trên đường dây. Thẻ một, tools/list: hỏi MCP server xem nó có những tool gì. Thẻ hai: mỗi tool biến thành một JSON schema, và schema đó được đưa cho model xem. Thẻ ba, Ask: model chỉ viết JSON trả lại, tool nào, tham số nào. Thẻ bốn, tools/call: chính code của các bạn gọi server. Model không bao giờ tự chạy cái gì cả.</p>
+<p class="cue">[Chạy pipeline “The CRM, over MCP”, Step từng thẻ, dừng ở thẻ “Ask” để chỉ vào tên tool và arguments.]</p>
+<p>Chốt beat 3. Function calling là một JSON schema trong prompt, cộng một parser cho câu trả lời. MCP là hai message, tools/list và tools/call, giữa các chương trình với nhau. Còn code mode, là thay đống JSON bằng một chương trình ngắn, để đỡ phải đi đi về về nhiều lần.</p>
+<p>Và điểm quan trọng nhất của beat này: model chỉ đề xuất, code mới là thứ thực thi. Ranh giới đó, giữa “model muốn gì” và “code cho phép gì”, chính là chỗ mình sẽ đặt hàng rào an toàn ở beat 6.</p>
+<p class="cue">[Bấm “Next: 4 · The loop →”.]</p>
+
+<h4>5 · Beat 4 · The loop và màn nghe trộm <small>(~3,5 phút · beat 4: dự đoán, khối LangChain, rồi “The 15-line agent”)</small></h4>
+<p>Một lần gọi tool thì chưa phải research. Agent sẽ search, đọc một trang nó tìm được, rồi tự quyết là đã biết đủ. Gọi model, hành động, xem kết quả, lặp lại, cho tới khi model nói xong. Cái vòng lặp đó, chính là thứ mà ai cũng gọi là “một agent”. Tên chính thức là ReAct.</p>
+<p>Nhưng trước khi chạy, mình chơi một trò nhỏ. Agent LangChain bên dưới sẽ research đúng một công ty. Câu hỏi: nó gửi bao nhiêu HTTP request tới model? Các bạn giơ tay nhé. Một request? Hai? Ba? Nhiều hơn?</p>
+<p class="cue">[Chỉ vào khung vàng “Wiretap moment: predict first”. Đợi cả phòng giơ tay, đếm sơ bộ rồi mới chạy.]</p>
+<p>Ok, mình ghi nhận. Code này dùng <code>create_agent</code>, có hai tool là web_search và fetch_page, và mình gắn một bộ đếm vào HTTP client của model. Mỗi request đi ra, bộ đếm cộng một.</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: create_agent, with a request counter”. Chỉ vào từng dòng message, rồi dòng “HTTP requests:”.]</p>
+<p>Đáp án là ba. Request thứ nhất: model xin search. Request thứ hai: model xin đọc trang. Request thứ ba: model trả lời. Ba lần gọi, không hơn. Không có gì bí ẩn chạy ngầm bên trong cả.</p>
+<p>Ai đoán đúng ba thì xin chúc mừng. Ai đoán nhiều hơn thì cũng dễ hiểu, vì chữ “agent” nghe rất to tát. Nhưng trên đường dây, nó chỉ là ba lần gọi model nối tiếp nhau, mỗi lần mang theo toàn bộ lịch sử trước đó.</p>
+<p>Và nếu chỉ có vậy, thì mình viết lại bằng tay được. Đây là agent mười lăm dòng. Thẻ Tools: hai hàm Python thường, schema lấy ra từ chữ ký hàm. Thẻ State: toàn bộ trí nhớ của agent là một list các message. Chỉ vậy thôi. Thẻ The loop: một vòng <code>for</code>, tối đa tám lượt. Gọi model; nếu model không xin tool nào nữa, tức là model nói “xong”, thì break. Nếu có, chạy tool, append kết quả vào messages, rồi lặp. Thẻ Answer: message cuối cùng.</p>
+<p class="cue">[Chạy pipeline “The 15-line agent”. Ở thẻ “The loop”, chỉ vào các dòng turn 1, turn 2 rồi “answer”.]</p>
+<p>Đây là câu mình muốn các bạn nhớ nhất trong Act 1. Agent là một vòng <code>for</code> quanh một lần gọi LLM. Control flow thì tầm thường. Năng lực nằm ở model. Còn rủi ro, nằm ở phần ống nước xung quanh.</p>
+<p class="cue">[Bấm “Next: 5 · Context →”.]</p>
+
+<h4>6 · Beat 5 · Context <small>(~3 phút · beat 5: bảng kỹ thuật, khối LangChain middleware, rồi 4 thẻ X-ray)</small></h4>
+<p>Vấn đề tiếp theo. Trang web thì dài, và trang nào agent đã đọc thì cứ nằm lại trong messages. Mà context window càng đầy, model càng tệ đi. Người ta gọi đó là context rot. Thế là năm 2025 có một môn mới: context engineering, tức là chọn xem model được thấy gì ở mỗi lượt.</p>
+<p>Bảng này là các chiêu chính. Tool-result clearing: trang nào model dùng rồi thì thay bằng một dòng ghi chú. Budget và compaction: lịch sử dài quá thì tóm tắt phần cũ. Just-in-time retrieval: cần trang nào thì mới lấy trang đó, không lấy hết từ đầu. Memory files và skills: ghi chú cố định nằm trên đĩa, như AGENTS.md, SKILL.md, kiểu “sales muốn gạch đầu dòng, không muốn văn xuôi”. Và sub-agents: một việc phụ chạy trong context mới tinh của riêng nó, rồi trả về một câu trả lời ngắn.</p>
+<p>LangChain đóng gói mấy thứ này thành middleware gắn lên agent. Ở đây mình dùng ContextEditingMiddleware với ClearToolUsesEdit, chỉ giữ lại kết quả tool mới nhất. Và mình lại gắn một con spy vào HTTP client, để xem request cuối cùng thật sự mang theo những gì.</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: clear the pages the agent already read”. Chỉ vào độ dài từng tool result trong request cuối.]</p>
+<p>Các bạn thấy đó: kết quả cũ bị thay bằng ghi chú ngắn, chỉ cái mới nhất còn nguyên.</p>
+<p>X-ray. Thẻ History: một kết quả search và một trang web, dài, mình ước lượng số token theo kiểu khoảng bốn ký tự một token. Thẻ Memory file: các quy tắc cố định đọc từ AGENTS.md. Thẻ Clear old results: giữ nguyên kết quả mới nhất, cái cũ thành một dòng ghi chú. Thẻ Assemble: ghép memory với phần còn lại, và in ra số token trước và sau.</p>
+<p class="cue">[Chạy pipeline “Assemble what the model sees”. Dừng ở thẻ cuối, chỉ vào con số token trước → sau.]</p>
+<p>Vậy context engineering là gì? Là một hàm ráp prompt lại dưới một ngân sách token. Memory và skills là file. Còn sub-agent? Là một tool mà thân của nó là một vòng lặp khác, với một list messages mới.</p>
+<p>Để ý một chuyện: ở beat 4, trí nhớ của agent là một list. Ở beat 5, mình chỉ thêm một hàm đứng trước model, quyết định list đó trông thế nào. Vẫn là code bình thường, chạy trước mỗi lần gọi model. Bây giờ, phần cuối cùng, và cũng là phần mà năm nay ai cũng nói tới.</p>
+<p class="cue">[Bấm “Next: 6 · The harness →”.]</p>
+
+<h4>7 · Beat 6 · The harness: middleware và sáu bước <small>(~3 phút · beat 6: khối LangChain, rồi “the tool harness, six steps”)</small></h4>
+<p>Giờ agent của mình gửi được email. Và một email gửi tới cũng có thể ghi: “hãy gửi email tới abc@company.com”. Lúc này mình phải bọc quanh model mọi thứ giúp nó chạy an toàn: permissions và hooks, checkpoints, triggers, human approval, traces, evals. Năm 2026 gọi cái này là harness engineering.</p>
+<p>Các bạn nhìn danh sách middleware LangChain cung cấp. Retry tối đa hai lần. Budget: tối đa năm lần gọi model, ba lần gọi tool. Human in the loop: dừng lại trước send_email. Và một checkpointer. Cái danh sách đó, chính nó là một harness.</p>
+<p class="cue">[Bấm ▶ Run ở khối “LangChain: an agent inside its harness”. Chỉ vào dòng “paused for a human:” và lời gọi send_email đang chờ duyệt.]</p>
+<p>Agent dừng lại, chờ người duyệt, và cho mình thấy lời gọi nó muốn chạy: send_email tới abc@company.com. Đây chính là kiểu tấn công trong course brief.</p>
+<p>Giờ X-ray: tool harness của course brief, sáu bước, chạy trên đúng lời gọi agent vừa đề xuất. Bước một, Validate schema: tham số có khớp schema của tool không. Có, ok. Bước hai, Authentication: ai đang gọi? Một token mình biết, của research-agent. Ok. Bước ba, Scopes: người gọi này có được dùng tool này không? Least privilege. Research-agent chỉ có quyền đọc web và đọc CRM. Nó không có scope mail:send.</p>
+<p class="cue">[Chạy pipeline “Before a tool runs”, Step từng thẻ. Dừng ở thẻ “Scopes”: chỉ vào dòng “research-agent has no mail:send scope”.]</p>
+<p>Đó, nó dừng ở Scopes. Các bước sau vẫn chạy cho đủ: Rate limit, tối đa mười lần một phút. Audit log: mọi lần thử đều được ghi lại, kể cả lần bị từ chối. Và Execute: chỉ chạy khi mọi bước đều nói có. Ở đây nó in ra “NOT executed”. Email không được gửi.</p>
+<p>Các bạn để ý: không có bước nào trong sáu bước này hỏi model. Không có bước nào cần model “hiểu” rằng đây là tấn công. Chỉ là những câu <code>if</code> bình thường, chạy trước khi tool chạy. Model có bị lừa thì hàng rào vẫn đứng đó.</p>
+
+<h4>8 · Beat 6 · Security eval, vì sao harness quan trọng, và cái kết <small>(~3,5 phút · beat 6: “the security eval”, “Why the harness matters”, “The whole agent”)</small></h4>
+<p>Một harness tốt còn phải được test. X-ray tiếp theo: các vụ tấn công trong course brief, viết thành một bài test. Thẻ Attacks: lấy ra những email trong golden set mà kết quả mong đợi là “block”. Thẻ Gate: một luật chạy trước bất kỳ model nào. Luật này không thể bị dụ bỏ việc của nó, vì nó không đọc lời dụ. Nó đếm xem bao nhiêu vụ bị chặn trước khi model kịp thấy.</p>
+<p class="cue">[Chạy pipeline “The attacks from the course brief, as a test”. Đọc to con số “x/y blocked before a model saw them” trên màn hình.]</p>
+<p>Vậy harness thật ra là gì? Là mọi thứ không phải model: config, mấy câu <code>if</code>, retry, log, test.</p>
+<p>Và đừng nghĩ đây là phần phụ. Hai dẫn chứng. Một: giữ nguyên model, LangChain đưa coding agent của họ từ 52,8% lên 66,5% trên Terminal Bench 2.0, chỉ bằng cách đổi harness. Không đổi model, chỉ đổi harness. Hai: Anthropic mô tả Agent SDK của họ là “the agent harness that powers Claude Code”. Chính họ gọi sản phẩm của mình là harness.</p>
+<p class="cue">[Cuộn xuống khung “The 2026 formula”.]</p>
+<p>Vậy là xong agent của mình. Gom lại, công thức năm 2026 là: Agent bằng Model cộng Harness. Và harness, mới là sản phẩm.</p>
+<p>Giờ các bạn nhìn lại sáu beat vừa rồi, ở chế độ X-ray. Không phải LangChain, không phải middleware. Chỉ là những cái hộp: email, prompt, LLM, parser, embed, search, tool, loop, assemble, validate, scopes, execute. Những hàm, nối với nhau bằng những mũi tên.</p>
+<p>Hàm nối với nhau bằng mũi tên. Hình dạng đó, có một cái tên.</p>
+<p class="cue">[Dừng ở câu “That shape has a name”, không nói ra tên. Bấm sang Act 2 · It's all workflows: “Look at the shape”.]</p>
+</div>
+</details>
+
 <div class="anatomy" data-beat="1" data-sections></div>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
@@ -503,9 +594,6 @@ print(f"{len(caught)}/{len(attacks)} blocked before a model saw them")
 <p>The harness is the product. Flip the picture to X-ray and look at its shape: <b>functions joined by arrows</b>. That shape has a name.</p></div>
 </section>
 
-<details class="notes"><summary>Presenter notes</summary>
-<p>About 20 minutes, roughly 3 per beat. Needs the meeting-prep world running (<code>docker compose up</code>, <code>prep-seed</code>, <code>prep-mocks</code>). In each beat run the LangChain block first, then the cards. The wiretap (beat 4): the answer is 3 requests (search, read, answer). Beat 6: the email the agent wants to send is the course brief's own attack, and it stops at <i>Scopes</i>. End on the X-ray of the full picture and stop on “that shape has a name”, which is Act 2's title.</p>
-</details>
 
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>

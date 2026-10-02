@@ -17,6 +17,57 @@
 <h1>Look at the shape</h1>
 <p class="lead">Act 1 ended on the X-ray: functions joined by arrows. Now we line up everything we built, ask one question about it, and redraw a popular seven-agent design with the answer.</p>
 
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 12 phút</summary>
+<div class="speech">
+<h4>1 · Cùng một hình dạng <small>(~3 phút · tab "Same shape")</small></h4>
+<p>Ở cuối Act 1, mình dừng lại ở tấm X-ray. Bỏ hết tên gọi đi, bên trong chỉ còn lại các function nối với nhau bằng mũi tên. Bây giờ mình làm một việc rất đơn giản. Mình xếp tất cả những gì mình đã build lên cạnh nhau. Mình hỏi đúng một câu. Rồi mình dùng câu trả lời đó để vẽ lại một thiết kế bảy agent rất phổ biến.</p>
+<p class="cue">[Đang ở tab "Same shape". Để năm sơ đồ hiện trên màn hình vài giây, chưa nói gì.]</p>
+<p>Các bạn nhìn năm sơ đồ này. Cái đầu tiên là RAG: question, embed, retrieve, rồi answer. Thẳng một đường. Cái thứ hai là một router: email đi vào triage. Nếu là lead thì đi research rồi viết brief. Nếu không phải lead thì skip. Cái thứ ba là ba check chạy song song: một câu reply đi qua tone, policy và PII cùng lúc, rồi merge lại thành một verdict. Cái thứ tư là agent loop: question đi vào LLM, LLM gọi tool, kết quả quay về LLM, và khi xong thì ra answer. Cái cuối cùng là harness: trigger, permissions, agent loop, có checkpoint để lưu lại, có approval, và chỉ khi có chữ "yes" thì mới send email.</p>
+<p>Năm hệ thống, năm cái tên. Người ta gọi là chain, là pipeline, là agent, là harness. Nhưng nhìn xuống bên dưới thì sao? Chỉ có năm chữ thôi: steps, edges, branches, loops, và state. Các bước. Các cạnh nối giữa các bước. Các nhánh rẽ. Các vòng lặp. Và trạng thái được chuyển đi dọc đường.</p>
+<p>Các bạn để ý cái legend bên dưới. Ô thường là code step. Ô màu là LLM step. Có ô là tool. Và có một loại edge đặc biệt: edge mà model tự chọn. Các bạn nhớ giúp mình loại edge đó, vì cả Act này xoay quanh nó.</p>
+<p>Tới đây chắc có bạn nghĩ: "Thì anh làm workflow engine, anh nói cái gì cũng là workflow là phải rồi." Công bằng. Vậy mình hỏi chính phe agent. LangGraph, công cụ của chính thế giới agent, bắt các bạn viết cái triage router này dưới dạng một graph. Và khi các bạn hỏi nó structure của nó là gì, nó trả lời bằng nodes và edges.</p>
+<p class="cue">[Kéo xuống thẻ "LangGraph: the triage router is a graph", bấm Run.]</p>
+<p>Code này có ba node: triage, research, và skip. Triage gọi model đúng một lần, hỏi email này có phải lead không. Sau đó là một dòng add_conditional_edges: nếu is_lead thì sang research, không thì sang skip. Mình chạy hai email: lotus-intro và newsletter. Các bạn thấy lotus-intro đi vào nhánh research, còn newsletter đi vào nhánh skip. Và phần cuối mới là phần quan trọng. LangGraph tự in ra danh sách edges của chính nó, và có những edge được đánh dấu là branch. Đó là một workflow. Chính framework agent tự khai ra như vậy.</p>
+<p>Vậy chốt lại tab này. RAG, router, parallel checks, agent loop, harness: tất cả đều là workflow. Chúng chỉ khác nhau đúng một điểm. Và điểm đó nằm ở tab tiếp theo.</p>
+<p class="cue">[Bấm "Next: 2 · Who decides the next step? →".]</p>
+
+<h4>2 · Ai quyết định bước tiếp theo? <small>(~3,5 phút · tab "Who decides the next step?")</small></h4>
+<p>Câu hỏi này không phải mình nghĩ ra. Anthropic, trong bài "Building effective agents", vạch ranh giới bằng đúng một câu hỏi. Mình đọc gần như nguyên văn. Workflows là những hệ thống mà LLM và tool được điều phối qua những code path định sẵn. Agents là những hệ thống mà LLM tự điều hướng quy trình và cách dùng tool của chính nó.</p>
+<p>Các bạn nhìn hai sơ đồ trên màn hình. Cùng một email, chạy hai lần. Bên trái: code chọn đường. Triage xong là một câu if. Nếu là lead thì search và read, còn không thì skip, rồi viết brief. Bên phải: model chọn đường. Email đi vào LLM, và ở mỗi lượt, model tự hỏi: giờ mình web search? Đọc một trang? Tra CRM? Hay là xong rồi? Mấy dấu hỏi trên edge chính là những chỗ model đang quyết định. Và nó còn lặp lại trên kết quả, lượt này qua lượt khác.</p>
+<p>Đừng tin mình. Mình chạy email của Linh theo cả hai cách, rồi mình đếm.</p>
+<p class="cue">[Kéo xuống pipeline "Workflow: code picks the path", chạy lần lượt Triage → Route and research → Brief.]</p>
+<p>Bước một là triage: đúng một LLM call, hỏi đây có phải lead không, và là công ty nào. Bước hai: một câu if, rồi một công thức cố định. Search tên công ty kèm chữ "news", đọc kết quả đầu tiên. Không ai hỏi model là nên làm gì tiếp. Bước ba: thêm một LLM call nữa để viết brief. Dòng cuối in ra số model calls, và "path picked by: code".</p>
+<p class="cue">[Chạy pipeline "Agent: the model picks the path": Tools → The loop → Answer.]</p>
+<p>Giờ sang bên agent. Mình đưa cho model ba tool: web_search, fetch_page, và crm_lookup. Rồi vào vòng lặp. Mỗi lượt, model hoặc chọn một tool, hoặc nói là xong rồi. Các bạn nhìn từng dòng "model picked" in ra. Đó chính là model đang chọn edge. Và ở bước cuối, mình hỏi một câu hơi khó chịu: model nói xong rồi, nhưng nó có tra CRM không? Các bạn đọc dòng "CRM checked". Đúng hay sai là do model quyết, không phải do mình.</p>
+<p>Khi chạy trên mock, con số là 2 model calls bên workflow, so với 3 bên agent. Hôm nay site chạy model thật, nên con số có thể khác. Các bạn cứ đọc đúng cái mà nó in ra. Nhưng cái hình thì không đổi: bên trái code chọn đường, bên phải model chọn đường.</p>
+<p>Và đây là điểm mình muốn các bạn mang về. Cả hai đều là workflow. Đều là steps và edges. Khác biệt thật sự là ai chọn từng edge: code, hay model. Đó là thuộc tính của từng edge, chứ không phải của cả hệ thống. Và hầu hết hệ thống thật đều trộn cả hai. Nên lần tới có ai hỏi "cái này là workflow hay agent?", câu hỏi đúng hơn là: edge nào do model chọn?</p>
+<p class="cue">[Bấm "Next: 3 · Seven agents, redrawn →".]</p>
+
+<h4>3 · Vẽ lại bảy agent <small>(~3 phút · tab "Seven agents, redrawn")</small></h4>
+<p>Giờ mình đem câu hỏi đó áp lên một thiết kế thật. Có một course project khá phổ biến build đúng cái trợ lý này, trợ lý chuẩn bị meeting brief, dưới dạng bảy agent: Email, Web Research, Company Info, Calendar, Memory, Report, và Human Approval. Sơ đồ bên trái là đúng như spec.</p>
+<p>Mình hỏi từng ô đúng câu hỏi của tab trước: ai chọn bước tiếp theo?</p>
+<p class="cue">[Chỉ vào bảng ba cột, đọc từng dòng.]</p>
+<p>Email Agent: thật ra là một trigger cộng một LLM call có cấu trúc. Trong bản của mình, đó là một webhook và bước triage. Web Research Agent: cái này open-ended thật sự. Tìm gì, đọc gì, khi nào biết đủ, không ai viết trước được. Đây là agent thật, và trong bản của mình là ba agent chạy song song. Company Info Agent: "lấy thông tin từ DB". Đó là một câu SQL, gọi qua MCP. Calendar Agent: một API, lọc theo domain của người gửi. Một tool, cũng qua MCP. Memory Agent: merge, deduplicate, ghi nhớ. Đó là code cộng pgvector. Report Agent: một LLM call với một template. Đó là bước brief. Và Human Approval Agent: dừng lại và chờ một chữ "yes". Đó là một gate: một bản nháp và một đường link.</p>
+<p>Kết quả: bảy agent trên giấy, nhưng chỉ có một agent thật. Các bạn nhìn sơ đồ bên phải: triage, identify, rồi research ×3, calendar, CRM, memory cùng chạy ra từ một điểm, gom lại ở brief, qua check, rồi tới approval.</p>
+<p>Mình nói rõ: đây không phải để chê ai. Chính đề bài đó yêu cầu tool harness, eval harness, security harness. Và đó chính xác là những gì một workflow cho các bạn. Còn cái phần duy nhất open-ended, là research, lại chính là chỗ multi-agent đáng tiền. Một orchestrator chia việc research, các worker chạy song song, một step merge kết quả. Vẽ ra thì nó là một workflow mà các node là agent. Handoff là một edge do model chọn. A2A là một edge giữa các process.</p>
+<p class="cue">[Kéo xuống pipeline "Three research agents, in parallel", chạy Plan → Workers → Merge.]</p>
+<p>Plan: chia research làm ba hướng. Công ty làm gì và bán gì, tin tức, và đội ngũ. Ở đây code chia, nhưng muốn thì có thể thay bằng một LLM call. Workers: cùng một agent khoảng mười lăm dòng, chạy ba lần cùng lúc, mỗi worker tối đa năm lượt. Các bạn xem mỗi hướng tốn bao nhiêu model calls, và tổng thời gian khi ba agent chạy cạnh nhau. Merge: một step bình thường, ghép những gì chúng tìm được.</p>
+<p>Vậy multi-agent là gì? Là một workflow mà node là agent. Phần khó không nằm ở các agent. Phần khó là wiring, là chạy song song, là context truyền giữa chúng. Và đó là việc của một engine.</p>
+<p class="cue">[Bấm "Next: 4 · The map →".]</p>
+
+<h4>4 · Tấm bản đồ <small>(~2,5 phút · tab "The map")</small></h4>
+<p>Tới đây có thể các bạn đang hình dung một đường thẳng: bên trái là workflow, bên phải là agent. Không phải vậy. Nó là một tấm bản đồ, có hai trục.</p>
+<p>Trục ngang: structure cố định tới mức nào. Bên trái là cố định trong code, bên phải là model chọn từng bước. Trục dọc: bao nhiêu phần việc là LLM call. Dưới là code thuần, trên là LLM calls. Code thuần nằm góc dưới bên trái, như một nightly ETL job. Coding agent nằm góc trên bên phải. Còn phần lớn những gì đang ship thật thì nằm ở giữa. Đó là hybrid.</p>
+<p>Có bốn kiểu hybrid hay gặp. Workflow with an agent node: một pipeline cố định, trong đó một bước là một agent nhỏ. Agent with workflow tools: model chọn giữa các tool, mà mỗi tool là một pipeline cố định. Orchestrator–workers: model chia việc, các worker chạy song song, rồi merge, đúng như mình vừa chạy. Và evaluator–optimizer: generate, check, retry, một vòng lặp với model làm giám khảo.</p>
+<p>Giờ tới lượt các bạn. Bên dưới bản đồ có sáu sản phẩm. Mình sẽ bấm từng cái. Nhưng trước mỗi lần bấm, các bạn đoán giúp mình: nó rơi vào đâu?</p>
+<p class="cue">[Bài tập với khán giả: chỉ làm 3–4 sản phẩm, không làm cả sáu. Gợi ý: RAG chatbot, our meeting-prep bot, Deep Research, Claude Code. Hỏi trước, chờ khán giả trả lời, rồi mới bấm.]</p>
+<p>RAG chatbot: các bạn đoán ở đâu? … Nó nằm trong vùng WORKFLOWS. Structure cố định, có LLM call. Our meeting-prep bot, chính cái mình đang build: ở đâu? … Nó nằm ở mép vùng workflow, sát chỗ "workflow with an agent node". Hợp lý, vì nó là một workflow có một agent team bên trong. Deep Research: … Nó lên vùng AGENTS, cạnh orchestrator–workers. Còn Claude Code: … góc trên bên phải, model chọn gần như mọi edge.</p>
+<p>Không chỉ mình nhìn thấy vậy. HumanLayer, trong "12-factor agents", nói rằng agent chạy production phần lớn là code deterministic, rắc thêm vài bước LLM. Nên lời khuyên của họ là: own your control flow. Và chính LangChain cũng đóng khung như vậy: hệ thống production kết hợp cả workflow lẫn agent.</p>
+<p class="cue">[Trước buổi nói: kiểm tra lại câu trích 12-factor và LangChain.]</p>
+<p>Vậy mọi điểm trên bản đồ đều là workflow. Câu hỏi duy nhất còn lại là: khi nào các bạn muốn để model chọn edge? Đó là Act 3: "Agents are real. Use them where they pay."</p>
+</div>
+</details>
+
 <div class="tabs">
 
   <div class="tab" data-name="Same shape" data-say="Five systems with five names. Underneath, the same five words: <b>steps, edges, branches, loops, state</b>.">
@@ -363,10 +414,6 @@ print(merged)
 <div class="callout navy"><b class="t">Others reached the same view</b><p>HumanLayer's <a href="https://github.com/humanlayer/12-factor-agents" target="_blank" rel="noopener">12-factor agents</a>: production agents are mostly deterministic code with LLM steps sprinkled in, so <b>own your control flow</b>. LangChain's own framing: production systems combine workflows and agents.</p></div>
 <div class="callout key"><b class="t">So</b><p>Every point on the map is a workflow. The only question left is: <b>when do you want the model to pick the edges?</b> That's Act 3.</p></div>
 </section>
-
-<details class="notes"><summary>Presenter notes</summary>
-<p>About 10 minutes. Tab 1: let the five graphs sit for a moment, then say the five words. Tab 2: run both pipelines; the numbers are 2 model calls vs 3, and code vs model picking. Credit Anthropic for the question. Tab 3: do the room exercise with 3–4 products, not all six. Verify the 12-factor and LangChain wording before the talk.</p>
-</details>
 
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>

@@ -16,6 +16,38 @@
 <h1>Every buzzword has a place in the workflow</h1>
 <p class="lead">The chain from the start of the talk, decoded. Each word is a step, an edge, or something around them.</p>
 
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 4 phút</summary>
+<div class="speech">
+<h4>1 · Bảng giải mã buzzword <small>(~2 phút · bảng "you hear / it is, in the workflow")</small></h4>
+<p>Các bạn còn nhớ lúc mở đầu không? Mình đưa ra một chuỗi buzzword dài, chữ nào nghe cũng như một thứ hoàn toàn mới. Giờ mình giải mã từng chữ một. Mỗi chữ chỉ là một step, một edge, hoặc một thứ bao quanh chúng.</p>
+<p class="cue">[Chỉ lần lượt từng dòng của bảng, đọc cột giữa.]</p>
+<p>Prompt engineering? Đó là arguments của một step. Structured output? Một bước parse, và khi sai thì nó phải báo lỗi to rõ. RAG? Retrieve, dán vào, rồi gọi model. Function calling và MCP? Một step mà model xin được chạy, và một protocol để với tới nó.</p>
+<p>Agent? Một vòng lặp mà model chọn edge tiếp theo. Context engineering, memory, skills? Đều là cái step lắp ráp prompt. Tất cả những thứ này mình đã thấy ở Act 1.</p>
+<p>Sub-agent, multi-agent? Một node mà bản thân nó là một agent, hoặc nhiều agent chạy song song rồi gộp lại. Handoff, A2A? Một edge do model chọn, và một edge đi xuyên qua các process. Cái này ở Act 2, tab 3.</p>
+<p>Harness engineering và guardrails? Là gates, permissions, retries, traces, evals bao quanh các step. Human-in-the-loop? Một cái gate: một bản nháp và một đường link. Durable, background agents? Một workflow có trigger và state được lưu lại. Hai cái này các bạn đã thấy chạy live ở Act 5.</p>
+<p>Và agent evals? Một golden set làm cổng chặn deploy, như ở Act 5 và Act 6.</p>
+<p>Các bạn thấy không, không có chữ nào nằm ngoài workflow cả.</p>
+<p>Lần sau, khi có ai đó giới thiệu với các bạn một buzzword mới, các bạn chỉ cần hỏi lại một câu: cái này là step, là edge, hay là thứ bao quanh chúng? Và trong đó, ai chọn edge tiếp theo: code hay model? Trả lời được câu đó, các bạn sẽ hiểu hệ thống đó đang làm gì thật sự.</p>
+
+<h4>2 · Câu chốt <small>(~45 giây · callout "The last line")</small></h4>
+<p class="cue">[Dừng lại ở callout "The last line". Đọc chậm.]</p>
+<p>Nếu hôm nay các bạn chỉ mang về được một câu, thì mình mong là câu này.</p>
+<p>Đừng hỏi hệ thống cần bao nhiêu agent. Hãy hỏi hệ thống cần workflow nào, và những step nào model thật sự phải quyết định.</p>
+<p>Với trợ lý meeting brief của mình, câu trả lời là: email đi vào, research, viết brief, rồi một con người duyệt. Model chỉ quyết ở những chỗ cần nó. Phần còn lại là code.</p>
+<p class="cue">[Im lặng hai, ba giây trước khi sang phần tiếp theo.]</p>
+
+<h4>3 · Mang về nhà <small>(~1 phút · bảng "Take it home")</small></h4>
+<p>Cuối cùng, đây là những thứ các bạn có thể mang về.</p>
+<p>Một là checklist ở Act 3: đường đi open-ended, giá trị mỗi lần chạy cao, dễ kiểm tra, chậm cũng được, và blast radius nhỏ. Đủ những điều đó thì hãy dùng agent.</p>
+<p>Hai là engine list ở Act 5, tab 1: những thứ mà bất kỳ engine nào cũng phải cho các bạn, dù các bạn dùng OperonX, LangGraph hay tự viết.</p>
+<p>Ba là code: meeting-prep-world, meeting-prep-operonx và meeting-prep-langgraph. Cùng một hệ thống được build hai lần, kèm theo golden set của nó.</p>
+<p>Và bốn là chính trang web này. Mọi block trên site đều chạy được. Các bạn chỉ cần gõ <code>uv run python -m runner.server</code>.</p>
+<p class="cue">[Chỉ vào lệnh trong bảng.]</p>
+<p>Cảm ơn các bạn đã nghe. Giờ mình mời các bạn đặt câu hỏi.</p>
+<p class="cue">[Chuyển sang Q&amp;A.]</p>
+</div>
+</details>
+
 <table>
   <tr><th>you hear</th><th>it is, in the workflow</th><th>where we saw it</th></tr>
   <tr><td>prompt engineering</td><td>a step's arguments</td><td>Act 1 · beat 1</td></tr>

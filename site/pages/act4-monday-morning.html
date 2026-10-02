@@ -16,6 +16,67 @@
 <p class="kicker">Act 4 · Monday morning</p>
 <h1>The agent meets the inbox</h1>
 <p class="lead">The demo worked on Friday. On Monday, 50 emails arrive at 8 am. Some are attacks, the search API is slow, the provider has a rate limit, and nobody can say why a brief says what it says.</p>
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 10 phút</summary>
+<div class="speech">
+<h4>1 · Thứ Hai, 8 giờ sáng <small>(~1 phút · mở đầu trang)</small></h4>
+<p>Các bạn còn nhớ con agent mình build ở Act 1 không? Chiều thứ Sáu, mình demo cho sếp. Nó chạy ngon. Đọc email, đi research, viết brief, ai cũng gật gù.</p>
+<p>Rồi sáng thứ Hai tới. 8 giờ sáng, 50 email đổ vào inbox cùng lúc. Trong đó có vài email là tấn công. Cái search API hôm nay chậm. Provider thì có rate limit. Và khi một cái brief nói sai, không ai trả lời được câu: tại sao nó lại nói vậy?</p>
+<p>Act này tên là "Monday morning". Mình sẽ không nói lý thuyết. Mình sẽ phá con agent đó, ngay tại đây, từng thẻ một, chạy thật với inbox thật, web thật, và model thật.</p>
+<p class="cue">[Đang ở tab "Break it". Mở sẵn Mailpit (http://127.0.0.1:8025) ở cửa sổ bên cạnh. Chỉ vào sơ đồ: 50 emails → for email in inbox → agent(email) → search · read · send → brief.]</p>
+
+<h4>2 · Thẻ 1: Một email ra lệnh <small>(~2 phút · tab "Break it", thẻ ✉)</small></h4>
+<p>Các bạn nhìn sơ đồ này. Đây là con agent naive: một vòng for chạy qua inbox, mỗi email gọi agent một lần, và agent được cầm mọi tool. Search, read, và lần này mình cho thêm một tool nữa: <code>send_email</code>. Không có harness gì hết. Mười lăm dòng code.</p>
+<p>Thẻ đầu tiên: một email ra lệnh. Đây chính là kiểu tấn công mà đề bài khóa học đã nêu. Một email gửi vào inbox sales, nhưng nội dung của nó không phải là hỏi mua hàng. Nó ra lệnh cho agent. Và agent thì đang cầm tool gửi email.</p>
+<p>Các bạn đoán xem chuyện gì xảy ra?</p>
+<p class="cue">[Bấm Step ở pipeline "Monday, 8 am" để chạy thẻ "An email gives orders". Chờ dòng ✗ màu đỏ.]</p>
+<p>Đây. Dấu gạch chéo đỏ: email đã được gửi đi. Vì sao? Vì có một email bảo nó làm vậy. Không có ai hack server, không có ai lấy được mật khẩu. Chỉ là một đoạn văn bản, và model làm theo.</p>
+<p class="cue">[Chuyển sang Mailpit, mở email vừa thật sự được gửi tới abc@company.com. Để khán giả nhìn vài giây.]</p>
+<p>Đây không phải là log giả lập. Email này thật sự đã đi ra, tới abc@company.com. Nếu đây là production, thì nó đã rời khỏi công ty rồi.</p>
+
+<h4>3 · Thẻ 2: Một trang web ra lệnh <small>(~1 phút · thẻ ⚠)</small></h4>
+<p>Được rồi, các bạn sẽ nói: thế thì mình không cho agent đọc email lạ nữa. Nhưng agent còn phải đi đọc web. Thẻ thứ hai: một trang web ra lệnh.</p>
+<p>Ở đây mình làm đúng cái việc mà rất nhiều code ngoài kia đang làm: tải trang web của Red River Textiles về, lấy nguyên cái HTML thô, rồi dán thẳng vào prompt để viết brief.</p>
+<p class="cue">[Bấm Step để chạy thẻ "A page gives orders".]</p>
+<p>Các bạn xem brief bây giờ chứa gì. Trang web đó có giấu sẵn chỉ dẫn bên trong, và vì mình dán nguyên trang thô, model đã ngoan ngoãn đưa nó vào brief. Điều đáng sợ là cái brief nhìn vẫn rất ổn. Không ai để ý cả.</p>
+
+<h4>4 · Thẻ 3: Một lần search chậm <small>(~1 phút · thẻ ⏱)</small></h4>
+<p>Thẻ thứ ba không liên quan gì tới security. Chỉ là một ngày bình thường. Inbox có ba công ty: Lotus Logistics, Halong Robotics, Mekong Microfinance. Riêng lần search cho Halong Robotics bị chậm, ba giây. Code đặt timeout một giây, và không có gì xử lý timeout cả.</p>
+<p class="cue">[Bấm Step để chạy thẻ "A slow search".]</p>
+<p>Batch sập ngay ở email số hai. Xong được một công ty. Mất hai email. Một cái call chậm, và cả batch chết theo. Đó là kiểu lỗi "total": hoặc mọi thứ chạy, hoặc không có gì chạy.</p>
+
+<h4>5 · Thẻ 4: JSON lắm lời <small>(~1,5 phút · thẻ { })</small></h4>
+<p>Thẻ thứ tư là cái mình thích nhất, vì nó rất đời thường. Mình hỏi model: email này có phải lead không, trả lời bằng JSON. Model trả lời: "Sure! Here is the JSON you asked for", rồi mới tới cái JSON.</p>
+<p>Code parse thì viết kiểu "an toàn": parse lỗi thì trả về <code>None</code>. Mà <code>None</code> thì đọc ra thành gì?</p>
+<p class="cue">[Bấm Step để chạy thẻ "Chatty JSON".]</p>
+<p><code>is_lead</code> bằng False. Email của Linh, một lead thật, bị xếp vào "không phải lead". Và không có gì báo cả. Không exception, không log, không ai biết. Lead cứ thế biến mất.</p>
+<p>Và mình kể các bạn nghe một chuyện có thật từ tuần này. Khi mình chuyển cả site sang chạy với model in-house, model đó có thói quen bọc JSON trong code fence, kiểu ba dấu backtick rồi chữ json. Thế là đoạn code nào gọi thẳng <code>json.loads</code> lên câu trả lời đều gãy. Câu hỏi là: đây là lỗi của model, hay là việc của harness? Mình nghĩ là việc của harness. Router của mình bây giờ tự gỡ cái fence ra khi câu trả lời chỉ là một khối code. Sửa một chỗ, mọi bước đều được hưởng. Đó là chính cái điểm của Act này.</p>
+
+<h4>6 · Thẻ 5 và 6: 50 cùng lúc, và "tại sao nó nói vậy?" <small>(~1,5 phút · thẻ ▤ và thẻ ?)</small></h4>
+<p>Thẻ thứ năm: 50 email cùng lúc. Provider chỉ cho phép 10 request một lúc. Nhưng không ai nói điều đó cho vòng lặp cả. Vòng lặp thì cứ bắn hết 50.</p>
+<p class="cue">[Bấm Step để chạy thẻ "50 at once".]</p>
+<p>40 trên 50 call bị từ chối với lỗi 429, Too Many Requests. Bốn phần năm công việc buổi sáng, bay mất.</p>
+<p>Và thẻ cuối cùng. Một cái brief đã được gửi đi với một fact sai. Sếp hỏi: model đã nhìn thấy gì mà nói vậy? Các bạn mở log ra xem…</p>
+<p class="cue">[Bấm Step để chạy thẻ "Why did it say that?".]</p>
+<p>Số bước được ghi lại cho run đó: không. Không có input, không có output, không có thời gian. Vì chẳng ai viết trace cả.</p>
+<p class="cue">[Chỉ vào callout vàng "Every one of these is silent or total".]</p>
+<p>Các bạn nhìn lại cả sáu thẻ. Email của kẻ tấn công đã được gửi. Brief bị đầu độc nhưng nhìn vẫn ổn. Một timeout làm mất hai email. Một lead biến mất thành chữ "không". Bốn mươi call bị từ chối. Và không ai giải thích được chuyện gì. Mỗi lỗi hoặc là im lặng, hoặc là sập toàn bộ. Không có lỗi nào lịch sự báo cho mình biết cả.</p>
+
+<h4>7 · Tự vá bằng tay: tảng băng chìm <small>(~1,5 phút · tab "Harden it by hand")</small></h4>
+<p class="cue">[Bấm "Next: 2 · Harden it by hand →" hoặc chuyển sang tab "Harden it by hand".]</p>
+<p>Tin tốt là: mỗi vết thương đều đã có cách chữa, ai cũng biết. Email ra lệnh: đặt một cái gate trước mọi model, và tool thì cấp theo least privilege. Trang web ra lệnh: đọc trang như một người nhìn thấy nó, và kiểm tra lại brief. Timeout: có timeout, có retry, và lỗi là một giá trị chứ không phải một vụ nổ. JSON lắm lời: parse thì phải fail cho to, không bao giờ âm thầm trả về <code>None</code>. 50 cùng lúc: giới hạn concurrency, có backoff. "Tại sao nó nói vậy": một trace cho mỗi run, mỗi bước. "Prompt mới có tốt hơn không": một golden set, và một cái gate. Và cuối cùng, một con người phải nói "đồng ý": một bản nháp, một đường link, và một lần chạy thứ hai.</p>
+<p>Các bạn để ý cột bên phải. Mười lăm dòng, mười lăm, hai mươi, mười… Cộng lại, 15 dòng thành 150 dòng. Và 135 dòng mới đó là y hệt nhau ở mọi team. Team nào cũng tự viết lại đúng những dòng đó.</p>
+<p>Và các bạn thấy không, không có cách chữa nào liên quan tới model cả. Không có cái nào là "đổi sang model xịn hơn". Cái vòng lặp agent chỉ là phần nổi của tảng băng. Phần chìm bên dưới là một <b>execution system</b>: timeout, retry, lỗi là giá trị, parallelism có giới hạn, gate, trace, eval, approval, durable state.</p>
+<p>Và cái danh sách đó có một cái tên. Nó gọi là <b>workflow engine</b>. Bạn nào đang dùng LangGraph thì đã có sẵn một nửa rồi, vì LangGraph cũng là một workflow engine. Và đó chính là điểm mình muốn nói.</p>
+
+<h4>8 · Cả ngành cũng đã đi tới cùng kết luận <small>(~1,5 phút · tab "The industry agrees")</small></h4>
+<p class="cue">[Bấm "Next: 3 · The industry agrees →" hoặc chuyển sang tab "The industry agrees". Trước buổi nói, kiểm tra lại câu chữ các khẳng định trong bảng này với nguồn gốc của chúng.]</p>
+<p>Không chỉ mình nghĩ vậy. Những team đang build agent framework cũng đâm vào đúng tảng băng đó, và câu trả lời của họ giống hệt: agent chạy bên trong workflow engine.</p>
+<p>Microsoft Agent Framework, cái kế nhiệm AutoGen và Semantic Kernel, được xây quanh workflow dạng graph. OpenAI Agents SDK: phần durable execution là do Temporal, Restate hoặc DBOS lo ở bên dưới. OpenTelemetry: bộ convention cho GenAI trace agent như một workflow gồm các bước. LangGraph, công cụ được giới agent yêu thích nhất, thì từ đầu tới giờ vẫn luôn là một workflow engine.</p>
+<p>Và cái thú vị nhất: OpenAI đang cho nghỉ hưu cái canvas trực quan của Agent Builder, ngày 30 tháng 11 năm 2026. Nhưng các bạn để ý: workflow không biến mất. Nó chỉ quay về lại trong code.</p>
+<p>Vậy thì câu hỏi tiếp theo rất tự nhiên. Một engine thì phải làm được những gì? Nên dùng engine nào? Và tại sao team mình lại tự build một cái riêng? Đó là Act 5: "What runs the workflow".</p>
+<p class="cue">[Bấm "Next →" ở cuối trang để sang Act 5 · What runs the workflow.]</p>
+</div>
+</details>
 
 <div class="tabs">
   <div class="tab" data-name="Break it" data-say="Six ways a hand-written agent fails at 8 am. Each one is <b>silent</b> or <b>total</b>.">
@@ -147,10 +208,6 @@ print("✗ steps recorded for that run:", len(trace), "— no inputs, no outputs
 <p>The teams building agent frameworks hit the same iceberg, and their answer is the same: <b>agents run inside workflow engines</b>. Even OpenAI retiring its visual Agent Builder points the same way: the workflow doesn't go away, it moves back into code.</p>
 <div class="callout key"><b class="t">So</b><p>What should an engine do, which one, and why did we build our own? That's Act 5.</p></div>
 </section>
-
-<details class="notes"><summary>Presenter notes</summary>
-<p>About 10 minutes. Have the Mailpit inbox (http://127.0.0.1:8025) open beside the page: after card 1, show the email that really went to abc@company.com. Run the cards with Step, one at a time, and let each red line land. Verify the industry claims' wording against their sources before the talk.</p>
-</details>
 
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>

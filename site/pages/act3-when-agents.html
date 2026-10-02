@@ -17,6 +17,31 @@
 <h1>Agents are real. Use them where they pay.</h1>
 <p class="lead">If everything is a workflow, when should the model pick the edges? Five questions answer it, and we can measure the answer on our own assistant.</p>
 
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 6 phút</summary>
+<div class="speech">
+<h4>1 · Năm câu hỏi <small>(~3 phút · tab "The checklist")</small></h4>
+<p>Act 2 kết thúc bằng một câu hỏi: nếu cái gì cũng là workflow, vậy khi nào nên để model chọn edge? Mình nói rõ trước: agents là thật. Act này không phải để nói agent vô dụng. Act này để nói: dùng agent ở đúng chỗ nó đáng tiền. Mình trả lời bằng năm câu hỏi, rồi mình đo trên chính trợ lý của mình.</p>
+<p class="cue">[Kéo xuống phần "Five questions", đọc năm câu hỏi. Chưa chỉ vào bảng ở tab "The checklist".]</p>
+<p>Câu một: đường đi có open-ended không? Tức là các bạn không thể viết trước các bước. Câu hai: mỗi lần chạy có đáng giá nhiều không? Tức là vài model calls vẫn rẻ so với kết quả. Câu ba: kết quả có dễ kiểm tra không? Một người, một test, hay một rule có phân biệt được tốt với xấu không. Câu bốn: chậm có sao không? Vài giây tới vài phút, chứ không phải mili giây. Câu năm: blast radius có nhỏ không? Tức là tool của nó không tự gửi, tự trả tiền, hay tự xoá được.</p>
+<p>Quy tắc là: chỉ giao một bước cho agent khi cả năm câu đều đúng. Không phải bốn trên năm. Cả năm.</p>
+<p>Giờ các bạn vote giúp mình. Calendar Agent: có nên là agent không? … Memory Agent thì sao? … Còn Web research?</p>
+<p class="cue">[Cho khán giả vote 2–3 ô trước, rồi mới chỉ vào bảng ở tab "The checklist".]</p>
+<p>Đây là đáp án. Trong bảy ô, chỉ một ô qua được. Calendar: đường đi không open-ended, kiểm tra thì dễ, nhưng giá trị mỗi lần thấp, và không ai muốn nó chậm. Workflow. Memory: trượt cả năm, và nó còn ghi vào knowledge base, nên blast radius không nhỏ. Workflow. Report: đáng giá, dễ kiểm tra, chậm cũng được, nhưng đường đi không open-ended. Đó là một LLM call. Approval: đáng giá, chậm cũng được, nhưng khó kiểm tra và nó gửi email. Đó là một gate, không bao giờ là một model.</p>
+<p>Còn research thì qua cả năm. Không ai liệt kê trước được trang nào quan trọng. Một brief tốt đáng vài model calls. Đằng nào sales cũng đọc nó trước buổi họp. Không ai ngồi chờ nó. Và tool của nó chỉ đọc. Mọi ô khác đều trượt ít nhất một câu, mà thường là trượt ngay câu đầu tiên.</p>
+<p>Vậy quy tắc là: agents là thật. Dùng chúng ở chỗ không biết trước được đường đi, và chạy chúng bên trong một workflow.</p>
+<p class="cue">[Bấm "Next: 2 · Measured →".]</p>
+
+<h4>2 · Đo thật <small>(~3 phút · tab "Measured")</small></h4>
+<p>Nói thì dễ. Giờ mình đo. Trên sơ đồ, hàng trên là bảy agent nối nhau thành một hàng. Hàng dưới là một agent team nằm trong workflow: triage, research ×3, CRM, calendar và KB, rồi brief, rồi gate. Mình build cả hai thiết kế trên cùng bộ tool, cùng model, chạy trên sáu email lead, và chấm từng brief bằng đúng cái scorer mà eval dùng.</p>
+<p class="cue">[Kéo xuống pipeline "Seven agents vs a workflow, on six emails", chạy lần lượt năm bước, dừng ở Measure.]</p>
+<p>Bước một: một model có gắn đồng hồ, đếm từng call và từng token. Bước hai: tool và một agent loop. Mỗi "agent" bên dưới đều chỉ là vòng lặp này với bộ tool riêng. Bước ba: bảy agent, đúng như spec, mỗi ô một agent, chạy nối đuôi nhau. Bước bốn: workflow. Code chạy các lookup, agent chỉ làm research, và một call viết brief. Bước năm: đo. Cùng email, cùng model, cùng scorer.</p>
+<p>Lúc đo trên mock, con số là thế này. Bảy agent: 63 model calls, 9,7 nghìn token, 6,5 giây, và 0 trên 6 brief pass. Workflow: 57 calls, 17,9 nghìn token, 3,2 giây, và 5 trên 6 brief pass. Hôm nay site chạy model thật: Gemma in-house cho các call thường, gpt-4o-mini cho các call có tool. Nên con số sẽ khác. Các bạn đọc đúng cái mà nó in ra. Nhưng cái hình thì giữ nguyên.</p>
+<p>Và cái hình đó không như các bạn nghĩ đâu. Workflow tốn nhiều token hơn, vì ba agent research mỗi con đều đọc trang. Nhưng nó vẫn thắng ở chỗ quan trọng. Nó nhanh gấp đôi, vì các bước độc lập chạy song song. Các lookup của nó được đảm bảo, vì code chạy chúng, không phải model chọn. Và brief của nó pass.</p>
+<p>Tại sao brief của bảy agent trượt hết? Vì "memory agent" đã tóm tắt evidence, và các fact bị mất. Mình nói thẳng: một LLM "memory agent" mà tóm tắt thì mất mát thông tin là chuyện đương nhiên, nó được thiết kế như vậy. Còn lần trượt duy nhất bên workflow là một agent đang làm đúng bản chất agent: nó đọc trang chủ thay vì trang tin tức. Và đó chính là lý do mình cần eval.</p>
+<p>Vậy là trên giấy thì đẹp rồi. Nhưng sáng thứ Hai, khi hộp thư thật mở ra thì sao? Đó là Act 4: "The agent meets the inbox."</p>
+</div>
+</details>
+
 <div class="tabs">
   <div class="tab" data-name="The checklist" data-say="Give a step to an agent only when <b>all five</b> are true. Of the seven boxes, one passes.">
     <table class="plain" style="margin:0">
@@ -151,10 +176,6 @@ asyncio.run(both())
 </div>
 <div class="callout key"><b class="t">Reading it (measured on the mock: 63 vs 57 calls, 9.7k vs 17.9k tokens, 6.5 s vs 3.2 s, 0/6 vs 5/6)</b><p>Not what you might expect: the workflow spends <b>more</b> tokens, because three research agents each read pages. It still wins where it counts. It takes <b>half the time</b>, since independent steps run side by side. Its lookups are <b>guaranteed</b>, because code runs them. And its briefs <b>pass</b>: the seven-agent briefs all fail, because the “memory agent” summarised the evidence and the facts were lost. The one workflow miss is an agent being an agent: it read the home page instead of the news. That's what the eval is for.</p></div>
 </section>
-
-<details class="notes"><summary>Presenter notes</summary>
-<p>About 6 minutes. Tab 1: read the five questions, then let the room vote on two or three boxes before revealing. Tab 2: run it once. The numbers come from the mock model; with a real key (Real model in the header) they change but the shape doesn't. Say it plainly: an LLM “memory agent” that summarises is lossy by design.</p>
-</details>
 
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>

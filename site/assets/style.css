@@ -200,3 +200,12 @@ ol.try li::marker { color: var(--green); font-weight: 800; }
   .grid2, .grid3 { grid-template-columns: 1fr; }
   table { display: block; overflow-x: auto; }
 }
+
+/* the presenter's script: collapsed at the top of each page, read aloud in Vietnamese */
+details.notes.speech { margin: 4px 0 22px; border-style: solid; border-color: #E7C76A; background: #FFFBEF; color: var(--ink, #1b2333); }
+details.notes.speech summary { color: #8A5A00; }
+details.notes.speech .speech { max-width: 820px; font-size: 16px; line-height: 1.7; }
+details.notes.speech h4 { margin: 18px 0 4px; color: var(--navy); font-size: 15px; }
+details.notes.speech h4 small { color: var(--grey); font-weight: 500; }
+details.notes.speech p { margin: 6px 0; }
+details.notes.speech .cue { color: #8A5A00; font-style: italic; font-size: 14px; }
