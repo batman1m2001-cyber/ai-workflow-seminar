@@ -47,6 +47,14 @@
     research_team: "team", merge: "team"
   };
 
+  // and back: clicking a part shows the code that is it
+  var CODE = {
+    user: "def read_email(", prompt: "def build_prompt(", llm: "def llm(", parser: "def parse(",
+    answer: "def brief_prompt(", docs: "def recall(", retriever: "def recall(", tools: "def tools_prompt(",
+    mcp: "def call_tool(", loop: "def research(", context: "def assemble_context(", memory: "MEMORY = ",
+    harness: "def guard(", team: "def research_team("
+  };
+
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
   function mode() { try { return localStorage.getItem("seminar.mode") || "real"; } catch (e) { return "real"; } }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -99,7 +107,7 @@
       var lines = s[0].split("\n"), plus = ch > 1 ? added(s[1].split("\n"), lines) : {};
       var nAdded = Object.keys(plus).filter(function (k) { return lines[k].trim(); }).length;
       el.querySelector(".pj-meta").textContent = lines.length + " lines" + (ch > 1 ? " · +" + nAdded + " new" : "");
-      cm = window.CodeMirror(codeBox, { value: s[0], mode: "python", theme: "seminar", lineNumbers: true, indentUnit: 4,
+      cm = el._cm = window.CodeMirror(codeBox, { value: s[0], mode: "python", theme: "seminar", lineNumbers: true, indentUnit: 4,
                                         viewportMargin: Infinity });
       Object.keys(plus).forEach(function (k) { if (lines[k].trim()) cm.addLineClass(+k, "background", "pj-added"); });
       var first = Object.keys(plus).map(Number).find(function (k) { return lines[k].trim() && !/^(import|from) /.test(lines[k]); });
@@ -170,4 +178,27 @@
   }
 
   document.querySelectorAll(".project[data-ch]").forEach(mount);
+
+  // a click on a diagram part selects its function in the open chapter's file
+  var diagram = document.querySelector(".anatomy");
+  if (diagram) diagram.addEventListener("click", function (e) {
+    var part = e.target.closest && e.target.closest("[data-id]");
+    var el = document.querySelector("section.beat:not([hidden]) .project");
+    var named = /^(\w+)\(\)/.exec(e.target.textContent || "");   // a chip like "screen(): the gate"
+    var cm = el && el._cm, want = named && e.target.tagName === "text" ? "def " + named[1] + "(" : part && CODE[part.getAttribute("data-id")];
+    if (!cm || !want) return;
+    var lines = cm.getValue().split("\n"), at = lines.findIndex(function (l) { return l.indexOf(want) === 0; });
+    if (at < 0) return;                                       // not in this chapter's file yet
+    var end = at + 1;
+    while (end < lines.length && (lines[end] === "" || /^\s/.test(lines[end]))) end++;
+    while (end > at + 1 && lines[end - 1] === "") end--;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    (el._focus || []).forEach(function (n) { cm.removeLineClass(n, "background", "pj-focus"); });
+    el._focus = [];
+    for (var n = at; n < end; n++) { cm.addLineClass(n, "background", "pj-focus"); el._focus.push(n); }
+    cm.setCursor({ line: at, ch: 0 });
+    var box = el.querySelector(".pj-code");
+    box.scrollTop = cm.heightAtLine(at, "local") - 24;                     // the panel scrolls, not the editor
+    box.scrollLeft = 0;
+  });
 })();

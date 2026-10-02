@@ -253,6 +253,7 @@ figure.wf svg { max-width: 100%; height: auto; }
 .pj-code { background: var(--code-bg); max-height: 640px; overflow: auto; }
 .pj-code .CodeMirror { height: auto; font: 13.5px/1.5 "JetBrains Mono", monospace; background: var(--code-bg); color: var(--code-fg); }
 .pj-added { background: rgba(61,220,132,.16); box-shadow: inset 3px 0 0 #3DDC84; }
+.pj-focus { background: rgba(245,182,66,.22) !important; box-shadow: inset 4px 0 0 #F5B642; }
 .pj-side { display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--line); background: #fff; }
 .pj-tabs { display: flex; gap: 2px; padding: 6px 8px 0; background: var(--soft); border-bottom: 1px solid var(--line); }
 .pj-tabs button { border: 0; background: none; padding: 7px 12px; font: 700 13px "Be Vietnam Pro", sans-serif; color: var(--grey); cursor: pointer; border-radius: 8px 8px 0 0; }
@@ -273,3 +274,5 @@ figure.wf svg { max-width: 100%; height: auto; }
   .pj-body { grid-template-columns: 1fr; }
   .pj-side { border-left: 0; border-top: 1px solid var(--line); min-height: 220px; }
 }
+.anatomy[data-sections] .an-part, .anatomy[data-sections] .an-loop, .anatomy[data-sections] .an-harness text { cursor: pointer; }
+.anatomy[data-sections] .an-part:hover rect { stroke: var(--navy); stroke-width: 2.5; }
