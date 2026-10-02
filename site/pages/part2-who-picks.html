@@ -108,64 +108,26 @@ flowchart LR
 <div class="sd-band safe"><div class="sd-name">Safety &amp; governance<small>around everything</small></div><div class="sd-row"><div class="sd-c "><b>Auth · secrets</b><span>keys stay on the server</span></div><div class="sd-c "><b>Tool policy</b><span>allow · deny · ask, per tool</span></div><div class="sd-c "><b>Guards</b><span>input gates · output checks</span></div><div class="sd-c "><b>Quotas · rate limits</b><span>per user, per provider</span></div></div></div>
 </div>
   </div>
-  <div class="tab" data-name="LangGraph, inside" data-chapter="10" data-say="One shared dict, and any node may write any key, so LangGraph runs in &lt;b&gt;supersteps&lt;/b&gt;: run the ready nodes, &lt;b&gt;wait for all of them&lt;/b&gt;, merge their writes, save a checkpoint, repeat.">
-<div class="code-pair"><pre class="static"># one dict for the whole graph
-class State(TypedDict):
-    email: dict
-    lead: dict
-    notes: Annotated[list, operator.add]   # many writers: a reducer
-
-# a node reads the dict, returns an update
-def triage(state: State) -&gt; dict:
-    return {&quot;lead&quot;: parse(llm(build_prompt(state[&quot;email&quot;])))}
-
-g = StateGraph(State)
-g.add_node(&quot;triage&quot;, triage)
-g.add_node(&quot;recall&quot;, recall)
-g.add_node(&quot;calendar&quot;, calendar)
-g.add_node(&quot;brief&quot;, brief)
-g.add_edge(START, &quot;triage&quot;)
-g.add_edge(&quot;triage&quot;, &quot;recall&quot;)
-g.add_edge(&quot;triage&quot;, &quot;calendar&quot;)
-g.add_edge([&quot;recall&quot;, &quot;calendar&quot;], &quot;brief&quot;)
-app = g.compile(checkpointer=InMemorySaver())</pre><div class="tl"><div class="tl-h"><b>LangGraph: supersteps</b><span>each step waits for the slowest email: brief starts at 9 s for everyone</span></div>
+  <div class="tab" data-name="LangGraph, inside" data-chapter="10" data-say="Top: LangGraph&#x27;s parts, mapped onto the engine. Below: the same small graph, run step by step. Press &lt;b&gt;▶ Next&lt;/b&gt; and watch the barrier: finished nodes wait for the slowest, then everything is merged and saved.">
+<div class="emap"><div class="emap-c"><small>graph DSL</small><b>StateGraph</b><span><code>add_node("name", fn)</code> · <code>add_edge("a", "b")</code></span></div><div class="emap-c key"><small>state store</small><b>one dict, channels</b><span>a channel per key: last value, or a reducer</span></div><div class="emap-c key"><small>scheduler</small><b>Pregel supersteps</b><span>run the ready nodes · wait · merge · repeat</span></div><div class="emap-c"><small>executor</small><b>asyncio + thread pool</b><span><code>max_concurrency</code></span></div><div class="emap-c"><small>checkpointer</small><b>every superstep</b><span>memory · SQLite · Postgres savers</span></div><div class="emap-c"><small>interrupts</small><b><code>interrupt()</code></b><span>resume with <code>Command(resume=…)</code></span></div></div><div class="stepper"><script type="application/json">{"nodes": [["triage", "triage \u00b7 1 s", 0, 1], ["recall", "recall \u00b7 0.5 s", 1, 0], ["calendar", "calendar \u00b7 0.1 s", 1, 1], ["research", "research \u00b7 8 s", 1, 2], ["brief", "brief \u00b7 2 s", 2, 1]], "edges": [["triage", "recall"], ["triage", "calendar"], ["triage", "research"], ["recall", "brief"], ["calendar", "brief"], ["research", "brief"]], "panel": "dict", "panelTitle": "the state: one dict", "steps": [{"t": "start", "say": "The run starts. All of LangGraph's state is <b>one dict</b>; the input is in it.", "state": [["email", "{from: Linh Tran, \u2026}", ""]], "note": "checkpoints: none yet"}, {"t": "superstep 1 \u00b7 0 \u2192 1 s", "nodes": {"triage": "run"}, "say": "<b>Superstep 1.</b> The only node whose inputs changed is <code>triage</code>. It runs.", "state": [["email", "{\u2026}", ""]], "note": "checkpoints: none yet"}, {"t": "end of superstep 1 \u00b7 1 s", "nodes": {"triage": "done"}, "say": "<b>Barrier.</b> triage's write is merged into the dict, then a <b>checkpoint</b> is saved: a consistent snapshot.", "state": [["email", "{\u2026}", ""], ["lead", "{company: Lotus Logistics, \u2026}", "new"]], "note": "\ud83d\udcbe checkpoint 1"}, {"t": "superstep 2 \u00b7 1 \u2192 1.5 s", "nodes": {"triage": "done", "recall": "done", "calendar": "done", "research": "run"}, "badges": {"recall": "write held", "calendar": "write held"}, "say": "<b>Superstep 2.</b> recall, calendar and research run in parallel. calendar and recall are <b>done</b>, but their writes are <b>held</b> until every node of this step finishes.", "state": [["email", "{\u2026}", ""], ["lead", "{\u2026}", ""], ["notes", "[\u2026]", "held"], ["meetings", "[\u2026]", "held"]], "note": "\ud83d\udcbe checkpoint 1 \u00b7 waiting for research"}, {"t": "end of superstep 2 \u00b7 9 s", "nodes": {"triage": "done", "recall": "done", "calendar": "done", "research": "done"}, "say": "<b>Barrier.</b> research finishes at 9 s. Now all three writes are merged (in a fixed order, with reducers), and checkpoint 2 is saved.", "state": [["email", "{\u2026}", ""], ["lead", "{\u2026}", ""], ["notes", "[\u2026]", "new"], ["meetings", "[\u2026]", "new"], ["findings", "[\u2026]", "new"]], "note": "\ud83d\udcbe checkpoint 2"}, {"t": "superstep 3 \u00b7 9 \u2192 11 s", "nodes": {"triage": "done", "recall": "done", "calendar": "done", "research": "done", "brief": "done"}, "say": "<b>Superstep 3.</b> brief's inputs changed, so it runs; its write is merged; checkpoint 3. <b>Done at 11 s</b>, with a snapshot after every step: that is what lets LangGraph resume or pause for a human.", "state": [["email", "{\u2026}", ""], ["lead", "{\u2026}", ""], ["notes", "[\u2026]", ""], ["meetings", "[\u2026]", ""], ["findings", "[\u2026]", ""], ["brief", "\"## Meeting brief: Lotus \u2026\"", "new"]], "note": "\ud83d\udcbe checkpoint 3"}]}</script></div>
+  </div>
+  <div class="tab" data-name="OperonX, inside" data-chapter="10" data-say="Top: OperonX&#x27;s parts, mapped onto the engine. Below: the same graph, step by step. Press &lt;b&gt;▶ Next&lt;/b&gt; and watch the ready counts: each result lands in its own slot at once, and a node fires the moment its count reaches 0.">
+<div class="emap"><div class="emap-c"><small>graph DSL</small><b>@op · @graph</b><span><code>a &gt;&gt; [b, c] &gt;&gt; d</code> · <code>if_(…)</code> · <code>op["x"]</code></span></div><div class="emap-c key"><small>state store</small><b>cells per slot</b><span>(op, output, context); reducers only on shared cells</span></div><div class="emap-c key"><small>scheduler</small><b>event-driven dataflow</b><span>each result counts down its successors; at 0 they fire</span></div><div class="emap-c"><small>executor</small><b>asyncio tasks</b><span><code>to_thread</code> for CPU ops · a cap per graph</span></div><div class="emap-c"><small>streams</small><b>items in contexts</b><span>every <code>yield</code> flows on at once: <code>[0] [1] …</code></span></div><div class="emap-c"><small>around it</small><b>Application</b><span>services · jobs · schedules · evals · traces → Studio</span></div></div><div class="stepper"><script type="application/json">{"nodes": [["triage", "triage \u00b7 1 s", 0, 1], ["recall", "recall \u00b7 0.5 s", 1, 0], ["calendar", "calendar \u00b7 0.1 s", 1, 1], ["research", "research \u00b7 8 s", 1, 2], ["brief", "brief \u00b7 2 s", 2, 1]], "edges": [["triage", "recall"], ["triage", "calendar"], ["triage", "research"], ["recall", "brief"], ["calendar", "brief"], ["research", "brief"]], "panel": "slots", "panelTitle": "the state: one slot per (op, output, context)", "steps": [{"t": "start", "badges": {"triage": "needs 1", "recall": "needs 1", "calendar": "needs 1", "research": "needs 1", "brief": "needs 3"}, "say": "The run starts. Every node has a <b>ready count</b>: how many inputs it still waits for. The state is a set of <b>slots</b>, one per (op, output, context).", "state": [["START \u00b7 email \u00b7 main", "{from: Linh Tran, \u2026}", ""]], "note": "no barrier, no global step"}, {"t": "0 \u2192 1 s", "nodes": {"triage": "run"}, "badges": {"recall": "needs 1", "calendar": "needs 1", "research": "needs 1", "brief": "needs 3"}, "say": "triage's count is 0, so it runs. When it emits its result, the scheduler counts it against each successor.", "state": [["START \u00b7 email \u00b7 main", "{\u2026}", ""]], "note": ""}, {"t": "1 s", "nodes": {"triage": "done", "recall": "run", "calendar": "run", "research": "run"}, "badges": {"brief": "needs 3"}, "say": "triage's result goes into <b>its own slot</b>. recall, calendar and research each reach 0 and start <b>at once</b>.", "state": [["START \u00b7 email \u00b7 main", "{\u2026}", ""], ["triage \u00b7 lead \u00b7 main", "{company: Lotus Logistics, \u2026}", "new"]], "note": ""}, {"t": "1.1 s", "nodes": {"triage": "done", "calendar": "done", "recall": "run", "research": "run"}, "badges": {"brief": "needs 2"}, "say": "calendar is done: its result is written <b>right now</b>, to its own slot. Nothing else writes there, so nothing has to wait to merge. brief needs 2 more.", "state": [["START \u00b7 email \u00b7 main", "{\u2026}", ""], ["triage \u00b7 lead \u00b7 main", "{\u2026}", ""], ["calendar \u00b7 meetings \u00b7 main", "[Wed 10:00 \u2026]", "new"]], "note": ""}, {"t": "1.5 s", "nodes": {"triage": "done", "calendar": "done", "recall": "done", "research": "run"}, "badges": {"brief": "needs 1"}, "say": "recall is done: written to its slot. brief needs 1 more.", "state": [["START \u00b7 email \u00b7 main", "{\u2026}", ""], ["triage \u00b7 lead \u00b7 main", "{\u2026}", ""], ["calendar \u00b7 meetings \u00b7 main", "[\u2026]", ""], ["recall \u00b7 notes \u00b7 main", "[pilot 2025-11 \u2026]", "new"]], "note": ""}, {"t": "9 s", "nodes": {"triage": "done", "calendar": "done", "recall": "done", "research": "done", "brief": "run"}, "say": "research is done (its three answers sit in three contexts, <code>[0] [1] [2]</code>). brief reaches 0 and fires <b>the moment its last input lands</b>.", "state": [["triage \u00b7 lead \u00b7 main", "{\u2026}", ""], ["calendar \u00b7 meetings \u00b7 main", "[\u2026]", ""], ["recall \u00b7 notes \u00b7 main", "[\u2026]", ""], ["research \u00b7 final \u00b7 [0]", "\"bonded warehouses \u2026\"", "new"], ["research \u00b7 final \u00b7 [1]", "\"five-year port contract \u2026\"", "new"], ["research \u00b7 final \u00b7 [2]", "\"Linh Tran, COO \u2026\"", "new"]], "note": ""}, {"t": "11 s", "nodes": {"triage": "done", "calendar": "done", "recall": "done", "research": "done", "brief": "done"}, "say": "<b>Done at 11 s.</b> For one email the slowest input decides, in both engines. The difference shows where work is <b>not</b> joined: a batch of emails, or a stream of items (tab 6).", "state": [["triage \u00b7 lead \u00b7 main", "{\u2026}", ""], ["recall \u00b7 notes \u00b7 main", "[\u2026]", ""], ["research \u00b7 final \u00b7 [0..2]", "[\u2026]", ""], ["brief \u00b7 text \u00b7 main", "\"## Meeting brief: Lotus \u2026\"", "new"]], "note": ""}]}</script></div>
+  </div>
+  <div class="tab" data-name="Why OperonX" data-chapter="10" data-say="Where OperonX beats LangGraph, each point from the engines&#x27; source or our own measurement. First, the batch: three emails through the same graph.">
+<div class="tl-pair"><div class="tl"><div class="tl-h"><b>LangGraph: supersteps</b><span>each step waits for the slowest email: brief starts at 9 s for everyone</span></div>
 <div class="tl-body">
 <div class="tl-walls"><i style="left:6.25%"></i><i style="left:56.25%"></i></div>
 <div class="tl-row"><span class="tl-l">email A</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:50.00%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
 <div class="tl-row"><span class="tl-l">email B</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:37.50%">brief</span><span class="tl-done" style="left:93.75%">15 s</span></div></div>
 <div class="tl-row"><span class="tl-l">email C</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
-<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief<i class="wall"></i>superstep barrier</div></div></div>
-  </div>
-  <div class="tab" data-name="OperonX, inside" data-chapter="10" data-say="One shared state too, but every slot has its own address: &lt;b&gt;(op, output, context)&lt;/b&gt;. Each op writes only its own slots, so nothing waits on a barrier: an op starts &lt;b&gt;the moment its inputs are in&lt;/b&gt;.">
-<div class="code-pair"><pre class="static"># a node: a function that owns its outputs
-@op
-def triage(email: dict) -&gt; dict:
-    return {&quot;lead&quot;: parse(llm(build_prompt(email)))}
-
-@graph
-def prepare(email):
-    lead = triage(email=email)
-    notes = recall(lead=lead[&quot;lead&quot;])     # reads triage&#x27;s slot
-    meetings = calendar(lead=lead[&quot;lead&quot;])
-    brief = write_brief(lead=lead[&quot;lead&quot;], notes=notes[&quot;notes&quot;],
-                        meetings=meetings[&quot;meetings&quot;])
-    START &gt;&gt; lead &gt;&gt; [notes, meetings] &gt;&gt; brief &gt;&gt; END</pre><div><table class="slots">
-  <tr><th>op</th><th>output</th><th>context</th><th>value</th></tr>
-  <tr><td>triage</td><td>lead</td><td>main</td><td><code>{"company": "Lotus Logistics", …}</code></td></tr>
-  <tr><td>recall</td><td>notes</td><td>main</td><td><code>["pilot 2025-11 …", …]</code></td></tr>
-  <tr><td>research</td><td>final</td><td>[0] website</td><td><code>"Lotus runs bonded warehouses …"</code></td></tr>
-  <tr><td>research</td><td>final</td><td>[1] news</td><td><code>"wins a five-year port contract …"</code></td></tr>
-  <tr><td>research</td><td>final</td><td>[2] people</td><td><code>"Linh Tran, COO; Bao Do, IT …"</code></td></tr>
-</table><div class="tl"><div class="tl-h"><b>OperonX: dataflow</b><span>each email moves on the moment its own step is done</span></div>
+<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief<i class="wall"></i>superstep barrier</div></div><div class="tl"><div class="tl-h"><b>OperonX: dataflow</b><span>each email moves on the moment its own step is done</span></div>
 <div class="tl-body">
 <div class="tl-row"><span class="tl-l">email A</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:50.00%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
 <div class="tl-row"><span class="tl-l">email B</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:18.75%;width:37.50%">brief</span><span class="tl-done" style="left:56.25%">9 s</span></div></div>
 <div class="tl-row"><span class="tl-l">email C</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:18.75%;width:12.50%">brief</span><span class="tl-done" style="left:31.25%">5 s</span></div></div>
-<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief</div></div></div></div>
-  </div>
-  <div class="tab" data-name="Why OperonX" data-chapter="10" data-say="Where OperonX beats LangGraph, each point from the engines&#x27; source or our own measurement.">
-<table class="plain why">
-  <tr><td><b>1 · No waiting for the slowest</b></td><td>no superstep barrier: on a batch, LangGraph takes the slowest email <i>at every step</i>; OperonX takes the slowest email's own time (15 s vs 11 s, tabs 4 and 5)</td></tr>
+<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief</div></div></div><table class="plain why">
+  <tr><td><b>1 · No waiting for the slowest</b></td><td>no superstep barrier: on a batch, LangGraph takes the slowest email <i>at every step</i>; OperonX takes the slowest email's own time (15 s vs 11 s, above)</td></tr>
   <tr><td><b>2 · Streams flow item by item</b></td><td>every <code>yield</code> moves on at once, in its own context: step B works on item 1 while step A makes item 2</td></tr>
   <tr><td><b>3 · Less engine overhead</b></td><td>same graphs, no LLM: chain 0.2 vs 2.7 ms · stream of 1,000 35 vs 172 ms · loop ×100 4.7 vs 37 ms · 500 at once 105 vs 1,055 ms</td></tr>
   <tr><td><b>4 · Wiring is code</b></td><td><code>a &gt;&gt; [b, c] &gt;&gt; d</code>, <code>if_(…)</code>, <code>op["x"]</code>: a wrong name fails at build, not node names as strings</td></tr>
@@ -248,6 +210,27 @@ def prepare(email):
   <li>repeat.</li>
 </ol>
 <p>What that buys: a consistent snapshot after every step, so it can resume, time-travel, or pause for a human with <code>interrupt()</code>. What it costs: every step waits for its slowest node.</p>
+<h3>The code it asks you to write</h3>
+<pre class="static"># one dict for the whole graph
+class State(TypedDict):
+    email: dict
+    lead: dict
+    notes: Annotated[list, operator.add]   # many writers: a reducer
+
+# a node reads the dict, returns an update
+def triage(state: State) -&gt; dict:
+    return {&quot;lead&quot;: parse(llm(build_prompt(state[&quot;email&quot;])))}
+
+g = StateGraph(State)
+g.add_node(&quot;triage&quot;, triage)
+g.add_node(&quot;recall&quot;, recall)
+g.add_node(&quot;calendar&quot;, calendar)
+g.add_node(&quot;brief&quot;, brief)
+g.add_edge(START, &quot;triage&quot;)
+g.add_edge(&quot;triage&quot;, &quot;recall&quot;)
+g.add_edge(&quot;triage&quot;, &quot;calendar&quot;)
+g.add_edge([&quot;recall&quot;, &quot;calendar&quot;], &quot;brief&quot;)
+app = g.compile(checkpointer=InMemorySaver())</pre>
 <div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · OperonX, inside →</button></div>
 </section>
 
@@ -256,6 +239,20 @@ def prepare(email):
 <h2>OperonX, inside: dataflow</h2>
 <p>OperonX also keeps <b>one shared state</b> for the run, but every value has its own address: <b>(op, output, context)</b>. Context is <code>main</code>, a loop iteration, or a stream item like <code>[1]</code>. Each op writes only its own slots and reads others' by reference (<code>op["x"]</code>); a slot that really is shared gets a reducer.</p>
 <p>So there is nothing to wait on. Each op emits its results as events; the scheduler counts them against each successor, and a successor whose count reaches zero <b>starts right away</b>. A fast branch runs ahead, and a stream's item 1 is downstream while item 2 is still being made.</p>
+<h3>The code it asks you to write</h3>
+<pre class="static"># a node: a function that owns its outputs
+@op
+def triage(email: dict) -&gt; dict:
+    return {&quot;lead&quot;: parse(llm(build_prompt(email)))}
+
+@graph
+def prepare(email):
+    lead = triage(email=email)
+    notes = recall(lead=lead[&quot;lead&quot;])     # reads triage&#x27;s slot
+    meetings = calendar(lead=lead[&quot;lead&quot;])
+    brief = write_brief(lead=lead[&quot;lead&quot;], notes=notes[&quot;notes&quot;],
+                        meetings=meetings[&quot;meetings&quot;])
+    START &gt;&gt; lead &gt;&gt; [notes, meetings] &gt;&gt; brief &gt;&gt; END</pre>
 <div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · Why OperonX →</button></div>
 </section>
 
@@ -274,6 +271,7 @@ def prepare(email):
 <script src="../assets/app.js"></script>
 <script src="../assets/decoder.js"></script>
 <script src="../assets/tabs.js"></script>
+<script src="../assets/stepper.js"></script>
 <script src="../assets/cards.js"></script>
 </body>
 </html>

@@ -138,7 +138,10 @@
         if (on) s.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
       });
       if (history.replaceState) history.replaceState(null, "", "#beat-" + n);
-      if (window.seminarDiagrams) setTimeout(window.seminarDiagrams, 0);   // Mermaid draws what is now shown
+      setTimeout(function () {                                   // what measures itself, now that it is shown
+        if (window.seminarDiagrams) window.seminarDiagrams();
+        if (window.seminarSteppers) window.seminarSteppers();
+      }, 0);
     }
     root.addEventListener("keydown", function (e) {
       if (e.key === "ArrowRight" && cur < tabs.length) { go(cur + 1); e.preventDefault(); }
