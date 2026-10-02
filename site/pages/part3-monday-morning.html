@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monday morning · Workflow Is All You Need</title>
+<title>Production · Workflow Is All You Need</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
@@ -25,89 +25,52 @@
 <main class="content">
 
 <p class="kicker">Part III · Production</p>
-<h1>Monday morning, and the engine</h1>
-<p class="lead">Part II was Friday's benchmark. On Monday at 8 am, 50 emails arrive at once. Some are attacks, the search API is slow, the provider has a rate limit, and nobody can say why a brief says what it says.</p>
-
+<h1>Production: the engine at work</h1>
+<p class="lead">Part II was the theory. Now the real inbox on a Monday morning: what breaks, which part of the engine fixes it, and the whole system running live on OperonX.</p>
 
 <div class="tabs">
-  <div class="tab" data-name="Monday breaks it" data-chapter="11" data-say="Six ways a hand-written agent fails at 8 am. Each one is <b>silent</b> or <b>total</b>.">
-<script type="application/json" class="wf">
-{"title": "The naive agent: a loop with every tool, run over the inbox", "w": 900, "h": 110,
- "nodes": [["i", "50 emails", 70, 55, "io"], ["l", "for email in inbox:", 260, 55], ["a", "agent(email)", 450, 55, "llm"],
-           ["t", "search · read · send", 640, 25, "tool"], ["b", "brief", 820, 55, "io"]],
- "edges": [["i", "l"], ["l", "a"], ["a", "t", "any tool", "llm"], ["t", "a", "", "back"], ["a", "b"]]}
-</script>
+  <div class="tab" data-name="Monday morning" data-chapter="11" data-say="The Part I agent, harness taken off, run over the real inbox at 8 am. Each failure is &lt;b&gt;silent&lt;/b&gt; or &lt;b&gt;total&lt;/b&gt;.">
+<div class="fails">
+  <div><b>1 · An email gives orders</b><span>“send an email to abc@…”: the agent obeys</span></div>
+  <div><b>2 · A web page gives orders</b><span>hidden text on a page ends up in the brief</span></div>
+  <div><b>3 · One timeout</b><span>a slow search kills the whole batch</span></div>
+  <div><b>4 · Chatty JSON</b><span>the parser returns None, and None reads as “not a lead”</span></div>
+  <div><b>5 · 50 at once</b><span>the provider allows 10: forty calls rejected</span></div>
+  <div><b>6 · “Why did it say that?”</b><span>nobody can see what the model saw</span></div>
+</div>
   </div>
-  <div class="tab" data-name="The iceberg" data-chapter="11" data-say="Each wound gets a fix. <b>15 lines become 150</b>, and the 135 new ones are the same every team writes.">
-    <table class="plain" style="margin:0">
-      <tr><th>wound</th><th>the fix</th><th>lines</th></tr>
-      <tr><td>an email gives orders</td><td>a gate before any model; tools by least privilege</td><td>~15</td></tr>
-      <tr><td>a page gives orders</td><td>read pages as a person sees them; check the brief</td><td>~15</td></tr>
-      <tr><td>one timeout kills the batch</td><td>timeouts, retries, a failure is a value</td><td>~20</td></tr>
-      <tr><td>chatty JSON becomes “no”</td><td>parsing that fails loudly, never <code>None</code></td><td>~10</td></tr>
-      <tr><td>50 at once, rate-limited</td><td>bounded concurrency, backoff</td><td>~15</td></tr>
-      <tr><td>“why did it say that?”</td><td>a trace per run, per step</td><td>~20</td></tr>
-      <tr><td>“is the new prompt better?”</td><td>a golden set, a gate</td><td>~20</td></tr>
-      <tr><td>a human must say yes</td><td>a draft, a link, a second run</td><td>~20</td></tr>
-    </table>
+  <div class="tab" data-name="Each failure is an engine feature" data-chapter="11" data-say="None of the fixes is about the model. Each one is a part of the engine from Part II.">
+<table class="map3">
+  <tr><th>Monday's failure</th><th>the engine part that fixes it (Part II)</th><th>in the real system</th></tr>
+  <tr><td>an email gives orders</td><td><b>graph</b>: a gate node before any model</td><td><code>screen</code> → <code>if_(…)</code> → <code>blocked</code></td></tr>
+  <tr><td>a page gives orders</td><td><b>graph</b>: a step that cleans pages, a check before sending</td><td><code>visible_text</code> in the tools, <code>check_brief</code></td></tr>
+  <tr><td>one timeout kills the batch</td><td><b>executor</b>: a failed node is recorded, the run goes on</td><td>each email is its own run</td></tr>
+  <tr><td>chatty JSON reads as “no”</td><td><b>node</b>: a parser that fails loudly</td><td><code>LLMOp(parser="json", on_failure="error")</code></td></tr>
+  <tr><td>50 at once, rate-limited</td><td><b>scheduler</b>: a concurrency cap</td><td>the graph's cap on tasks in flight</td></tr>
+  <tr><td>“why did it say that?”</td><td><b>trace</b>: every node's inputs and outputs</td><td><code>trace_local</code> → Studio</td></tr>
+  <tr><td>is the new prompt better?</td><td><b>around it</b>: an eval that gates the deploy</td><td><code>operonx-run golden</code>: 19 emails</td></tr>
+  <tr><td>a human must say yes</td><td><b>around it</b>: a draft and a link</td><td><code>request_approval</code> → the <code>approve</code> graph</td></tr>
+</table>
   </div>
-  <div class="tab" data-name="What an engine must do" data-chapter="12" data-say="Every line answers a wound from Monday morning. <b>Engine-agnostic</b>: hold any engine to this list.">
-    <table class="plain" style="margin:0">
-      <tr><th>the engine gives you</th><th>Monday's wound</th></tr>
-      <tr><td>steps and edges, branches, loops, state</td><td>the shape of every system in Parts I and II</td></tr>
-      <tr><td>bounded parallelism</td><td>50 at once, 40 rejected</td></tr>
-      <tr><td>failures as values, timeouts, retries</td><td>one timeout lost the batch</td></tr>
-      <tr><td>parsing that fails loudly</td><td>chatty JSON became “no”</td></tr>
-      <tr><td>gates and least privilege as steps</td><td>an email and a page gave orders</td></tr>
-      <tr><td>a trace per run, per step</td><td>“why did it say that?”</td></tr>
-      <tr><td>evals as a deploy gate</td><td>“is the new prompt better?”</td></tr>
-      <tr><td>triggers, approvals, durable state</td><td>a webhook, 8 am, a human's yes</td></tr>
-      <tr><td>jobs and services from the same graph</td><td>the batch and the live inbox are one system</td></tr>
-    </table>
+  <div class="tab" data-name="The real system on OperonX" data-chapter="12" data-say="The course brief&#x27;s boxes as zones of one OperonX graph. Only &lt;b&gt;web research&lt;/b&gt; is an agent; every other edge is picked by code.">
+<figure class="mm"><pre class="mermaid">
+flowchart TB
+  M([email arrives]) --> E[email_agent<br/>gate · triage]
+  E -- "attack or not a lead" --> D([done])
+  E -- lead --> X[extract_company_name]
+  X --> W[["web_research_agent<br/>the agent, ×3"]]
+  X --> C[calendar_agent]
+  X --> I[company_info_agent]
+  W --> MEM[memory_agent<br/>merge in code]
+  C --> MEM
+  I --> MEM
+  MEM --> R[report_agent<br/>one LLM call · check]
+  R --> H[human_approval_gate<br/>a draft and a link]
+  H --> D
+  style W fill:#FFF6E0,stroke:#D9962B,stroke-width:2px
+</pre></figure>
   </div>
-  <div class="tab" data-name="OperonX" data-chapter="12" data-say="The same steps, twice. Left: Part I's <code>prepare()</code>, plain Python, one call after another. Right: the real system's <b>OperonX graph</b>: the steps are nodes, the wiring is <code>&gt;&gt;</code>, and the engine runs it.">
-    <div class="sbs">
-      <div><h4>agent.py (Part I): Python runs the steps in order</h4><pre class="static">def prepare(email):
-    &quot;&quot;&quot;The whole job, step by step.&quot;&quot;&quot;
-    if attack := screen(email):
-        return f&quot;held at the gate ({attack!r}): no model saw this email&quot;
-    lead = parse(llm(build_prompt(email)))
-    notes = recall(f&quot;{lead[&#x27;company&#x27;]}: {lead[&#x27;intent&#x27;]}&quot;)
-    crm = start_mcp()
-    tools = list_tools(crm) + LOCAL_TOOLS
-    findings = merge(research_team(crm, tools, lead))
-    return llm(brief_prompt(lead, notes, findings))</pre></div>
-      <div><h4>meeting-prep (OperonX): the steps as a graph, run by the engine</h4><pre class="static">@graph
-def prepare(mail, deliver):
-    email = email_agent(email=mail)
-    extract_company = extract_company_name(email=mail)
-    web_research = web_research_agent(company=extract_company[&quot;company&quot;])
-    calendar = calendar_agent(company_id=extract_company[&quot;company_id&quot;])
-    company_info = company_info_agent(company=extract_company[&quot;company&quot;], company_id=extract_company[&quot;company_id&quot;])
-    memory = memory_agent(
-        email=mail, company=extract_company[&quot;company&quot;], contacts=company_info[&quot;contacts&quot;],
-        history=company_info[&quot;history&quot;], meetings=calendar[&quot;meetings&quot;], notes=company_info[&quot;memory&quot;],
-        website=web_research[&quot;website&quot;], news=web_research[&quot;news&quot;], people=web_research[&quot;people&quot;],
-    )
-    report = report_agent(company=extract_company[&quot;company&quot;], company_name=extract_company[&quot;name&quot;],
-                          evidence=memory[&quot;text&quot;])
-    human_approval = human_approval_gate(email=mail, deliver=deliver, company=extract_company[&quot;company&quot;],
-                                         brief=report[&quot;brief&quot;], ok=report[&quot;ok&quot;], problems=report[&quot;problems&quot;])
-    done = ops.settle(a=email[&quot;outcome&quot;], b=human_approval[&quot;outcome&quot;])
-
-    START &gt;&gt; email &gt;&gt; if_(email[&quot;lead&quot;] == True, extract_company).else_(done)  # noqa: E712
-    extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</pre></div>
-    </div>
-  </div>
-  <div class="tab" data-name="The landscape" data-chapter="12" data-say="Three honest options. Each is <b>strongest</b> somewhere.">
-    <table class="plain" style="margin:0">
-      <tr><th></th><th>strongest at</th><th>weaker at</th></tr>
-      <tr><td><b>LangGraph</b></td><td>the agent ecosystem, docs, hiring pool, checkpoints, interrupts, LangSmith</td><td>state dict + reducers on every step; string-wired graphs; heavier per-step overhead; triggers, eval gates and jobs are yours to build</td></tr>
-      <tr><td><b>Temporal · Restate · DBOS</b></td><td>durable execution across days, at any scale</td><td>not built for LLM steps; heavy for a team's pipelines</td></tr>
-      <tr><td><b>OperonX</b></td><td>speed, terse syntax, jobs + evals + triggers built in, pluggable trace consumers, Studio drawing the real graph</td><td>small community; serves one team; we maintain it</td></tr>
-    </table>
-  </div>
-  <div class="tab" data-name="The whole system, live" data-chapter="12" data-say="A customer email, sent from this page. Watch the <b>inbox</b> and <b>Studio</b>.">
+  <div class="tab" data-name="Live" data-chapter="12" data-say="A customer email, sent from this page. Watch the &lt;b&gt;inbox&lt;/b&gt; and &lt;b&gt;Studio&lt;/b&gt;.">
     <div class="live">
       <select id="golden"></select>
       <button id="send">Send as customer</button>
@@ -120,8 +83,8 @@ def prepare(mail, deliver):
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
-<h2>Chapter 11 · Monday breaks it</h2>
-<p>The agent from Part I with its harness taken off: a loop with every tool, <code>send_email</code> included, run over the whole inbox. Each card is one Monday-morning event, run for real against the inbox, the web and the model.</p>
+<h2>Chapter 11 · Monday morning</h2>
+<p>Friday's demo worked. On Monday at 8 am, 50 emails arrive at once. Run the Part I agent over them with its harness taken off, card by card, against the real inbox, web and model.</p>
 <div class="pipeline" data-title="Monday, 8 am">
   <div class="step" data-icon="✉" data-title="An email gives orders" data-desc="The course brief's own attack. The agent has a send tool.">
 <script type="text/plain">
@@ -196,74 +159,57 @@ trace = []                                            # nobody wrote one
 print("✗ steps recorded for that run:", len(trace), "— no inputs, no outputs, no timings")
 </script></div>
 </div>
-<div class="callout warn"><b class="t">Every one of these is silent or total</b><p>The attacker's email was sent. The poisoned brief looks fine. One timeout lost two emails. A lead vanished as a “no”. Forty calls were rejected. And nobody can explain any of it.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The iceberg →</button></div>
+
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · Each failure is an engine feature →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="2" hidden>
-<h2>Harden it by hand: the iceberg</h2>
-<p>Every wound has a known fix, and <b>none of them is about the model</b>. Add them all and the 15-line agent is 150 lines. The loop is the tip; underneath is the <b>execution system</b>: timeouts, retries, failures as values, bounded parallelism, gates, traces, evals, approvals, durable state.</p>
-<p>The first fix, as a test: the course brief's attack emails against a gate that runs <b>before any model</b>.</p>
-<div class="pipeline" data-title="The attacks from the course brief, as a test">
-  <div class="step" data-icon="⚠" data-title="Attacks" data-desc="The golden emails that are attacks.">
-<script type="text/plain">
-from prep_world import golden
-attacks = [g for g in golden() if g["expect"]["action"] == "block"]
-print(f"{len(attacks)} attack emails")
-</script></div>
-  <div class="step" data-icon="⛨" data-title="Gate" data-desc="A rule that runs before any model: it can't be talked out of its job.">
-<script type="text/plain">
-from prep_world.guard import looks_like_attack
-caught = [g["id"] for g in attacks if looks_like_attack(g["subject"] + " " + g["body"])]
-print(f"{len(caught)}/{len(attacks)} blocked before a model saw them")
-</script></div>
-</div>
-
-<div class="callout key"><b class="t">The truth</b><p>That list has a name: a <b>workflow engine</b>. The teams building agent frameworks reached the same answer: Microsoft's Agent Framework is built around graph workflows, the OpenAI Agents SDK runs on durable-execution engines underneath, and LangGraph has been a workflow engine all along.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · What an engine must do →</button></div>
+<h2>Each failure is an engine feature</h2>
+<p>Every failure has a known fix, and <b>none of them is about the model</b>. Write them by hand and the 15-line agent becomes 150 lines, the same 135 lines every team writes. Or notice that each fix is a part of the engine from Part II: a gate is a node, a cap is the scheduler, a trace is the engine watching itself.</p>
+<div class="callout key"><b class="t">The truth</b><p>A production agent is <b>a workflow engine</b> with a model inside some nodes.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The real system on OperonX →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
-<h2>Chapter 12 · What an engine must do</h2>
-<p>Every line of this list answers a Monday wound. Hold <b>any</b> engine to it. If your agent runs in production, something does all of this: the only choice is whether it's an engine, or 150 lines per agent.</p>
-<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · OperonX →</button></div>
+<h2>Chapter 12 · The real system on OperonX</h2>
+<p>Here is the whole meeting-prep assistant as one OperonX graph. The zones carry the course brief's own box names, so the brief's diagram and Studio's drawing match. The wiring is two lines at the end.</p>
+<pre class="static">@graph
+def prepare(mail, deliver):
+    email = email_agent(email=mail)
+    extract_company = extract_company_name(email=mail)
+    web_research = web_research_agent(company=extract_company[&quot;company&quot;])
+    calendar = calendar_agent(company_id=extract_company[&quot;company_id&quot;])
+    company_info = company_info_agent(company=extract_company[&quot;company&quot;], company_id=extract_company[&quot;company_id&quot;])
+    memory = memory_agent(
+        email=mail, company=extract_company[&quot;company&quot;], contacts=company_info[&quot;contacts&quot;],
+        history=company_info[&quot;history&quot;], meetings=calendar[&quot;meetings&quot;], notes=company_info[&quot;memory&quot;],
+        website=web_research[&quot;website&quot;], news=web_research[&quot;news&quot;], people=web_research[&quot;people&quot;],
+    )
+    report = report_agent(company=extract_company[&quot;company&quot;], company_name=extract_company[&quot;name&quot;],
+                          evidence=memory[&quot;text&quot;])
+    human_approval = human_approval_gate(email=mail, deliver=deliver, company=extract_company[&quot;company&quot;],
+                                         brief=report[&quot;brief&quot;], ok=report[&quot;ok&quot;], problems=report[&quot;problems&quot;])
+    done = ops.settle(a=email[&quot;outcome&quot;], b=human_approval[&quot;outcome&quot;])
+
+    START &gt;&gt; email &gt;&gt; if_(email[&quot;lead&quot;] == True, extract_company).else_(done)  # noqa: E712
+    extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</pre>
+<p>Open it in <a href="http://127.0.0.1:8766" target="_blank" rel="noopener">Studio</a>: it draws this graph from the code, and every run is a trace you can click through.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · Live →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
-<h2>OperonX: the workflow, given to an engine</h2>
-<p>Part I ended on a picture: <code>agent.py</code>'s functions joined by arrows. <b>OperonX</b> is a Python workflow engine that takes that picture literally:</p>
-<table class="plain">
-  <tr><td><b><code>@op</code></b></td><td>a plain function becomes a step: <code>recall</code>, <code>screen</code>, <code>request_approval</code></td></tr>
-  <tr><td><b><code>@graph</code> and <code>&gt;&gt;</code></b></td><td>the wiring is written once: <code>a &gt;&gt; [b, c, d] &gt;&gt; e</code> runs b, c and d side by side, then e</td></tr>
-  <tr><td><b><code>if_(…)</code></b></td><td>a branch the <b>code</b> picks; an agent node is where the <b>model</b> picks</td></tr>
-  <tr><td><b>the engine</b></td><td>each step runs the moment its inputs are ready; failures are values; timeouts, retries, bounded parallelism</td></tr>
-  <tr><td><b>around it</b></td><td>webhooks and schedules start runs, a golden set gates deploys, every run is a trace, and <b>Studio</b> draws the graph from the code</td></tr>
-</table>
-<p>Every Monday wound from tab 1 has a line in that list. That's the difference between <code>agent.py</code> and a system: not the model, the engine around it.</p>
-<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · The landscape →</button></div>
-</section>
-
-<!-- ─────────────────────────────────────────────────────────────── -->
-<section class="beat" data-beat="5" hidden>
-<h2>The landscape, fairly</h2>
-<p>LangGraph is a good engine and the best supported. Temporal-class engines win when a run must survive for days. We built <b>OperonX</b> for speed and terse graphs, and we pay for it: we maintain it, and it serves one team. The measured numbers and the same system built in both are in the <a href="appendix.html">appendix</a>.</p>
-<div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · The whole system, live →</button></div>
-</section>
-
-<!-- ─────────────────────────────────────────────────────────────── -->
-<section class="beat" data-beat="6" hidden>
 <h2>The whole system, live</h2>
 <ol>
   <li>Pick Linh's email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>
-  <li>The inbox's webhook starts the graph, and <b>Studio</b> lights it up, zone by zone, with the brief's own box names: email, extract company, then web research (the one agent, three questions in parallel) beside calendar and company info, then memory, report, human approval.</li>
+  <li>The inbox starts a run, and <b>Studio</b> lights up the graph zone by zone.</li>
   <li><b>“[Approve?] Brief: …”</b> lands in the inbox. Click <b>Approve</b>: the brief goes to sales and into memory.</li>
   <li>Now send an <b>attack</b>. It's held at the gate in milliseconds, and nothing is sent.</li>
 </ol>
-<div class="callout key"><b class="t">The truth</b><p>The Chapter 4 agent is <b>one node</b> in this graph. Everything around it is the workflow, and the engine runs it: triggers, the gate, parallel steps, the human's yes, a trace per run.</p></div>
-<div class="handoff"><span>Still missing</span><p>Nothing, for Linh's email. Now the same pattern in production, and the decoder, full.</p></div>
+<div class="callout key"><b class="t">The truth</b><p>Part I's agent is <b>one node</b> in this graph. Everything around it is the workflow, and the engine runs it.</p></div>
+<div class="handoff"><span>Next</span><p>Back to the question from 8 am, and the decoder, full.</p></div>
 </section>
 
 </main>

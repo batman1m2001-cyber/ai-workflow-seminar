@@ -11,8 +11,8 @@
   var PAGES = [
     { id: "index", n: "★", title: "The email and the brief", part: "Prologue" },
     { id: "part1-build-the-agent", n: "I", title: "Build the agent from scratch", part: "Part I · The agent, as it is" },
-    { id: "part2-who-picks", n: "II", title: "Who picks the next step?", part: "Part II · Workflow or agent" },
-    { id: "part3-monday-morning", n: "III", title: "Monday morning, and the engine", part: "Part III · Production" },
+    { id: "part2-who-picks", n: "II", title: "An agent is a workflow with a loop", part: "Part II · Workflow engines" },
+    { id: "part3-monday-morning", n: "III", title: "The engine at work", part: "Part III · Production" },
     { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" },
     { id: "appendix", n: "+", title: "Engine numbers", part: "Appendix" }
   ];
@@ -232,19 +232,31 @@
   }
 
   // ── diagrams ────────────────────────────────────────────────────────
+  // Mermaid lays a diagram out from its size on screen, so one in a hidden tab
+  // waits: tabs.js calls window.seminarDiagrams() each time a tab is shown.
+  var mermaid = null;
+  function renderVisible() {
+    if (!mermaid) return;
+    var todo = [].slice.call(document.querySelectorAll(".mermaid:not([data-processed])"))
+      .filter(function (d) { return d.offsetParent !== null; });
+    if (todo.length) mermaid.run({ nodes: todo }).catch(function () {});
+  }
+  window.seminarDiagrams = renderVisible;
   function diagrams() {
     if (!document.querySelector(".mermaid")) return;
     import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(function (m) {
-      m.default.initialize({
+      mermaid = m.default;
+      mermaid.initialize({
         startOnLoad: false, theme: "base", securityLevel: "strict",
+        flowchart: { curve: "basis", nodeSpacing: 34, rankSpacing: 46, padding: 10, useMaxWidth: false },
         themeVariables: {
           fontFamily: "Be Vietnam Pro, sans-serif", fontSize: "15px",
-          primaryColor: "#F0FFF6", primaryBorderColor: "#00B74F", primaryTextColor: "#1D4289",
-          lineColor: "#8592AB", secondaryColor: "#EEF2FA", tertiaryColor: "#F4F5F6",
-          clusterBkg: "#F4F5F6", clusterBorder: "#DBE0E6"
+          primaryColor: "#F4F6FB", primaryBorderColor: "#9AABCB", primaryTextColor: "#1D4289",
+          lineColor: "#8592AB", secondaryColor: "#EEF2FA", tertiaryColor: "#FFFFFF",
+          clusterBkg: "#FAFBFD", clusterBorder: "#DBE0E6", edgeLabelBackground: "#FFFFFF"
         }
       });
-      m.default.run({ querySelector: ".mermaid" });
+      renderVisible();
     }).catch(function () {});
   }
 

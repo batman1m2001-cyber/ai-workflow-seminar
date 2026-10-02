@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Who picks the next step · Workflow Is All You Need</title>
+<title>An agent is a workflow · Workflow Is All You Need</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -13,91 +13,13 @@
 <body data-page="part2-who-picks" data-chapter="8" data-root="..">
 <main class="content">
 
-<p class="kicker">Part II · Workflow or agent</p>
-<h1>Who picks the next step?</h1>
-<p class="lead">Part I ended on a picture: functions joined by arrows. At each arrow, either <b>your code</b> picks the next step or <b>the model</b> does. Ask that one question of Linh's email, of the products you know, and of the course brief's seven agents. Then measure.</p>
-
+<p class="kicker">Part II · Workflow engines</p>
+<h1>An agent is a workflow with a loop</h1>
+<p class="lead">Part I ended on a picture: <code>agent.py</code> is functions joined by arrows. Here we see where a single agent hits its limits, why it's just a graph with a loop, and what runs such graphs: <b>a workflow engine</b>, inside LangGraph and inside OperonX.</p>
 
 <div class="tabs">
-  <div class="tab" data-name="Who picks?" data-chapter="8" data-say="The same email twice. Left: <b>code</b> picks the path. Right: the <b>model</b> picks it, each turn (and loops on the results).">
-    <div class="wf-pair">
-<script type="application/json" class="wf">
-{"title": "Workflow: code picks the path", "w": 500, "h": 150,
- "nodes": [["q", "email", 58, 75, "io"], ["c", "triage", 185, 75, "llm"], ["o", "search + read", 325, 28, "tool"], ["f", "skip", 325, 122], ["a", "brief", 445, 75, "llm"]],
- "edges": [["q", "c"], ["c", "o", "if lead"], ["c", "f", "else"], ["o", "a"]]}
-</script>
-<script type="application/json" class="wf">
-{"title": "Agent: the model picks the path", "w": 500, "h": 150,
- "nodes": [["q", "email", 58, 50, "io"], ["l", "LLM", 195, 50, "llm"], ["o", "web search", 380, 22, "tool"], ["p", "read page", 380, 75, "tool"], ["f", "CRM", 380, 128, "tool"], ["a", "brief", 195, 128, "io"]],
- "edges": [["q", "l"], ["l", "o", "?", "llm"], ["l", "p", "?", "llm"], ["l", "f", "?", "llm"], ["l", "a", "done?", "llm"]]}
-</script>
-    </div>
-    <div class="wf-legend"><span>code step</span><span class="llm">LLM step</span><span class="tool">tool</span><span class="pick">the model picks this edge</span></div>
-  </div>
-  <div class="tab" data-name="The map" data-chapter="8" data-say="Not a line from “workflow” to “agent”: a map. Click a product below and see where it lands.">
-<svg class="map-svg" viewBox="0 0 900 470" role="img" aria-label="Two axes: structure fixed to dynamic, steps code to LLM; systems placed on the map">
-  <rect class="zone" x="92" y="250" width="330" height="168" rx="10"/>
-  <rect class="zone" x="560" y="40" width="300" height="150" rx="10"/>
-  <text class="zone-t" x="104" y="410">WORKFLOWS</text>
-  <text class="zone-t" x="848" y="180" text-anchor="end">AGENTS</text>
-  <line class="ax" x1="90" y1="420" x2="870" y2="420"/><polygon points="870,414 882,420 870,426" fill="currentColor"/>
-  <line class="ax" x1="90" y1="420" x2="90" y2="30"/><polygon points="84,30 90,18 96,30" fill="currentColor"/>
-  <text class="axt" x="96" y="446">structure: fixed in code</text>
-  <text class="axt" x="870" y="446" text-anchor="end">picked by the model, step by step →</text>
-  <text class="axt" x="72" y="414" transform="rotate(-90 72 414)">steps: plain code → LLM calls →</text>
-  <g class="pt"><circle cx="140" cy="385" r="7"/><text x="152" y="390">nightly ETL job</text></g>
-  <g class="pt"><circle cx="190" cy="215" r="7"/><text x="202" y="220">RAG pipeline</text></g>
-  <g class="pt"><circle cx="300" cy="245" r="7"/><text x="312" y="250">router</text></g>
-  <g class="pt"><circle cx="250" cy="160" r="7"/><text x="262" y="165">parallel checks</text></g>
-  <g class="pt hy"><circle cx="420" cy="215" r="7"/><text x="432" y="220">workflow with an agent node</text></g>
-  <g class="pt hy"><circle cx="470" cy="135" r="7"/><text x="482" y="140">evaluator–optimizer</text></g>
-  <g class="pt hy"><circle cx="590" cy="250" r="7"/><text x="602" y="255">agent with workflow tools</text></g>
-  <g class="pt hy"><circle cx="600" cy="105" r="7"/><text x="612" y="110">orchestrator–workers</text></g>
-  <g class="pt"><circle cx="700" cy="150" r="7"/><text x="712" y="155">ReAct agent</text></g>
-  <g class="bz" id="bz-copilot"><rect x="100" y="78" width="168" height="28" rx="14"/><text x="184" y="97" text-anchor="middle">Copilot autocomplete</text></g>
-  <g class="bz" id="bz-rag"><rect x="150" y="262" width="122" height="28" rx="14"/><text x="211" y="281" text-anchor="middle">RAG chatbot</text></g>
-  <g class="bz" id="bz-refund"><rect x="330" y="262" width="176" height="28" rx="14"/><text x="418" y="281" text-anchor="middle">our meeting-prep bot</text></g>
-  <g class="bz" id="bz-report"><rect x="160" y="340" width="148" height="28" rx="14"/><text x="234" y="359" text-anchor="middle">nightly QC report</text></g>
-  <g class="bz" id="bz-research"><rect x="560" y="56" width="132" height="28" rx="14"/><text x="626" y="75" text-anchor="middle">Deep Research</text></g>
-  <g class="bz" id="bz-claude"><rect x="736" y="46" width="112" height="28" rx="14"/><text x="792" y="65" text-anchor="middle">Claude Code</text></g>
-</svg>
-    <div class="chips">
-      <button data-reveal="bz-copilot">Copilot autocomplete</button><button data-reveal="bz-rag">RAG chatbot</button>
-      <button data-reveal="bz-refund">our meeting-prep bot</button><button data-reveal="bz-report">nightly QC report</button>
-      <button data-reveal="bz-research">Deep Research</button><button data-reveal="bz-claude">Claude Code</button>
-    </div>
-    <div class="map-legend"><i style="background:var(--navy);margin-left:0"></i>a known pattern<i style="background:var(--green)"></i>a hybrid<i style="background:#FFF7E8;border:1px solid #E0B25C"></i>a product (click to place)</div>
-  </div>
-
-  <div class="tab" data-name="The brief, redrawn" data-chapter="9" data-say="Left: the course brief, as drawn. Right: the same boxes, coloured by <b>who picks the next step</b>. Only one box needs the model to decide.">
-    <div class="brief-pair">
-      <figure class="brief-img"><img src="../assets/img/brief-flow.png" alt="The course brief's diagram: Email Inbox, New Customer Email, Email Agent, Extract Company Name, then Web Research Agent, Calendar Agent and Company Info Agent in parallel, Memory Agent, Report Agent, Human Approval, Send Brief / Save to KB"><figcaption>As the brief draws it: seven “agents”</figcaption></figure>
-      <div>
-<script type="application/json" class="wf">
-{"title": "Who picks each box's next step", "w": 520, "h": 560,
- "nodes": [["m", "Email", 260, 30, "llm"], ["x", "Extract name", 260, 100],
-           ["w", "Web Research ↻", 95, 190, "llm"], ["c", "Calendar", 260, 190, "tool"], ["i", "Company Info", 425, 190, "tool"],
-           ["y", "Memory", 260, 290], ["r", "Report", 260, 380, "llm"], ["h", "Approval", 260, 460, "io"], ["s", "Send / save", 260, 530, "tool"]],
- "edges": [["m", "x", "if lead"], ["x", "w"], ["x", "c"], ["x", "i"], ["w", "y"], ["c", "y"], ["i", "y"], ["y", "r"], ["r", "h"], ["h", "s", "click"]]}
-</script>
-        <div class="wf-legend"><span>code step</span><span class="llm">LLM call or agent</span><span class="tool">tool (MCP, database)</span><span class="io">a person</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="tab" data-name="When to use an agent" data-chapter="9" data-say="Give a step to an agent only when <b>all five</b> are true. Of the seven boxes, one passes.">
-    <table class="plain" style="margin:0">
-      <tr><th></th><th>open-ended path</th><th>high value per run</th><th>cheap to check</th><th>slow is fine</th><th>small blast radius</th><th></th></tr>
-      <tr><td>Email</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
-      <tr><td><b>Web research</b></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓ <small>(read-only tools)</small></td><td><b>agent</b></td></tr>
-      <tr><td>Company info</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
-      <tr><td>Calendar</td><td>✗</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>workflow</td></tr>
-      <tr><td>Memory</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td>✗ <small>(writes the KB)</small></td><td>workflow</td></tr>
-      <tr><td>Report</td><td>✗</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>one LLM call</td></tr>
-      <tr><td>Approval</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>✗ <small>(sends email)</small></td><td>a gate, never a model</td></tr>
-    </table>
-  </div>
-  <div class="tab" data-name="Measured" data-chapter="10" data-say="Both designs built for real, run on the same 19 golden emails, the same models and the same scorer.">
-    <div class="measure">
+  <div class="tab" data-name="Agents hit a wall" data-chapter="8" data-say="The same assistant, built both ways for real: &lt;b&gt;7 agents&lt;/b&gt; as the course brief draws it, and &lt;b&gt;1 agent inside a workflow&lt;/b&gt;. Same 19 emails, same models, same scorer.">
+<div class="measure">
       <div class="m-col"><b>The brief's 7 agents</b><span>meeting-prep-brd · 6 LLM agents, 8 MCP servers, a human gate</span></div>
       <div class="m-col win"><b>One agent, inside a workflow</b><span>meeting-prep-operonx · web research is the agent; the rest are steps</span></div>
       <div class="m-row"><i>briefs that pass</i><span>16 / 19</span><span>18 / 19</span></div>
@@ -107,165 +29,173 @@
       <div class="m-row"><i>cost per 1,000 emails</i><span>$2.52</span><span>$1.08</span></div>
     </div>
   </div>
+  <div class="tab" data-name="A graph with a loop" data-chapter="9" data-say="Top: an agent is a small graph whose loop edges &lt;b&gt;the model&lt;/b&gt; picks (amber, dashed). Bottom: the workflow is a bigger graph whose edges &lt;b&gt;your code&lt;/b&gt; picks; the agent is one node in it.">
+<div class="mm-stack"><figure class="mm"><figcaption>An agent</figcaption><pre class="mermaid">
+flowchart LR
+  T([task]) --> L[llm]
+  L -- "model: call a tool" --> R[run_tool]
+  R -- result --> L
+  L -- "model: done" --> A([answer])
+  linkStyle 1,3 stroke:#D9962B,stroke-width:2.5px,stroke-dasharray:6 4
+</pre></figure><figure class="mm"><figcaption>A workflow, with the agent as one node</figcaption><pre class="mermaid">
+flowchart LR
+  E([email]) --> S{screen}
+  S -- attack --> H([held])
+  S -- ok --> P[triage]
+  P --> K[recall notes]
+  P --> RS[[research agent ×3]]
+  K --> B[write brief]
+  RS --> B
+  B --> O([brief])
+  style RS fill:#FFF6E0,stroke:#D9962B,stroke-width:2px
+</pre></figure></div>
+  </div>
+  <div class="tab" data-name="Inside a workflow engine" data-chapter="10" data-say="Every workflow engine is these five parts. The interesting differences are in &lt;b&gt;state&lt;/b&gt; and the &lt;b&gt;scheduler&lt;/b&gt;.">
+<div class="eng">
+  <div class="eng-c"><i>1</i><b>Graph</b><span>nodes are functions; edges are fixed, a branch, a loop, a fan-out</span></div>
+  <span class="eng-a">→</span>
+  <div class="eng-c"><i>2</i><b>Compile</b><span>check the graph, plan the run</span></div>
+  <span class="eng-a">→</span>
+  <div class="eng-c key"><i>3</i><b>Scheduler</b><span>which node may run now?</span></div>
+  <span class="eng-a">⇄</span>
+  <div class="eng-c"><i>4</i><b>Executor</b><span>async tasks, many at once, under a cap</span></div>
+  <span class="eng-a">⇄</span>
+  <div class="eng-c key"><i>5</i><b>State</b><span>every node's outputs, for the next node to read</span></div>
+</div>
+<div class="eng-around"><b>around it</b> a trace per run and per node · checkpoints · triggers that start runs</div>
+  </div>
+  <div class="tab" data-name="LangGraph, inside" data-chapter="10" data-say="One shared dict, and any node may write any key, so LangGraph runs in &lt;b&gt;supersteps&lt;/b&gt;: run the ready nodes, &lt;b&gt;wait for all of them&lt;/b&gt;, merge their writes, save a checkpoint, repeat.">
+<div class="code-pair"><pre class="static"># one dict for the whole graph
+class State(TypedDict):
+    email: dict
+    lead: dict
+    notes: Annotated[list, operator.add]   # many writers: a reducer
+
+# a node reads the dict, returns an update
+def triage(state: State) -&gt; dict:
+    return {&quot;lead&quot;: parse(llm(build_prompt(state[&quot;email&quot;])))}
+
+g = StateGraph(State)
+g.add_node(&quot;triage&quot;, triage)
+g.add_node(&quot;recall&quot;, recall)
+g.add_node(&quot;calendar&quot;, calendar)
+g.add_node(&quot;brief&quot;, brief)
+g.add_edge(START, &quot;triage&quot;)
+g.add_edge(&quot;triage&quot;, &quot;recall&quot;)
+g.add_edge(&quot;triage&quot;, &quot;calendar&quot;)
+g.add_edge([&quot;recall&quot;, &quot;calendar&quot;], &quot;brief&quot;)
+app = g.compile(checkpointer=InMemorySaver())</pre><div class="tl"><div class="tl-h"><b>LangGraph: supersteps</b><span>each step waits for the slowest email: brief starts at 9 s for everyone</span></div>
+<div class="tl-body">
+<div class="tl-walls"><i style="left:6.25%"></i><i style="left:56.25%"></i></div>
+<div class="tl-row"><span class="tl-l">email A</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:50.00%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
+<div class="tl-row"><span class="tl-l">email B</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:37.50%">brief</span><span class="tl-done" style="left:93.75%">15 s</span></div></div>
+<div class="tl-row"><span class="tl-l">email C</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
+<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief<i class="wall"></i>superstep barrier</div></div></div>
+  </div>
+  <div class="tab" data-name="OperonX, inside" data-chapter="10" data-say="One shared state too, but every slot has its own address: &lt;b&gt;(op, output, context)&lt;/b&gt;. Each op writes only its own slots, so nothing waits on a barrier: an op starts &lt;b&gt;the moment its inputs are in&lt;/b&gt;.">
+<div class="code-pair"><pre class="static"># a node: a function that owns its outputs
+@op
+def triage(email: dict) -&gt; dict:
+    return {&quot;lead&quot;: parse(llm(build_prompt(email)))}
+
+@graph
+def prepare(email):
+    lead = triage(email=email)
+    notes = recall(lead=lead[&quot;lead&quot;])     # reads triage&#x27;s slot
+    meetings = calendar(lead=lead[&quot;lead&quot;])
+    brief = write_brief(lead=lead[&quot;lead&quot;], notes=notes[&quot;notes&quot;],
+                        meetings=meetings[&quot;meetings&quot;])
+    START &gt;&gt; lead &gt;&gt; [notes, meetings] &gt;&gt; brief &gt;&gt; END</pre><div><table class="slots">
+  <tr><th>op</th><th>output</th><th>context</th><th>value</th></tr>
+  <tr><td>triage</td><td>lead</td><td>main</td><td><code>{"company": "Lotus Logistics", …}</code></td></tr>
+  <tr><td>recall</td><td>notes</td><td>main</td><td><code>["pilot 2025-11 …", …]</code></td></tr>
+  <tr><td>research</td><td>final</td><td>[0] website</td><td><code>"Lotus runs bonded warehouses …"</code></td></tr>
+  <tr><td>research</td><td>final</td><td>[1] news</td><td><code>"wins a five-year port contract …"</code></td></tr>
+  <tr><td>research</td><td>final</td><td>[2] people</td><td><code>"Linh Tran, COO; Bao Do, IT …"</code></td></tr>
+</table><div class="tl"><div class="tl-h"><b>OperonX: dataflow</b><span>each email moves on the moment its own step is done</span></div>
+<div class="tl-body">
+<div class="tl-row"><span class="tl-l">email A</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:50.00%">research</span><span class="tl-bar s-brief" style="left:56.25%;width:12.50%">brief</span><span class="tl-done" style="left:68.75%">11 s</span></div></div>
+<div class="tl-row"><span class="tl-l">email B</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:18.75%;width:37.50%">brief</span><span class="tl-done" style="left:56.25%">9 s</span></div></div>
+<div class="tl-row"><span class="tl-l">email C</span><div class="tl-track"><span class="tl-bar s-triage" style="left:0.00%;width:6.25%"></span><span class="tl-bar s-research" style="left:6.25%;width:12.50%">research</span><span class="tl-bar s-brief" style="left:18.75%;width:12.50%">brief</span><span class="tl-done" style="left:31.25%">5 s</span></div></div>
+<div class="tl-row tl-axis"><span class="tl-l"></span><div class="tl-track"><span style="left:0.00%">0s</span><span style="left:18.75%">3s</span><span style="left:37.50%">6s</span><span style="left:56.25%">9s</span><span style="left:75.00%">12s</span><span style="left:93.75%">15s</span></div></div></div><div class="tl-legend"><i class="s-triage"></i>triage <i class="s-research"></i>research <i class="s-brief"></i>brief</div></div></div></div>
+  </div>
+  <div class="tab" data-name="Why OperonX" data-chapter="10" data-say="Where OperonX beats LangGraph, each point from the engines&#x27; source or our own measurement.">
+<table class="plain why">
+  <tr><td><b>1 · No waiting for the slowest</b></td><td>no superstep barrier: on a batch, LangGraph takes the slowest email <i>at every step</i>; OperonX takes the slowest email's own time (15 s vs 11 s, tabs 4 and 5)</td></tr>
+  <tr><td><b>2 · Streams flow item by item</b></td><td>every <code>yield</code> moves on at once, in its own context: step B works on item 1 while step A makes item 2</td></tr>
+  <tr><td><b>3 · Less engine overhead</b></td><td>same graphs, no LLM: chain 0.2 vs 2.7 ms · stream of 1,000 35 vs 172 ms · loop ×100 4.7 vs 37 ms · 500 at once 105 vs 1,055 ms</td></tr>
+  <tr><td><b>4 · Wiring is code</b></td><td><code>a &gt;&gt; [b, c] &gt;&gt; d</code>, <code>if_(…)</code>, <code>op["x"]</code>: a wrong name fails at build, not node names as strings</td></tr>
+  <tr><td><b>5 · No global schema to design</b></td><td>each op owns its outputs; no <code>TypedDict</code> for the whole graph, no reducer per shared key</td></tr>
+  <tr><td><b>6 · Graphs nest</b></td><td>a sub-graph is an op (the brief's boxes became zones); an agent is one node; a loop is a back-edge</td></tr>
+  <tr><td><b>7 · The app layer is built in</b></td><td>jobs, services, schedules, webhooks, an eval that gates every deploy, traces drawn by Studio: LangGraph needs its Platform and LangSmith for these</td></tr>
+  <tr><td><b>8 · A lighter stack</b></td><td>core: pydantic, pyyaml, rich, orjson; LangGraph: langchain-core, -checkpoint, -prebuilt, -sdk</td></tr>
+  <tr><td><b>9 · It held up on the real system</b></td><td>both builds pass 19/19 golden emails; the LangGraph build's <code>interrupt()</code> re-ran its node on resume and <b>sent the approval email twice</b>, and lost the pending approval on a restart</td></tr>
+</table>
+  </div>
 </div>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
-<h2>Chapter 8 · Who picks the next step?</h2>
-<p>Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener"><i>Building effective agents</i></a> draws the line with one question:</p>
-<div class="callout navy"><p><b>Workflows</b> are systems where LLMs and tools are orchestrated through predefined code paths. <b>Agents</b> are systems where LLMs dynamically direct their own processes and tool usage.</p></div>
-<p>Run Linh's email both ways and count the calls.</p>
-<div class="pipeline" data-title="Workflow: code picks the path">
-  <div class="step" data-icon="✦" data-title="Triage" data-desc="One LLM call: is this a lead, and who is it?">
-<script type="text/plain">
-import json
-import httpx
-from openai import OpenAI
-from prep_world import WEB, golden
-from prep_world.guard import visible_text
-from prep_world.mail import as_email
-
-client, calls = OpenAI(), 0
-def llm(**kw):
-    global calls
-    calls += 1
-    return client.chat.completions.create(model="gpt-4o-mini", **kw).choices[0].message
-
-email = as_email(next(g for g in golden() if g["id"] == "lotus-intro"))
-lead = json.loads(llm(messages=[
-    {"role": "system", "content": 'Reply as JSON with keys "is_lead" and "company".'},
-    {"role": "user", "content": f"From: {email['from_name']} <{email['from']}>\n\n{email['text']}"}]).content)
-print(lead)
-</script></div>
-  <div class="step" data-icon="⑂" data-title="Route and research" data-desc="An if, then a fixed recipe: search, read the top result.">
-<script type="text/plain">
-if lead["is_lead"]:
-    hits = httpx.get(f"{WEB}/search", params={"q": f"{lead['company']} news"}).json()
-    facts = visible_text(httpx.get(hits[0]["url"]).text)
-else:
-    facts = None
-print(facts[:120] if facts else "skipped: not a lead")
-</script></div>
-  <div class="step" data-icon="✉" data-title="Brief" data-desc="One more LLM call writes it.">
-<script type="text/plain">
-brief = llm(messages=[{"role": "user", "content": f"Write a meeting brief.\n\nCompany: {lead['company']}\n\nEvidence:\n{facts}"}]).content
-print(brief[:160])
-print(f"model calls: {calls} · path picked by: code")
-</script></div>
-</div>
-
-<div class="pipeline" data-title="Agent: the model picks the path">
-  <div class="step" data-icon="⚒" data-title="Tools" data-desc="Three tools on offer; the model will choose.">
-<script type="text/plain">
-import inspect, json
-import httpx
-from openai import OpenAI
-from prep_world import WEB, db
-from prep_world.guard import visible_text
-
-def web_search(query: str) -> str:
-    """Search the web. Returns titles, links and snippets."""
-    return httpx.get(f"{WEB}/search", params={"q": query}).text
-
-def fetch_page(url: str) -> str:
-    """Read a web page: its visible text."""
-    return visible_text(httpx.get(url).text)
-
-def crm_lookup(domain: str) -> str:
-    """Find a company in our CRM by its email domain."""
-    return json.dumps(db.find_company(domain) or {})
-
-TOOLS = {f.__name__: f for f in (web_search, fetch_page, crm_lookup)}
-SCHEMAS = [{"type": "function", "function": {"name": n, "description": f.__doc__, "parameters": {"type": "object",
-            "properties": {p: {"type": "string"} for p in inspect.signature(f).parameters}}}} for n, f in TOOLS.items()]
-print(list(TOOLS))
-</script></div>
-  <div class="step" data-icon="↻" data-title="The loop" data-desc="Each turn, the model picks a tool or says it's done.">
-<script type="text/plain">
-client, calls = OpenAI(), 0
-messages = [{"role": "user", "content": "Prepare a brief on lotus-logistics.example. Find out about Lotus Logistics news."}]
-while True:
-    calls += 1
-    msg = client.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=SCHEMAS).choices[0].message
-    if not msg.tool_calls:
-        break
-    messages.append(msg.model_dump(exclude_none=True))
-    for c in msg.tool_calls:
-        print(f"model picked: {c.function.name}")
-        out = TOOLS[c.function.name](**json.loads(c.function.arguments))
-        messages.append({"role": "tool", "tool_call_id": c.id, "content": out})
-</script></div>
-  <div class="step" data-icon="✉" data-title="Answer" data-desc="The model decided it was done. Did it check the CRM?">
-<script type="text/plain">
-used = [m["tool_calls"][0]["function"]["name"] for m in messages if m.get("tool_calls")]
-print(msg.content[:120])
-print(f"model calls: {calls} · path picked by: the model · CRM checked: {'crm_lookup' in used}")
-</script></div>
-</div>
-
-<div class="callout key"><b class="t">The truth</b><p>Both are workflows: steps and arrows. The difference is <b>who picks each arrow</b>, your code or the model. That's a property of <b>each arrow</b>, not of a whole system, and most real systems mix both.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The map →</button></div>
+<h2>Chapter 8 · Agents hit a wall</h2>
+<p>Every decision the model makes is a model call: time, tokens, and one more chance to go wrong. In Part I, one research question took <b>4 calls</b>; three questions took <b>11</b> for a single email. Now scale it the way the course brief does, and let the model decide <i>every</i> box.</p>
+<table>
+  <tr><th></th><th>7 agents (the brief, as drawn)</th><th>1 agent inside a workflow</th></tr>
+  <tr><td>briefs that pass</td><td>16/19</td><td><b>18/19</b></td></tr>
+  <tr><td>LLM calls per email</td><td>12.1</td><td><b>8.4</b></td></tr>
+  <tr><td>tokens per email</td><td>13,390</td><td><b>4,659</b></td></tr>
+  <tr><td>time, median</td><td>25.2 s</td><td><b>9.6 s</b></td></tr>
+  <tr><td>cost per 1,000 emails</td><td>$2.52</td><td><b>$1.08</b></td></tr>
+</table>
+<div class="callout warn"><b class="t">Why the 7 agents lose facts</b><p>The research, calendar and company agents <b>find</b> the facts. Then the Memory Agent, an LLM, rewrites everything into one summary, and some facts don't survive. A merge written in code can't drop a fact.</p></div>
+<div class="callout key"><b class="t">The truth</b><p>The more steps the model decides, the slower, costlier and less reliable the system. Let the model decide <b>only where the path can't be known</b>, and let code decide the rest.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · A graph with a loop →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="2" hidden>
-<h2>The map</h2>
-<p>Two questions place any system: <b>how fixed is the structure?</b> (left to right) and <b>how much of the work is LLM calls?</b> (bottom to top). Plain code sits bottom-left, a coding agent top-right, and most of what ships lives in between.</p>
-<p><b>Room exercise:</b> click the products under the map one by one. Before each click, ask where it lands.</p>
-<div class="callout navy"><b class="t">Others reached the same view</b><p>HumanLayer's <a href="https://github.com/humanlayer/12-factor-agents" target="_blank" rel="noopener">12-factor agents</a>: production agents are mostly deterministic code with LLM steps sprinkled in, so <b>own your control flow</b>.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The brief, redrawn →</button></div>
+<h2>Chapter 9 · An agent is a graph with a loop</h2>
+<p>Draw the Part I agent as a graph and it's tiny: <code>llm</code>, <code>run_tool</code>, and an edge back. The only special thing is <b>who picks that edge</b>: the model. Everything around it, the gate, the triage, the notes, the merge, the brief, is a graph whose edges your code picks.</p>
+<div class="callout key"><b class="t">The truth</b><p>An agent is a workflow with <b>one loop whose edge the model picks</b>. A real system is a bigger workflow with that loop as one node. So the question is no longer <i>how many agents</i>: it's <b>what runs the workflow</b>.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · Inside a workflow engine →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
-<h2>Chapter 9 · The brief's seven agents, redrawn</h2>
-<p>The course brief asks for this assistant as <b>seven agents</b>. Ask each box the question: <i>who picks its next step?</i></p>
-<table>
-  <tr><th>the brief's box</th><th>who picks the next step</th><th>so it is</th></tr>
-  <tr><td>Email Agent</td><td>code: a gate, then one LLM call says “lead or not”</td><td>a step with one LLM call</td></tr>
-  <tr><td>Extract Company Name</td><td>code: look the sender's domain up in the CRM</td><td>a step</td></tr>
-  <tr><td><b>Web Research Agent</b></td><td><b>the model</b>: what to search, what to read, when it knows enough</td><td><b>an agent</b></td></tr>
-  <tr><td>Calendar Agent</td><td>code: one query, filtered by the company</td><td>a tool call</td></tr>
-  <tr><td>Company Info Agent</td><td>code: CRM and knowledge-base queries</td><td>tool calls</td></tr>
-  <tr><td>Memory Agent</td><td>code: merge and de-duplicate the facts</td><td>a step</td></tr>
-  <tr><td>Report Agent</td><td>code: one LLM call writes the brief, a check reads it</td><td>a step with one LLM call</td></tr>
-  <tr><td>Human Approval</td><td><b>a person</b> clicks Approve or Reject</td><td>a gate: a draft and a link</td></tr>
-</table>
-<div class="callout navy"><b class="t">Not a takedown</b><p>The brief's own <b>tool, eval and security harnesses</b> are exactly what a workflow gives you. And its one open-ended box is where an agent, even three in parallel (Chapter 7), really pays.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · When to use an agent →</button></div>
+<h2>Chapter 10 · Inside a workflow engine</h2>
+<p>Every engine, LangGraph, OperonX, Temporal, Airflow, is these five parts. Three are plumbing. Two decide how the engine behaves: <b>where the outputs live</b> (state) and <b>when a node may run</b> (the scheduler).</p>
+<p>Two engines, the same five parts, two different answers to <b>state</b> and <b>the scheduler</b>.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · LangGraph, inside →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
-<h2>When should a step be an agent?</h2>
-<table class="plain">
-  <tr><td><b>Is the path open-ended?</b></td><td>you can't write the steps down in advance</td></tr>
-  <tr><td><b>Is each run worth a lot?</b></td><td>several model calls are cheap next to the outcome</td></tr>
-  <tr><td><b>Is the result cheap to check?</b></td><td>a person, a test or a rule can tell good from bad</td></tr>
-  <tr><td><b>Is slow fine?</b></td><td>seconds to minutes, not milliseconds</td></tr>
-  <tr><td><b>Is the blast radius small?</b></td><td>its tools can't send, pay or delete on their own</td></tr>
-</table>
-<p>Research passes all five: nobody can list in advance which pages matter, a good brief is worth a few calls, sales reads it anyway, nobody waits on it, and its tools only read. Every other box fails at least one, usually the first.</p>
-<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · Measured →</button></div>
+<h2>LangGraph, inside: supersteps</h2>
+<p>All nodes share <b>one dict</b>, and several nodes may write the same key. To keep that safe, LangGraph runs the graph in <b>supersteps</b> (the Pregel model):</p>
+<ol>
+  <li>find the nodes whose inputs changed in the last step;</li>
+  <li>run them in parallel;</li>
+  <li><b>wait until every one of them has finished</b>;</li>
+  <li>merge their writes into the dict (reducers, in a fixed order) and save a checkpoint;</li>
+  <li>repeat.</li>
+</ol>
+<p>What that buys: a consistent snapshot after every step, so it can resume, time-travel, or pause for a human with <code>interrupt()</code>. What it costs: every step waits for its slowest node.</p>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · OperonX, inside →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="5" hidden>
-<h2>Chapter 10 · Measured: both built for real</h2>
-<p>We built the brief <b>exactly as drawn</b> (<code>meeting-prep-brd</code>: six LLM agents, each with its own MCP tools behind the six-step harness, Extract Company Name as one LLM call, Human Approval as a person) and the workflow (<code>meeting-prep-operonx</code>: one agent, the rest steps). Same 19 golden emails, same models, same scorer, real runs.</p>
-<table>
-  <tr><th></th><th>the brief's 7 agents</th><th>one agent, in a workflow</th></tr>
-  <tr><td>briefs that pass</td><td>16/19</td><td><b>18/19</b></td></tr>
-  <tr><td>LLM calls per email</td><td>12.1</td><td><b>8.4</b></td></tr>
-  <tr><td>tokens per email</td><td>13,390</td><td><b>4,659</b></td></tr>
-  <tr><td>time, median · 95th percentile</td><td>25.2 s · 35.4 s</td><td><b>9.6 s · 17.2 s</b></td></tr>
-  <tr><td>cost per 1,000 emails</td><td>$2.52</td><td><b>$1.08</b></td></tr>
-  <tr><td>security cases (4 attack emails)</td><td>all pass</td><td>all pass</td></tr>
-</table>
-<div class="callout warn"><b class="t">Why the seven agents lose facts</b><p>The research, calendar and company agents <b>find</b> the facts: they're in the traces. Then the <b>Memory Agent</b>, an LLM, rewrites everything into one summary, and some facts don't survive: the CRM's pilot history, or the IT manager who actually wrote. A merge written in code can't drop a fact.</p></div>
-<p>Open both in <a href="http://127.0.0.1:8766" target="_blank" rel="noopener">Studio</a>: <code>meeting-prep-brd</code> → <code>on_email</code>, and <code>meeting-prep-operonx</code> → <code>prepare</code>. The same boxes, the same names.</p>
-<div class="callout key"><b class="t">The truth</b><p>Agents are real. <b>Use them where the path can't be known, and run them inside a workflow.</b></p></div>
-<div class="handoff"><span>Still missing</span><p>That's Friday's benchmark. Now it's Monday, 8 am, and 50 emails arrive at once.</p></div>
+<h2>OperonX, inside: dataflow</h2>
+<p>OperonX also keeps <b>one shared state</b> for the run, but every value has its own address: <b>(op, output, context)</b>. Context is <code>main</code>, a loop iteration, or a stream item like <code>[1]</code>. Each op writes only its own slots and reads others' by reference (<code>op["x"]</code>); a slot that really is shared gets a reducer.</p>
+<p>So there is nothing to wait on. Each op emits its results as events; the scheduler counts them against each successor, and a successor whose count reaches zero <b>starts right away</b>. A fast branch runs ahead, and a stream's item 1 is downstream while item 2 is still being made.</p>
+<div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · Why OperonX →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="6" hidden>
+<h2>Why OperonX</h2>
+<p>We built OperonX because the workflow is the product, and the engine under it should be fast, terse, and ours to bend the same week.</p>
+<div class="callout navy"><b class="t">The honest line</b><p>LangGraph is stronger at <b>durable checkpoints</b> (resume after a crash, pause for days) and has the bigger ecosystem. We pay for OperonX too: we maintain it.</p></div>
+<div class="handoff"><span>Still missing</span><p>That's the theory. Now it's Monday, 8 am, and 50 emails arrive at once.</p></div>
 </section>
 
 </main>

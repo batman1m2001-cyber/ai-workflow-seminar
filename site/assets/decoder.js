@@ -17,11 +17,11 @@
     { ch: 5, term: "context engineering · memory · skills · sub-agents", truth: "a function that builds the prompt under a budget; memory is a file; a sub-agent is a tool that runs another loop" },
     { ch: 6, term: "harness engineering · guardrails", truth: "everything that isn't the model: <code>if</code>s, retries, logs, tests" },
     { ch: 7, term: "multi-agent · orchestrator", truth: "agents as nodes, run in parallel, then merged: a workflow" },
-    { ch: 8, term: "agent vs workflow", truth: "who picks each arrow: your code, or the model" },
-    { ch: 9, term: "“seven agents”", truth: "one agent where the path is open; code, one LLM call or a person everywhere else" },
-    { ch: 10, term: "“more agents is better”", truth: "measured: more calls, more tokens, slower, and facts lost in the merge" },
-    { ch: 11, term: "production-ready agent", truth: "a workflow engine: timeouts, retries, gates, traces, evals, durable state" },
-    { ch: 12, term: "human-in-the-loop · durable agents", truth: "a gate: a draft and a link; a workflow with triggers and stored state" }
+    { ch: 8, term: "agents at scale", truth: "the more steps the model decides, the slower, costlier and less reliable" },
+    { ch: 9, term: "agent vs workflow", truth: "an agent is a graph with one loop whose edge the model picks" },
+    { ch: 10, term: "workflow engine", truth: "graph · compile · scheduler · executor · state; LangGraph runs supersteps, OperonX runs dataflow" },
+    { ch: 11, term: "production-ready agent", truth: "engine features: a gate node, a concurrency cap, a trace, an eval gate" },
+    { ch: 12, term: "human-in-the-loop · durable agents", truth: "a draft and a link; the click starts the next graph" }
   ];
 
   var full = document.querySelector(".decoder-full");
