@@ -1,12 +1,11 @@
 /* agent.py, chapter by chapter: the function graph, the whole file, and the wire.
  *
- *   <div class="fg" data-ch="3"></div>        the function graph of agent.py after chapter 3
- *   <div class="project" data-ch="3"></div>   the whole file (new lines marked), ▶ Run,
- *                                             its output, and what went over the wire
+ *   <div class="project" data-ch="3"></div>   agent.py after chapter 3: the whole file (new lines
+ *                                             marked), ▶ Run, its output, and what went over the wire
  *
  * The files are site/assets/py/agent/ch1.py … ch7.py. ▶ Run sends the file with a
  * short prelude that reports every call of one of its functions (sys.setprofile), so
- * the graph lights up in call order, and the calls to llm(), embed() and
+ * the agent diagram (anatomy.js) lights each function's part in call order, and the calls to llm(), embed() and
  * mcp_request() show their real request and reply.
  */
 (function () {
@@ -38,34 +37,14 @@
     ""
   ].join("\n");
 
-  // the graph of each chapter: what prepare() calls, in order
-  function N(fn, tag, by) { return { fn: fn, tag: tag, by: by }; }
-  function G(fn, label, items, kind) { return { group: fn, label: label, items: items, kind: kind || "loop" }; }
-  var head = [N("read_email", "the email", "<module>"), N("build_prompt", "prompt engineering", "prepare"),
-              N("llm", "the model", "prepare"), N("parse", "structured output", "prepare")];
-  var brief = [N("brief_prompt", "the brief's prompt", "prepare"), N("llm", "the model", "prepare")];
-  function loop(ch) {
-    var items = [N("tools_prompt", "tools as text", "research")];
-    if (ch >= 5) items.push(N("assemble_context", "context engineering", "research"));
-    items.push(N("llm", "the model", "research"), N("parse_tool_call", "a tool call?", "research"));
-    if (ch >= 6) items.push(N("guard", "the harness", "research"));
-    items.push(N("run_tool", "our code runs it", "research"));
-    return G("research", "↻ research(): the agent loop, until the model answers", items);
-  }
-  function mcp() { return [N("start_mcp", "MCP server", "prepare"), N("list_tools", "MCP tools/list", "prepare")]; }
-  var GRAPHS = {
-    1: head,
-    2: head.concat([N("recall", "RAG", "prepare")], brief),
-    3: head.concat([N("recall", "RAG", "prepare")], mcp(),
-                   [N("tools_prompt", "tools as text", "prepare"), N("llm", "the model", "prepare"),
-                    N("parse_tool_call", "the model's JSON", "prepare"), N("call_tool", "MCP tools/call", "prepare")], brief),
-    4: head.concat([N("recall", "RAG", "prepare")], mcp(), [loop(4)], brief),
-    5: head.concat([N("recall", "RAG", "prepare")], mcp(), [loop(5)], brief),
-    6: [N("read_email", "the email", "<module>"), N("screen", "the gate", "prepare")].concat(head.slice(1),
-        [N("recall", "RAG", "prepare")], mcp(), [loop(6)], brief),
-    7: [N("read_email", "the email", "<module>"), N("screen", "the gate", "prepare")].concat(head.slice(1),
-        [N("recall", "RAG", "prepare")], mcp(),
-        [G("research_team", "×3 agents at once: research_team()", [loop(7)], "team"), N("merge", "merge", "prepare")], brief)
+  // which part of the agent diagram (anatomy.js) each agent.py function lights
+  var PART = {
+    read_email: "user", build_prompt: "prompt", llm: "llm", parse: "parser", brief_prompt: "answer",
+    embed: "docs", recall: "retriever",
+    tools_prompt: "tools", parse_tool_call: "tools", run_tool: "tools", web_search: "tools", fetch_page: "tools",
+    start_mcp: "mcp", list_tools: "mcp", call_tool: "mcp", mcp_request: "mcp",
+    research: "loop", assemble_context: "context", screen: "harness", guard: "harness",
+    research_team: "team", merge: "team"
   };
 
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
@@ -92,39 +71,10 @@
     return out;
   }
 
-  // ── the function graph ───────────────────────────────────────────────
-  function keys(items, acc) {
-    items.forEach(function (it) {
-      if (it.group) { acc.push("g:" + it.group); keys(it.items, acc); }
-      else acc.push(it.fn + "@" + it.by);
-    });
-    return acc;
-  }
-  function drawGraph(box, ch) {
-    var prev = {}, seen = {};
-    if (ch > 1) keys(GRAPHS[ch - 1], []).forEach(function (k) { prev[k] = (prev[k] || 0) + 1; });
-    function isNew(k) { seen[k] = (seen[k] || 0) + 1; return seen[k] > (prev[k] || 0); }
-    function render(items) {
-      return items.map(function (it, i) {
-        var arrow = i ? '<span class="fg-arr">→</span>' : "";
-        if (it.group) {
-          var nw = isNew("g:" + it.group);
-          return arrow + '<div class="fg-group ' + it.kind + (nw ? " new" : "") + '" data-fn="' + it.group + '">' +
-            '<span class="fg-label">' + esc(it.label) + '<i class="fg-cnt"></i></span><div class="fg-row">' + render(it.items) + "</div></div>";
-        }
-        var n = isNew(it.fn + "@" + it.by);
-        return arrow + '<button type="button" class="fg-node' + (n ? " new" : "") + '" data-fn="' + it.fn + '" data-by="' + it.by + '">' +
-          "<code>" + it.fn + "()</code><small>" + esc(it.tag) + '</small><i class="fg-cnt"></i></button>';
-      }).join("");
-    }
-    box.innerHTML = '<div class="fg-row fg-top">' + render(GRAPHS[ch]) + "</div>";
-    box.setAttribute("data-ready", "");
-  }
-
   // ── one chapter's project ────────────────────────────────────────────
   function mount(el) {
     var ch = +el.getAttribute("data-ch");
-    var graph = document.querySelector('.fg[data-ch="' + ch + '"]');
+    var graph = document.querySelector(".anatomy");
     el.innerHTML =
       '<div class="pj-head"><div class="pj-title"><code>agent.py</code> after chapter ' + ch + ' <span class="pj-meta"></span></div>' +
       '<div class="pj-ctl"><button class="pj-reset" type="button">Reset</button><button class="run" type="button">▶ Run</button></div></div>' +
@@ -157,31 +107,7 @@
     });
     el.querySelector(".pj-reset").onclick = function () { if (cm) cm.setValue(original); };
 
-    if (graph) graph.addEventListener("click", function (e) {
-      var node = e.target.closest(".fg-node, .fg-group");
-      if (!node || !cm) return;
-      var at = cm.getValue().split("\n").findIndex(function (l) { return l.indexOf("def " + node.getAttribute("data-fn") + "(") === 0; });
-      if (at < 0) return;
-      cm.setSelection({ line: at, ch: 0 }, { line: at, ch: 999 });
-      cm.scrollIntoView({ line: at, ch: 0 }, 120);
-      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-
-    function nodes() { return graph ? [].slice.call(graph.querySelectorAll(".fg-node, .fg-group")) : []; }
-    function clear() { nodes().forEach(function (n) { n.classList.remove("lit", "hot"); n.querySelector(".fg-cnt").textContent = ""; n._n = 0; }); }
-    function light(ev) {
-      var cands = nodes().filter(function (n) {
-        return n.getAttribute("data-fn") === ev.fn && (!n.getAttribute("data-by") || n.getAttribute("data-by") === ev.by);
-      });
-      if (!cands.length) return null;
-      var n = cands.find(function (c) { return !c._n; }) || cands[cands.length - 1];
-      n._n = (n._n || 0) + 1;
-      n.classList.add("lit");
-      if (n._n > 1) n.querySelector(".fg-cnt").textContent = "×" + n._n;
-      nodes().forEach(function (x) { x.classList.remove("hot"); });
-      n.classList.add("hot");
-      return n;
-    }
+    function light(ev) { if (graph && graph.flash && PART[ev.fn]) graph.flash(PART[ev.fn]); }
 
     function wireItem(call, ret) {
       var a = call.args || {}, title, req, rep;
@@ -209,11 +135,9 @@
     runBtn.onclick = function () {
       if (runBtn.disabled || !cm) return;
       runBtn.disabled = true; runBtn.textContent = "Running…";
-      clear(); wire.innerHTML = ""; out.textContent = "running…"; el.querySelector(".pj-n").textContent = "";
-      if (graph) {
-        graph.classList.add("running");
-        graph.closest(".tabs").scrollIntoView({ behavior: "smooth", block: "start" });   // watch it light up
-      }
+      if (graph && graph.clearFlash) graph.clearFlash(true);
+      wire.innerHTML = ""; out.textContent = "running…"; el.querySelector(".pj-n").textContent = "";
+      if (graph) graph.scrollIntoView({ behavior: "smooth", block: "start" });   // watch it light up
       fetch(ROOT + "/api/run", { method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ code: PRELUDE + cm.getValue(), mode: mode(), page: "agent-ch" + ch }) })
         .then(function (r) { return r.json(); })
@@ -238,13 +162,12 @@
           return p;
         })
         .then(function () {
-          nodes().forEach(function (x) { x.classList.remove("hot"); });
+          if (graph) graph.querySelectorAll(".hot").forEach(function (x) { x.classList.remove("hot"); });
           if (graph) graph.classList.remove("running");
           runBtn.disabled = false; runBtn.textContent = "▶ Run";
         });
     };
   }
 
-  document.querySelectorAll(".fg[data-ch]").forEach(function (g) { drawGraph(g, +g.getAttribute("data-ch")); });
   document.querySelectorAll(".project[data-ch]").forEach(mount);
 })();

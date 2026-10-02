@@ -16,41 +16,6 @@
 <h1>How many agents does it take?</h1>
 <p class="lead">Back to the question from 8 am, and the decoder, full.</p>
 
-<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 3 phút</summary>
-<div class="speech">
-<p class="cue">[Trang này ngắn. Nói chậm, không vội. Nếu thiếu giờ: chỉ đọc lướt bảng Decoder, nhưng luôn giữ trọn câu trả lời và "The last line".]</p>
-
-<h4>1 · Câu trả lời <small>(~45 giây · callout "How many agents does Linh's email take?")</small></h4>
-<p>Vậy quay lại câu hỏi lúc 8 giờ sáng, lúc mở đầu buổi nói. Đề bài khóa học vẽ bảy agent. Email của Linh cần bao nhiêu agent?</p>
-<p class="cue">[Dừng một nhịp trước khi chỉ vào callout.]</p>
-<p><b>Một.</b> Nằm bên trong một workflow. Một vòng lặp, ở đúng chỗ duy nhất mà đường đi không biết trước được: research công ty. Bên trong nó có thể chạy ba lượt research song song như ở chương 7, nhưng đó vẫn là một node, một chỗ duy nhất mà model chọn đường. Mọi chỗ khác là code, một LLM call, hoặc một con người bấm Approve. Và tất cả được một engine chạy.</p>
-
-<h4>2 · Bảng giải mã, đầy đủ <small>(~1,25 phút · bảng "The decoder")</small></h4>
-<p>Các bạn còn nhớ cái chuỗi buzzword lúc mở đầu không? Cả buổi, cái nút Decoder ở góc phải dưới cứ thêm một dòng sau mỗi chương. Giờ nó đầy rồi, mười hai dòng. Các bạn đã nhìn nó được điền, từng chương một.</p>
-<p class="cue">[Chỉ lướt từng nhóm dòng, đọc cột giữa "it is, in the workflow". Không đọc hết từng chữ.]</p>
-<p>Bảy dòng đầu là bảy chương của <code>agent.py</code>. Prompt engineering, structured output: arguments của một function, cộng <code>json.loads</code> và một cái check. RAG: một query, rồi string formatting; vector store là một cái bảng. Function calling, MCP: model đề xuất JSON, code của mình chạy nó. Agent: một vòng <code>for</code> quanh một LLM call. Context engineering, memory: một function lắp prompt dưới một budget. Harness, guardrails: mọi thứ không phải model. Multi-agent: các agent là node, chạy song song rồi gộp lại, tức là một workflow.</p>
-<p>Năm dòng sau là Part II và Part III. Agent hay workflow: là chuyện ai chọn mỗi mũi tên, code hay model. "Bảy agent": một agent ở chỗ đường đi mở, còn lại là code, một LLM call, hoặc một con người. "Càng nhiều agent càng tốt": đo rồi, nhiều call hơn, nhiều token hơn, chậm hơn, và mất fact khi gộp. Production-ready agent: một workflow engine. Human-in-the-loop, durable agents: một cái gate, một workflow có trigger và state được lưu lại.</p>
-<p>Không có chữ nào nằm ngoài workflow cả. Chữ nào cũng là một step, một mũi tên, hoặc một thứ bao quanh chúng. Lần sau, khi có ai giới thiệu một buzzword mới, các bạn chỉ cần hỏi: cái này là step, là mũi tên, hay là thứ bao quanh? Và ở đó, ai chọn bước tiếp theo: code hay model?</p>
-
-<h4>3 · Câu chốt <small>(~30 giây · callout "The last line")</small></h4>
-<p class="cue">[Dừng lại ở callout "The last line". Đọc chậm.]</p>
-<p>Nếu hôm nay các bạn chỉ mang về được một câu, thì mình mong là câu này.</p>
-<p>Đừng hỏi hệ thống cần bao nhiêu agent. Hãy hỏi hệ thống cần workflow nào, và những step nào model thật sự phải quyết định.</p>
-<p class="cue">[Im lặng hai, ba giây trước khi sang phần tiếp theo.]</p>
-
-<h4>4 · Mang về nhà <small>(~30 giây · bảng "Take it home")</small></h4>
-<p>Cuối cùng, những thứ các bạn mang về được.</p>
-<p>Một là <code>agent.py</code>: con agent viết từ đầu, từng chương một, từ <code>ch1.py</code> tới <code>ch7.py</code>. Mỗi file chạy được, đọc từ trên xuống là hiểu.</p>
-<p>Hai là năm câu hỏi ở Part II: đường đi có open-ended không, giá trị mỗi lần chạy có cao không, kết quả có dễ kiểm tra không, chậm có được không, và blast radius có nhỏ không. Đủ cả năm thì mới dùng agent.</p>
-<p>Ba là engine list ở Part III: những thứ mà bất kỳ engine nào cũng phải cho các bạn, dù các bạn dùng OperonX, LangGraph hay tự viết.</p>
-<p>Bốn là code: <code>meeting-prep-world</code>, <code>meeting-prep-brd</code> là đề bài đúng như vẽ, và <code>meeting-prep-operonx</code> là bản workflow chạy trên OperonX. Một hệ thống, build hai cách, kèm theo golden set của nó.</p>
-<p>Và năm là chính trang web này. Mọi block trên site đều chạy được. Các bạn chỉ cần gõ <code>uv run python -m runner.server</code>.</p>
-<p class="cue">[Chỉ vào lệnh trong bảng.]</p>
-<p>Cảm ơn các bạn đã nghe.</p>
-<p class="cue">[Sau đó: chuyển sang demo các use case thật (QC, callbot) nếu có thời gian.]</p>
-<p class="cue">[Rồi Q&amp;A. Nếu có câu hỏi về số đo engine, mở trang Appendix.]</p>
-</div>
-</details>
 
 <div class="callout navy"><b class="t">How many agents does Linh's email take?</b><p style="font-size:26px;font-weight:800;color:var(--navy);margin:4px 0">One. Inside a workflow.</p>
 <p>One loop where the path can't be known (research), and code, one LLM call or a person everywhere else, run by an engine.</p></div>

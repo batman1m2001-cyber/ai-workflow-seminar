@@ -15,134 +15,10 @@
 
 <p class="kicker">Part I · The agent, as it is</p>
 <h1>Build the agent from scratch</h1>
-<p class="lead">Linh's email arrives at 8 am. We write the program that turns it into a brief, <b>from scratch</b>: one file, <code>agent.py</code>, plain Python, HTTP and an MCP client. Each chapter adds <b>one layer</b> to the same file. Watch two things grow: the code, and the graph of its functions.</p>
+<p class="lead">Linh's email arrives at 8 am. We write the program that turns it into a brief, <b>from scratch</b>: one file, <code>agent.py</code>, plain Python, HTTP and an MCP client. Each chapter adds <b>one layer</b> to the same file. Watch two things grow: the picture of the agent, where every part is a function, and the code.</p>
 
-<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 25 phút</summary>
-<div class="speech">
-<p class="cue">[Chuẩn bị: meeting-prep world đang chạy (<code>./stack.sh up</code>, <code>./stack.sh check</code>), runner đang chạy, nút “Real model” ở thanh trên đang bật (nếu mạng chậm thì chuyển sang “Mock model”, mọi chương vẫn chạy). Mỗi chương đi cùng một nhịp: caption “The idea” dưới đồ thị → đoạn giới thiệu → panel <code>agent.py</code> (dòng xanh lá là dòng mới) → ▶ Run, nhìn đồ thị sáng lên → tab “Output”, rồi tab “On the wire” → “The truth” (khung xanh lá) → “Still missing” (dòng vàng) → nút Next. Không mở nút “＋ The same in LangChain” trên sân khấu. Chương 3 và 4 là hai chương nặng nhất, dành thời gian cho chúng.]</p>
 
-<h4>0 · Mở đầu Part I: một file, bảy chương <small>(~1,5 phút · lead, thanh tab 1–7, đồ thị hàm, nút Decoder)</small></h4>
-<p>Quay lại email lúc tám giờ sáng. Linh Tran, COO của Lotus Logistics, muốn tìm hiểu AI đọc tờ khai hải quan. Thứ Tư có cuộc gọi, và trước đó sales muốn một bản brief một trang.</p>
-<p>Part I này mình làm đúng một việc: viết cái chương trình biến email đó thành bản brief, from scratch. Một file duy nhất, tên là <code>agent.py</code>. Python thường, <code>httpx</code> để gọi HTTP, Postgres, và một MCP client tự viết. Không có agent framework nào cả.</p>
-<p>Bảy chương, mỗi chương thêm đúng một lớp vào cùng một file. Các bạn nhìn thanh tab phía trên: The call, Knowledge, Tools and MCP, The loop, Context, The harness, Many agents. Mỗi tab là đồ thị của <code>agent.py</code> sau chương đó. Mỗi ô là một hàm trong file, dòng chữ nhỏ bên dưới là cái buzzword mà ngành mình gọi nó, ô nào mới thì tô xanh. Dòng caption ngay dưới đồ thị là The idea: ý tưởng của chương, đúng như người ta hay nói.</p>
-<p>Rồi bên dưới là cả file <code>agent.py</code>, đầy đủ, không cắt. Bấm ▶ Run là chạy cả file thật, và đồ thị sáng lên theo đúng thứ tự các hàm được gọi. Bên phải có hai tab: Output, và On the wire. On the wire là chỗ mình nghe trộm: mọi request gửi tới model, nguyên văn, và mọi message gửi tới MCP server. Không có gì giấu.</p>
-<p>Cuối mỗi chương có The truth: buzzword đó thật ra là cái gì, gói trong một câu. Và một dòng Still missing: thứ agent vẫn chưa làm được, chương sau giải quyết đúng thứ đó. Ở góc phải dưới có nút Decoder: mỗi lần một The truth hiện ra, nó mở thêm một dòng. Cuối buổi các bạn có cả bảng giải mã.</p>
-<p class="cue">[Chỉ vào thanh tab 1–7, vào một ô của đồ thị (tên hàm và buzzword bên dưới), vào caption “The idea”. Rồi chỉ nút “Decoder” ở góc phải dưới.]</p>
-
-<h4>1 · Chương 1 · The call <small>(~2,5 phút · tab “1 The call”, agent.py 46 dòng)</small></h4>
-<p>The idea: prompt engineering và structured output. Viết prompt cho đúng, và nhận về dữ liệu thay vì một đoạn văn.</p>
-<p>Đồ thị có bốn ô. <code>read_email()</code>: email sáng nay, dưới dạng một dict. <code>build_prompt()</code>: cái mà người ta gọi là “prompt template”, ở đây là một list hai message, và email được dán vào bằng một cái f-string. System message ghi: chỉ trả lời bằng JSON, với bốn key company, domain, intent, contact. <code>llm()</code>: các bạn đếm giúp mình, ba dòng. Một <code>httpx.post</code> tới <code>/chat/completions</code>, messages đi vào, text đi ra. Hết. <code>parse()</code>: <code>json.loads</code>, cộng một dòng assert: nếu model không nêu tên công ty thì fail, và fail to tiếng.</p>
-<p class="cue">[Bấm vào ô <code>llm()</code> trên đồ thị: code nhảy tới hàm đó, chỉ ba dòng. Bấm ▶ Run, nhìn bốn ô sáng lần lượt. Tab “Output”: chỉ company, domain, intent, contact. Rồi mở tab “On the wire”, mở dòng “→ POST /chat/completions · 2 messages”.]</p>
-<p>Đây là toàn bộ những gì model nhận được. Tên model, và hai message. Không có gì khác. Và reply bên dưới: vẫn chỉ là một chuỗi ký tự, trông giống JSON. Phải tới <code>parse()</code> nó mới thành dữ liệu.</p>
-<p>The truth của chương 1. Prompt engineering là chọn tham số cho một hàm. Structured output là <code>json.loads</code> cộng một phép kiểm tra. Và model, là một HTTP POST.</p>
-<p>Để ý thêm: bước parse có thể fail. Model là thứ không chắc chắn, nên ngay từ chương đầu tiên đã cần một bước kiểm tra bằng code. Chi tiết nhỏ này sẽ quay lại nhiều lần hôm nay.</p>
-<p>Bạn nào muốn so với LangChain thì có nút ＋ ở mỗi chương, sau buổi các bạn mở ra xem.</p>
-<p>Còn thiếu gì? Agent biết <i>ai</i> viết thư. Nó chẳng biết gì <i>về</i> họ. Mình đã từng làm việc với họ chưa?</p>
-<p class="cue">[Chỉ dòng “Still missing”. Bấm “Next: 2 · Knowledge →”.]</p>
-
-<h4>2 · Chương 2 · Knowledge <small>(~2,5 phút · tab “2 Knowledge”, ô mới <code>recall()</code>)</small></h4>
-<p>Trước khi research ai đó, câu đầu tiên một người sales giỏi hỏi là: mình đã gặp họ chưa? The idea: RAG, retrieval-augmented generation, cùng cả bộ từ vựng đi kèm: vector store, retriever, embeddings. Nói gọn: đưa cho model kiến thức nó chưa bao giờ được train.</p>
-<p>Các bạn nhìn mấy dòng xanh trong file. <code>embed()</code>: biến text thành một dãy số, lại là một HTTP POST, lần này tới <code>/embeddings</code>. <code>recall()</code>: đúng một câu SQL trên Postgres. Tính khoảng cách giữa vector câu hỏi và vector của từng ghi chú, <code>ORDER BY</code> khoảng cách, lấy ba dòng gần nhất. Rồi <code>brief_prompt()</code>: một prompt thứ hai, dán lead và các ghi chú vào, kèm câu “chỉ dùng evidence, không bịa”. Và model viết bản brief đầu tiên.</p>
-<p class="cue">[Bấm ô <code>recall()</code> trên đồ thị: chỉ vào câu SQL có <code>&lt;=&gt;</code> và <code>ORDER BY distance</code>. Bấm ▶ Run. Mở “On the wire”: chỉ “→ POST /embeddings” (một dãy số), rồi mở request “/chat/completions” cuối cùng, chỉ phần “Evidence:” trong user message.]</p>
-<p>Trên đường dây giờ có ba request. Một cái đọc email, như chương 1. Một cái embed, trả về một dãy số. Và cái cuối: các bạn nhìn phần Evidence. Ghi chú của tụi mình, lấy từ database, được dán thẳng vào prompt. Đó là toàn bộ phép màu.</p>
-<p>The truth: RAG là embed, rồi <code>ORDER BY embedding &lt;=&gt; q</code>, rồi format string. Và cái “vector store” mà mọi người hay nói, nó là một cái bảng.</p>
-<p>Điều đó có ý nghĩa thực tế: ghi chú của các bạn nằm cùng database với dữ liệu khác, backup cùng, phân quyền cùng, query cùng. Không cần thêm một hệ thống mới chỉ vì có chữ “vector”.</p>
-<p>Còn thiếu gì? Agent nhớ ghi chú của mình. Nhưng nó vẫn chưa tra cứu được gì: CRM, lịch, web.</p>
-<p class="cue">[Mở Decoder một giây: đã có hai dòng. Đóng lại. Bấm “Next: 3 · Tools →”.]</p>
-
-<h4>3 · Chương 3 · Tools and MCP: the black box <small>(~1,5 phút · tab “3 Tools and MCP”, khối code “The black box”, khung “Where did the tools go?”)</small></h4>
-<p>The idea: function calling và MCP. Câu người ta hay nói: “model biết dùng tool”.</p>
-<p>Đây là cách mọi người được dạy để đưa tool cho model. Gọi <code>client.chat.completions.create</code>, truyền messages, và truyền thêm <code>tools=</code>, một list các schema. Model trả về một field đặc biệt tên là <code>tool_calls</code>. Nhìn vào đó ai cũng nghĩ: model vừa gọi tool.</p>
-<p>Nhưng mình hỏi các bạn hai câu. Một: cái list tools đó đi đâu? Model chỉ đọc được text. Vậy API đã biến nó thành text ở đâu đó, trong một prompt mà các bạn không thấy, không log được, không sửa được. Hai: model có thật sự gọi gì không? Không. Model chỉ viết ra text. API đọc text đó, rồi trình bày lại thành field <code>tool_calls</code>. Không có gì được chạy cả.</p>
-<p>Đó là một cái hộp đen. Và cách tốt nhất để hiểu một cái hộp đen là tự làm nó. Nên mình mở nó ra.</p>
-<p class="cue">[Chỉ khối code “The black box”, dừng ở dòng <code>tools=[...]</code>, rồi khung vàng “Where did the tools go?”. Cuộn xuống “Opened”.]</p>
-
-<h4>4 · Chương 3 · Opened: MCP và function calling, trên đường dây <small>(~3,5 phút · “Opened”, panel agent.py, “On the wire”)</small></h4>
-<p>Hai mảnh. Mảnh thứ nhất: MCP. CRM của tụi mình là một chương trình khác, <code>prep_world.mcp_server</code>. Hàm <code>start_mcp()</code> khởi động nó như một process con, rồi nói chuyện với nó bằng JSON-RPC qua stdin và stdout. Cả giao thức nằm trong <code>mcp_request()</code>: ghi một dòng JSON ra, đọc một dòng JSON về. Ba message: <code>initialize</code>, chào hỏi. <code>tools/list</code>, “anh có những tool gì?”, mỗi tool là một JSON schema. Và <code>tools/call</code>, “chạy cái này giúp tôi”.</p>
-<p>Mảnh thứ hai: function calling. <code>tools_prompt()</code> lấy các schema đó, viết thẳng vào system prompt dưới dạng text. Mỗi tool một dòng. Rồi thêm format trả lời: muốn dùng tool thì trả về đúng một dòng JSON, <code>{"tool": …, "args": …}</code>; biết đủ rồi thì trả lời bằng text. <code>parse_tool_call()</code> đọc dòng JSON đó. Và <code>call_tool()</code>, code của mình, gửi <code>tools/call</code> tới server.</p>
-<p class="cue">[Bấm ▶ Run. Nhìn đồ thị sáng theo thứ tự: … <code>recall()</code> → <code>start_mcp()</code> → <code>list_tools()</code> → <code>tools_prompt()</code> → <code>llm()</code> → <code>parse_tool_call()</code> → <code>call_tool()</code> → <code>brief_prompt()</code> → <code>llm()</code>. Mở tab “On the wire”.]</p>
-<p>Giờ mình đọc đường dây, từng dòng một.</p>
-<p class="cue">[Mở “→ MCP initialize”, rồi “→ MCP tools/list”: chỉ tên <code>crm_find_company</code> và <code>inputSchema</code> của nó.]</p>
-<p>Đây là MCP, nguyên văn. Một message <code>initialize</code>, server trả lời nó là ai. Rồi <code>tools/list</code>: server khai bốn tool, <code>crm_find_company</code>, <code>crm_contacts</code>, <code>crm_history</code>, <code>calendar_meetings</code>. Mỗi tool có tên, mô tả, và schema của tham số. MCP chỉ có vậy: các message JSON giữa hai chương trình. Không có gì dính tới model ở đây cả.</p>
-<p class="cue">[Mở request “→ POST /chat/completions” thứ hai (cái ngay sau tools/list): chỉ system message bắt đầu bằng “You can use these tools:”, rồi chỉ reply.]</p>
-<p>Còn đây, là cái prompt mà cái hộp đen giấu đi. “You can use these tools”, rồi từng tool, từng dòng JSON. Rồi luật chơi: muốn dùng tool thì trả lời một dòng JSON. Tool chỉ là text trong prompt. Và reply bên dưới: model viết đúng một dòng, <code>{"tool": "crm_find_company", "args": …}</code>. Đó là tất cả những gì model làm. Nó viết ra một yêu cầu.</p>
-<p class="cue">[Mở “→ MCP tools/call”: chỉ name, arguments, rồi bản ghi CRM trong reply. Bấm ô <code>call_tool()</code> trên đồ thị để nhảy tới hàm.]</p>
-<p>Và đây là ai chạy cái yêu cầu đó: <code>call_tool()</code>, code của mình. Code đọc JSON của model, gửi <code>tools/call</code> tới server, và bản ghi CRM của Lotus Logistics hiện ra ở đây, trên đường dây giữa hai chương trình, không phải bên trong model. Rồi bản ghi đó được dán vào <code>brief_prompt()</code> như một dòng evidence nữa.</p>
-<p>Nói cho công bằng: trong production, dùng <code>tools=</code> của provider vẫn là lựa chọn tốt, vì model được train kỹ trên đúng format đó. Mục tiêu ở đây không phải là bỏ nó, mà là khi nó trục trặc, các bạn biết bên trong là một prompt, một dòng JSON, và một đoạn code của chính mình.</p>
-<p>The truth của chương 3: tool là text trong prompt. Model trả lời bằng JSON. Code của các bạn mới chạy tool. Còn MCP là JSON-RPC giữa hai chương trình: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.</p>
-<p>Và đây là điểm quan trọng nhất của chương này: model đề xuất, code thực thi. Ranh giới đó, giữa “model muốn gì” và “code cho phép gì”, là chỗ mình sẽ đặt hàng rào ở chương 6.</p>
-<p>Còn thiếu gì? Một lần tra thì chưa phải research. Agent phải search, đọc cái nó tìm được, và tự quyết khi nào đã biết đủ.</p>
-<p class="cue">[Bấm “Next: 4 · The loop →”.]</p>
-
-<h4>5 · Chương 4 · The loop, và màn nghe trộm <small>(~4 phút · tab “4 The loop”, hộp <code>research()</code>, khung vàng “Wiretap moment: predict first”)</small></h4>
-<p>The idea: agent, ReAct, autonomy. Model tự làm việc cho tới khi xong. Cái mà ai cũng gọi là “một agent”.</p>
-<p>Trên đồ thị, mấy ô của chương 3 giờ nằm trong một cái hộp có mũi tên vòng: <code>research()</code>. Các bạn nhìn code của nó. <code>tools_prompt()</code> như chương trước. Rồi một vòng <code>for</code>, tối đa tám lượt. Mỗi lượt: gọi <code>llm()</code>. <code>parse_tool_call()</code>: nếu model không xin tool nào, tức là nó nói “xong”, thì in ra số request và return. Nếu có, <code>run_tool()</code> chạy tool đó, rồi append hai message vào list: câu trả lời của model, và kết quả của tool. Rồi lặp lại. Toàn bộ trí nhớ của agent là cái list <code>messages</code> đó.</p>
-<p><code>run_tool()</code> chạy hoặc một hàm Python ở local, hoặc gửi sang MCP server. Có thêm hai tool web: <code>web_search()</code> và <code>fetch_page()</code>, hai hàm Python thường, schema lấy ra từ chữ ký hàm. Nhiệm vụ: “tra CRM trước, rồi search web và đọc trang tốt nhất”.</p>
-<p>Trước khi chạy, mình chơi một trò. Để research một công ty, agent này gửi bao nhiêu request tới model? Các bạn giơ tay nhé. Một? Ba? Mười? Nhiều hơn mười?</p>
-<p class="cue">[Chỉ khung vàng “Wiretap moment: predict first”. Đợi cả phòng giơ tay cho từng mốc 1, 3, 10, nhiều hơn; đếm sơ bộ, đọc to. Rồi mới bấm ▶ Run.]</p>
-<p>Ok, mình ghi nhận. Chạy.</p>
-<p class="cue">[Bấm ▶ Run. Nhìn hộp <code>research()</code> quay vòng: chỉ con số ×N trên ô <code>llm()</code> bên trong hộp. Tab “Output”: đọc to dòng “requests to the model: N”. Mở “On the wire”: chỉ dòng tiêu đề của các request “/chat/completions” trong vòng lặp, số messages tăng dần 2, 4, 6…]</p>
-<p>Đáp án: N. Thường là hai tới bốn. Một request model xin tra CRM, một request xin search, có khi thêm một request xin đọc trang, và request cuối model trả lời. Model thật nên có lúc nó đi thêm một vòng; các bạn cứ đọc đúng con số in ra. Trên tab On the wire các bạn sẽ thấy nhiều hơn N hai cái: một cái đọc email ở đầu, một cái viết brief ở cuối. Phần của agent là N cái ở giữa.</p>
-<p>Và các bạn nhìn tiêu đề của từng request: 2 messages, 4 messages, 6 messages. Mỗi lần gọi, nó gửi lại toàn bộ lịch sử từ đầu. Model không nhớ gì giữa hai request. Trí nhớ là cái list mà code của mình gửi đi.</p>
-<p>Ai đoán đúng thì chúc mừng. Ai đoán nhiều hơn cũng dễ hiểu, vì chữ “agent” nghe rất to tát. Nhưng trên đường dây, nó chỉ là vài lần gọi model nối tiếp nhau.</p>
-<p>Đây là câu mình muốn các bạn nhớ nhất trong Part I. The truth: agent là một vòng <code>for</code> quanh một lần gọi LLM. Control flow thì tầm thường. Năng lực nằm ở model.</p>
-<p>Còn thiếu gì? Nó chạy được. Nhưng 2, 4, 6 messages: trang nào đã đọc thì cứ nằm lại trong messages, và lần nào cũng gửi lại. Tới trang thứ năm, nó chậm hơn, đắt hơn, và tệ hơn. Người ta gọi đó là context rot.</p>
-<p class="cue">[Bấm “Next: 5 · Context →”.]</p>
-
-<h4>6 · Chương 5 · Context <small>(~3 phút · tab “5 Context”, ô mới <code>assemble_context()</code>)</small></h4>
-<p>The idea: context engineering, memory, skills. Chọn xem model được thấy gì ở mỗi lượt. Năm 2025 cái này thành hẳn một môn riêng.</p>
-<p>Trên đồ thị, trong hộp <code>research()</code>, có một ô mới đứng ngay trước <code>llm()</code>: <code>assemble_context()</code>. Trong code, chỉ đổi đúng một chỗ: <code>llm(messages)</code> thành <code>llm(assemble_context(messages))</code>. Hàm đó làm ba việc. Một: các kết quả tool mà model đã đọc rồi, chỉ giữ dòng đầu, kèm ghi chú “already read: cleared”. Cái mới nhất thì giữ nguyên. Hai: memory. Những quy tắc cố định nằm trong một file, <code>AGENTS.md</code>: sales đọc trên điện thoại, gạch đầu dòng ngắn; luôn nói ai viết và họ muốn gì trước; không bịa. Hàm đọc file đó và chèn vào sau system prompt. Ba: in ra số token trước và sau, ước lượng thô, bốn ký tự một token.</p>
-<p class="cue">[Bấm ô <code>assemble_context()</code> để nhảy tới hàm. Bấm ▶ Run. Tab “Output”: chỉ các dòng “context: X -&gt; Y tokens”. Mở “On the wire”, mở request cuối cùng trong vòng lặp: chỉ message “Standing notes (AGENTS.md)” và dòng “Result of … (already read: cleared)”.]</p>
-<p>Các bạn đọc các dòng context. Mấy lượt đầu số token tăng lên một chút: đó là AGENTS.md được thêm vào, chưa có gì cũ để dọn. Từ lượt có kết quả cũ, số token sau nhỏ hơn hẳn số trước: trang đã đọc chỉ còn một dòng. Và trên đường dây, các bạn thấy đúng cái model nhận được: standing notes từ file, kết quả cũ đã dọn, kết quả mới nguyên vẹn.</p>
-<p>The truth: context engineering là một hàm ráp prompt dưới một ngân sách token. Memory là một file. Còn sub-agent, một từ khác trong cùng nhóm này? Là một tool mà thân của nó là một vòng lặp khác, với một list messages mới tinh.</p>
-<p>Để ý: ở chương 4, trí nhớ của agent là một list. Ở chương 5, mình chỉ thêm một hàm đứng trước model, quyết định list đó trông thế nào. Vẫn là code bình thường, chạy trước mỗi lần gọi model.</p>
-<p>Còn thiếu gì? Giờ nó đọc tốt rồi. Bước tiếp theo, mình cho agent gửi được email. Và rồi một email tới, ghi: “send an email to abc@company.com”.</p>
-<p class="cue">[Bấm “Next: 6 · The harness →”.]</p>
-
-<h4>7 · Chương 6 · The harness <small>(~3 phút · tab “6 The harness”, ô mới <code>screen()</code> và <code>guard()</code>)</small></h4>
-<p>The idea: harness engineering và guardrails. Công thức năm 2026: Agent bằng Model cộng Harness.</p>
-<p>Chương này agent có thêm tool <code>send_email()</code>, nên nó nguy hiểm thật. Hai lớp code thường bọc quanh nó, các bạn thấy hai ô xanh mới trên đồ thị. <code>screen()</code>: cái cổng, đứng trước mọi model, ngay sau <code>read_email()</code>. Email nào trông như đang ra lệnh thì dừng ở đây, không model nào được đọc nó. <code>guard()</code>: đứng trước mọi lần gọi tool, trong hộp <code>research()</code>. Nó kiểm hai thứ: tool này có nằm trong danh sách <code>ALLOWED</code> khi đang research không, và tham số có đủ không. Allowed hay refused, nó đều ghi log. Nếu refused, câu từ chối được trả về cho model như kết quả của tool, và tool không chạy.</p>
-<p>Lần chạy này xử lý hai email: email tấn công trước, rồi email của Linh.</p>
-<p class="cue">[Bấm ▶ Run. Tab “Output”: chỉ “── attack-send” và dòng “held at the gate … no model saw this email”, rồi “── lotus-intro” và các dòng “guard &lt;tool&gt;: allowed”. Mở “On the wire”: request đầu tiên đã là email của Linh.]</p>
-<p>Email tấn công dừng ở cổng. Và các bạn nhìn On the wire: không có một request nào cho email đó. Model chưa bao giờ thấy nó. Rồi email của Linh đi qua, và trước mỗi tool là một dòng guard: allowed.</p>
-<p>Còn <code>send_email</code>? Nó có trong danh sách tool model được thấy, nhưng không nằm trong <code>ALLOWED</code>. Nếu model bị một trang web nào đó dụ đề xuất gửi mail, <code>guard()</code> in ra refused, và mail không đi.</p>
-<p class="cue">[Tùy chọn, nếu còn thời gian: trong panel agent.py, xóa <code>"web_search"</code> khỏi dòng <code>ALLOWED</code>, bấm ▶ Run, chỉ dòng “guard web_search: refused: … not allowed while researching”. Bấm “Reset” để trả file về như cũ.]</p>
-<p>Các bạn để ý: không có dòng nào trong <code>screen()</code> hay <code>guard()</code> hỏi model. Không cần model “hiểu” rằng đây là tấn công. Chỉ là mấy câu <code>if</code>, chạy đúng ở cái ranh giới của chương 3: model đề xuất, code quyết định. Model có bị lừa thì hàng rào vẫn đứng đó.</p>
-<p>The truth: harness là mọi thứ không phải model. Mấy câu <code>if</code>, retry, log, test. Và nó chiếm phần lớn code.</p>
-<p>Đừng nghĩ đây là phần phụ. Giữ nguyên model, LangChain đưa coding agent của họ từ 52,8% lên 66,5% trên Terminal-Bench 2.0, chỉ bằng cách đổi harness. Không đổi model. Chỉ đổi harness.</p>
-<p>Còn thiếu gì? An toàn rồi, nhưng chậm. Công ty bán gì, tin tức, con người: research lần lượt, cái này xong mới tới cái kia. Sao không cho ba agent chạy cùng lúc?</p>
-<p class="cue">[Bấm “Next: 7 · Many agents →”.]</p>
-
-<h4>8 · Chương 7 · Many agents <small>(~2,5 phút · tab “7 Many agents”, hộp <code>research_team()</code> ×3, ô mới <code>merge()</code>)</small></h4>
-<p>The idea: multi-agent, orchestrator, workers. Một đội agent, mỗi agent một việc. Đây cũng là chữ mà course brief bảy agent dùng.</p>
-<p>Ba câu hỏi không phụ thuộc vào nhau: công ty làm gì và bán gì, tin tức gần đây, những người mình sẽ gặp. Vậy <code>research_team()</code> chạy chính cái vòng <code>research()</code> của chương 4, ba lần cùng lúc, mỗi lần một câu hỏi, trên ba thread. Rồi <code>merge()</code>, một hàm bình thường, ghép những gì chúng tìm được. Có thêm một cái lock: ba agent dùng chung một MCP server, nên mỗi lúc chỉ một cuộc hội thoại JSON-RPC.</p>
-<p class="cue">[Bấm ▶ Run. Chỉ hộp <code>research_team()</code>: hộp <code>research()</code> bên trong đếm ×3. Tab “Output”: ba dòng “requests to the model: N”, các dòng context và guard đan xen vì ba agent chạy cùng lúc. Chỉ con số trên tab “On the wire”.]</p>
-<p>Các bạn thấy ba dòng “requests to the model”, mỗi agent một dòng, và log của chúng xen vào nhau, vì chúng chạy cạnh nhau chứ không nối đuôi nhau. Con số trên tab On the wire: tổng số request của cả đội, nhiều hơn hẳn chương 4. Ba agent, thì khoảng gấp ba số lần gọi model.</p>
-<p>The truth: multi-agent là chính cái vòng lặp đó, làm node, chạy song song, rồi gộp lại bằng một step bình thường. Phần khó không nằm ở các agent. Phần khó là wiring giữa chúng: cái gì chạy song song, cái gì đợi cái gì, context truyền qua lại thế nào.</p>
-<p class="cue">[Mở Decoder: bảy dòng, đúng bảy chương. Đóng lại. Cuộn lên đồ thị của tab 7.]</p>
-
-<h4>9 · Now look at the graph: “It's a workflow” <small>(~2 phút · đồ thị tab 7, rồi phần “Now look at the graph” và khung navy “That picture has a name”)</small></h4>
-<p>Bảy chương, bảy ý tưởng, và không ý tưởng nào cần tới framework. Giờ các bạn nhìn lại đồ thị, một lần cuối.</p>
-<p class="cue">[Để đồ thị tab 7 trên màn hình. Chỉ lần lượt từng ô từ trái sang phải khi đọc. Để im vài giây.]</p>
-<p>Đọc từng ô. <code>read_email()</code>: một dict. <code>screen()</code>: một regex và một câu <code>if</code>. <code>build_prompt()</code>: một f-string. <code>llm()</code>: một POST. <code>parse()</code>: <code>json.loads</code>. <code>recall()</code>: một câu SQL. <code>start_mcp()</code>, <code>list_tools()</code>: vài dòng JSON qua stdin. <code>research()</code>: một vòng <code>for</code>. <code>assemble_context()</code>: một hàm cắt messages. <code>guard()</code>: mấy câu <code>if</code>. <code>research_team()</code>: ba thread. <code>merge()</code>: một phép join. <code>brief_prompt()</code>: lại một f-string.</p>
-<p>Bỏ hết tên gọi đi, còn lại cái gì? Những hàm, nối với nhau bằng những mũi tên. Một cái cổng. Các bước theo thứ tự. Một vòng lặp. Ba nhánh chạy song song. Một bước gộp. Và dữ liệu được chuyển đi dọc đường.</p>
-<p class="cue">[Cuộn xuống “Now look at the graph” và khung navy “That picture has a name”.]</p>
-<p>Hình dạng đó có một cái tên. Đó là một workflow.</p>
-<p>Và cái làm cho một phần của nó được gọi là “agent”, chỉ là thế này: bên trong <code>research()</code>, model chọn bước tiếp theo. Gọi tool nào, và khi nào thì dừng. Ở mọi mũi tên khác, code của các bạn chọn.</p>
-<p>Vậy câu hỏi thật sự không phải là cần bao nhiêu agent. Câu hỏi là: ở mỗi mũi tên, ai chọn bước tiếp theo? Code của các bạn, hay là model? Đó là Part II.</p>
-<p class="cue">[Bấm thẻ “Next → Who picks the next step?” ở cuối trang (hoặc <code>Alt + →</code>) để sang Part II.]</p>
-</div>
-</details>
-
-<div class="tabs fg-tabs">
-  <div class="tab" data-name="The call" data-chapter="1" data-say="<b>prompt engineering · structured output</b>: write the right prompt, get data back instead of text."><div class="fg" data-ch="1"></div></div>
-  <div class="tab" data-name="Knowledge" data-chapter="2" data-say="<b>RAG · vector store · embeddings</b>: give the model knowledge it was never trained on."><div class="fg" data-ch="2"></div></div>
-  <div class="tab" data-name="Tools and MCP" data-chapter="3" data-say="<b>function calling · MCP</b>: the model “uses tools”."><div class="fg" data-ch="3"></div></div>
-  <div class="tab" data-name="The loop" data-chapter="4" data-say="<b>agent · ReAct · autonomy</b>: the model works on its own until the job is done."><div class="fg" data-ch="4"></div></div>
-  <div class="tab" data-name="Context" data-chapter="5" data-say="<b>context engineering · memory · skills</b>: choose what the model sees at each turn."><div class="fg" data-ch="5"></div></div>
-  <div class="tab" data-name="The harness" data-chapter="6" data-say="<b>harness engineering · guardrails</b>: Agent = Model + Harness."><div class="fg" data-ch="6"></div></div>
-  <div class="tab" data-name="Many agents" data-chapter="7" data-say="<b>multi-agent · orchestrator · workers</b>: a team of agents, each with its own job."><div class="fg" data-ch="7"></div></div>
-</div>
+<div class="anatomy" data-beat="1" data-sections></div>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
@@ -370,10 +246,11 @@ for i in result.get("__interrupt__", []):
 <div class="project" data-ch="7"></div>
 <div class="callout key"><b class="t">The truth</b><p><b>Multi-agent</b> is the same loop as nodes, run in parallel, then merged by a plain step. The hard part isn't the agents: it's the wiring between them.</p></div>
 
-<h2>Now look at the graph</h2>
-<p>Seven chapters, seven ideas, and not one needed a framework. Look at the picture at the top: every box is a plain <b>function</b> of <code>agent.py</code>, joined by <b>arrows</b>: a gate, steps in order, a loop, three agents side by side, a merge.</p>
+<h2>Now flip the whole agent</h2>
+<p>Seven chapters, seven ideas, and not one needed a framework. Press <b>X-ray</b> on the picture at the top: every part is a plain <b>function</b> of <code>agent.py</code>, joined by <b>arrows</b>: a gate, steps in order, a loop, three agents side by side, a merge.</p>
 <div class="callout navy"><b class="t">That picture has a name</b><p style="font-size:24px;font-weight:800;color:var(--navy);margin:4px 0">It's a workflow.</p>
 <p>What makes part of it an “agent” is only this: at some arrows, <b>the model picks the next step</b> (inside <code>research()</code>, which tool, and when to stop). Everywhere else, <b>your code</b> picks. So the real question isn't <i>how many agents</i>. At each arrow: <b>who picks the next step?</b></p></div>
+<div class="beat-nav"><button class="beat-next flip" type="button">Flip to X-ray ↑</button></div>
 
 </section>
 
@@ -383,7 +260,7 @@ for i in result.get("__interrupt__", []):
 <script src="../assets/split.js"></script>
 <script src="../assets/app.js"></script>
 <script src="../assets/decoder.js"></script>
-<script src="../assets/tabs.js"></script>
+<script src="../assets/anatomy.js"></script>
 <script src="../assets/project.js"></script>
 </body>
 </html>

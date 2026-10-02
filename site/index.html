@@ -19,30 +19,6 @@
   <p>Agents, RAG, tool calling, context engineering: the same primitives, one engine. Every page has runnable code: read it, change it, press <b>Run</b>.</p>
 </div>
 
-<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 3 phút</summary>
-<div class="speech">
-<p class="cue">[Trước giờ nói: chạy <code>./stack.sh up</code> rồi <code>./stack.sh check</code>. Mở sẵn trang này, cuộn lên đầu. Chế độ model để Real.]</p>
-<h4>1 · Mở màn: mỗi sáu tháng, một “engineering” mới <small>(~1 phút · hero + chuỗi buzzword)</small></h4>
-<p>Chào các bạn. Hôm nay mình nói về một câu hơi “ngông”: Workflow Is All You Need.</p>
-<p>Trước khi vào, mình hỏi nhanh một chút. Ai ở đây đang có một agent chạy trong production? Giơ tay giúp mình. Rồi, giờ ai đã từng phải debug một agent lúc hai giờ sáng? À, vẫn còn kha khá tay đấy.</p>
-<p>Các bạn nhìn dòng chữ này. Prompt Engineering. Rồi RAG. Rồi Function Calling. Rồi Agents. Rồi Context Engineering, Harness Engineering, Loop Engineering, Graph Engineering… và dấu ba chấm. Cứ khoảng sáu tháng, ngành mình lại có thêm một chữ “engineering” mới. Mỗi lần như vậy là một đợt blog, một đợt framework, một đợt khóa học.</p>
-<p>Câu hỏi mình muốn đặt ra là: đây thật sự là tám thứ khác nhau, hay chỉ là một thứ, được gọi bằng tám cái tên?</p>
-<p class="cue">[Chỉ vào chuỗi chip “Every six months, a new ‘engineering’”, dừng ở chip “Agents” đang được tô.]</p>
-
-<h4>2 · Email lúc 8 giờ sáng, và bản brief bảy agent <small>(~1 phút · đoạn trích dẫn + sơ đồ “The course brief: seven ‘agents’”)</small></h4>
-<p>Để khỏi nói suông, cả buổi hôm nay mình bám theo đúng một bài toán. Tám giờ sáng, có một email gửi tới. Người gửi là Linh Tran, COO của Lotus Logistics. Thứ Tư này team sales có cuộc gọi với họ, và trước đó sales muốn một bản brief một trang về công ty này. Vậy thôi, rất đời thường.</p>
-<p class="cue">[Cuộn xuống sơ đồ course brief.]</p>
-<p>Và đây là cách một course project khá phổ biến bảo mình build nó: bảy agent. Email Agent đọc thư. Ba agent chạy song song: Web Research, Calendar, Company Info. Rồi Memory Agent gom lại, Report Agent viết brief, Human Approval duyệt, và cuối cùng là gửi brief hoặc lưu vào knowledge base. Nhìn rất chuyên nghiệp, rất “multi-agent”.</p>
-<p>Câu hỏi cho các bạn, và cũng là câu hỏi xuyên suốt cả buổi: việc này thật sự cần bao nhiêu agent? Bảy? Ba? Một? Các bạn giữ câu trả lời trong đầu nhé, cuối buổi mình quay lại đếm.</p>
-
-<h4>3 · Lời hứa và lộ trình <small>(~1 phút · đoạn “No framework today” + “The route”)</small></h4>
-<p>Lời hứa của mình hôm nay: không framework nào lên sân khấu. Mỗi ý tưởng của thế giới agent, mình build lại từ đầu, live, bằng Python thường, client <code>openai</code>, Postgres và một MCP client, mỗi cái vài dòng, để xem bên dưới nó thật ra là gì. Rồi mình mới đếm agent.</p>
-<p>Đây là lộ trình. Part I: build cái agent viết brief từ đầu, bảy chương, mỗi chương một ý tưởng: lần gọi model, knowledge, tools, vòng lặp, context, harness, và nhiều agent. Part II: hỏi đúng một câu ở mỗi mũi tên, “ai chọn bước tiếp theo?”, vẽ lại bảy agent của course brief, rồi so số đo thật của hai bản build. Part III: sáng thứ Hai, năm mươi email ập tới cùng lúc, agent gãy live, và cái engine bên dưới. Epilogue: cùng một pattern trong các hệ thống production, và bảng giải mã cho từng buzzword các bạn vừa thấy.</p>
-<p>Cách dùng trang: mỗi chương có một pipeline, bấm ▶ Run hoặc Step là từng bước sáng lên và hiện ra kết quả của nó. Code LangChain tương ứng có sẵn trong tab ＋ để ai muốn so sánh sau buổi. Mặc định là Real, model thật; muốn chạy offline, tức thì, miễn phí thì chuyển sang Mock.</p>
-<p>Được rồi. Mọi thứ bắt đầu từ một lần gọi model.</p>
-<p class="cue">[Bấm thẻ “Part I · The agent, as it is · Build the agent from scratch” để sang trang tiếp.]</p>
-</div>
-</details>
 
 <h2 style="margin-top:10px">Every six months, a new “engineering”</h2>
 <div class="chips">

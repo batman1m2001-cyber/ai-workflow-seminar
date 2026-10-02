@@ -233,34 +233,13 @@ figure.wf svg { max-width: 100%; height: auto; }
 .hero-brief { max-width: 420px; margin: 8px 0 22px; }
 .hero-brief img { max-height: 520px; }
 
-/* ── agent.py, chapter by chapter (project.js) ─────────────────────── */
-.fg-tabs .tabs-stage { padding: 14px 16px 10px; }
-.fg { overflow-x: auto; }
-.fg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 4px; }
-.fg-arr { color: #9AABCB; font-weight: 700; padding: 0 2px; }
-.fg-node {
-  display: inline-flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 12px; cursor: pointer;
-  border: 1.5px solid #C9D3E3; border-radius: 12px; background: #fff; font: inherit; color: var(--ink);
-  transition: border-color .2s, background .2s, box-shadow .2s, transform .15s; position: relative;
-}
-.fg-node code { font: 600 14px "JetBrains Mono", monospace; color: var(--navy); background: none; padding: 0; }
-.fg-node small { font-size: 11.5px; color: var(--grey); line-height: 1.2; }
-.fg-node:hover { transform: translateY(-1px); border-color: var(--navy); }
-.fg-node.new { border-color: var(--green); background: var(--mint); }
-.fg-node.new small { color: var(--green-dk); font-weight: 600; }
-.fg-cnt { position: absolute; top: -9px; right: -8px; font: 700 11px "JetBrains Mono", monospace; font-style: normal; background: var(--navy); color: #fff; border-radius: 999px; padding: 1px 6px; }
-.fg-cnt:empty { display: none; }
-.fg-group { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border: 1.5px dashed #B9A6E8; border-radius: 14px; background: #FAF7FF; position: relative; }
-.fg-group.team { border-color: #9AABCB; background: #F6F8FC; }
-.fg-group.new { border-color: var(--green); border-style: solid; }
-.fg-label { font-size: 12px; font-weight: 700; color: #6B4FB8; position: relative; }
-.fg-group.team > .fg-label { color: var(--navy); }
-.fg-group > .fg-label .fg-cnt { position: static; margin-left: 8px; }
-.running .fg-node:not(.lit) { opacity: .45; }
-.fg-node.lit { opacity: 1; }
-.fg-node.hot { border-color: #F5B642; box-shadow: 0 0 0 4px rgba(245,182,66,.25); background: #FFF6E0; }
-.fg-group.hot { border-color: #F5B642; }
-
+/* ── agent.py, chapter by chapter (project.js lights anatomy.js parts) ── */
+.an-sub.fn { font: 600 13px "JetBrains Mono", monospace; fill: var(--green-dk); }
+.an-count { font: 700 15px "JetBrains Mono", monospace; fill: var(--navy); }
+.anatomy.running .an-part:not(.lit) { opacity: .4; }
+.an-part.lit rect { stroke: var(--green); stroke-width: 2.5; }
+.an-part.hot rect, .an-harness.hot > rect { stroke: #F5B642; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(245,182,66,.6)); }
+.an-loop.hot path, .an-loop.lit path { stroke: #F5B642; stroke-width: 3.5; }
 .project { border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; margin: 18px 0 22px; overflow: hidden; }
 .pj-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px 10px 18px; border-bottom: 1px solid var(--line); }
 .pj-title { flex: 1; font-weight: 800; color: var(--navy); font-size: 16px; }
