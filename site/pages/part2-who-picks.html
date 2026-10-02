@@ -50,6 +50,9 @@ flowchart LR
   style RS fill:#FFF6E0,stroke:#D9962B,stroke-width:2px
 </pre></figure></div>
   </div>
+  <div class="tab" data-name="Nodes and edges" data-chapter="9" data-say="Any workflow, not just ours: &lt;b&gt;nodes&lt;/b&gt; that each do one job, with an input and an output, and &lt;b&gt;edges&lt;/b&gt; that carry data from one to the next. Watch a run: &lt;b&gt;the graph&lt;/b&gt; decides what runs next, never the node.">
+<div class="wfg"></div>
+  </div>
   <div class="tab" data-name="Inside a workflow engine" data-chapter="10" data-say="A workflow engine, as a system: what starts a run, what you write, the runtime core, what nodes call, where data lives, how you see it, and the safety around it. The green parts, &lt;b&gt;the scheduler&lt;/b&gt;, &lt;b&gt;the executor&lt;/b&gt; and &lt;b&gt;the state store&lt;/b&gt;, are where engines differ.">
 <div class="sd">
 <div class="sd-band trig"><div class="sd-name">Triggers<small>what starts a run</small></div><div class="sd-row"><div class="sd-c "><b>HTTP API</b><span>a request starts a run</span></div><div class="sd-c "><b>Webhook</b><span>an email arrives</span></div><div class="sd-c "><b>Schedule</b><span>cron: 8 am</span></div><div class="sd-c "><b>Queue · events</b><span>a message on a topic</span></div><div class="sd-c "><b>Batch job</b><span>50 emails, one run each</span></div><div class="sd-c "><b>Eval run</b><span>the golden set</span></div></div></div>
@@ -162,11 +165,51 @@ flowchart LR
 <h2>Chapter 9 · An agent is a graph with a loop</h2>
 <p>Draw the Part I agent as a graph and it's tiny: <code>llm</code>, <code>run_tool</code>, and an edge back. The only special thing is <b>who picks that edge</b>: the model. Everything around it, the gate, the triage, the notes, the merge, the brief, is a graph whose edges your code picks.</p>
 <div class="callout key"><b class="t">The truth</b><p>An agent is a workflow with <b>one loop whose edge the model picks</b>. A real system is a bigger workflow with that loop as one node. So the question is no longer <i>how many agents</i>: it's <b>what runs the workflow</b>.</p></div>
-<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · Inside a workflow engine →</button></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · Nodes and edges →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
+<h2>Nodes and edges</h2>
+<p>Forget email for a moment. Every workflow is two things: <b>nodes</b> that do the work, and <b>edges</b> that say which output feeds which input.</p>
+
+<h3>One node</h3>
+<div class="wn">
+  <div class="wn-io"><i>inputs</i><code>text</code></div>
+  <div class="wn-arr">→</div>
+  <div class="wn-core"><em>LLM</em><b>classify</b><span>one job</span></div>
+  <div class="wn-arr">→</div>
+  <div class="wn-io"><i>outputs</i><code>label</code></div>
+</div>
+<ul class="wn-rules"><li>one job</li><li>reads only its inputs</li><li>writes only its outputs</li><li>doesn't know its neighbours</li></ul>
+
+<h3>Kinds of node</h3>
+<div class="wk">
+  <div style="--c:#0172CB"><b>function</b><span>plain code</span></div>
+  <div style="--c:#7B4FD6"><b>LLM</b><span>one model call</span></div>
+  <div style="--c:#0E8C99"><b>tool</b><span>an API, a database, an MCP server</span></div>
+  <div class="hl" style="--c:#C9861A"><b>agent</b><span>an LLM and tools in a loop: Part I's web_research</span></div>
+  <div style="--c:#1D4289"><b>branch</b><span>picks which edge to follow</span></div>
+  <div style="--c:#00A045"><b>sub-graph</b><span>a whole graph, used as one node</span></div>
+  <div style="--c:#D6322E"><b>human</b><span>waits for a person</span></div>
+  <div style="--c:#1D4289"><b>input · output</b><span>where a run starts and ends</span></div>
+</div>
+
+<h3>The graph decides</h3>
+<div class="wr">
+  <div><b>Ready → run</b><span>a node runs when all its inputs are in: merge waited for 3</span></div>
+  <div><b>No edge between → side by side</b><span>search, research and enrich ran at once</span></div>
+  <div><b>A branch picks the path</b><span>yes: three nodes; no: only skip</span></div>
+  <div><b>A loop is an edge back</b><span>redo sent the draft back to write</span></div>
+</div>
+
+<div class="callout key"><b class="t">The truth</b><p>A workflow is <b>nodes with inputs and outputs</b>, joined by <b>edges</b>. An LLM call, a tool, an agent and a person are all just kinds of node. The node does its job; <b>the graph decides what runs next</b>.</p></div>
+<p>At run time, something has to do that deciding: keep every output, see which node is ready, run nodes side by side, wait for a person, retry what failed, record it all. That something is a <b>workflow engine</b>.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · Inside a workflow engine →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="4" hidden>
 <h2>Chapter 10 · Inside a workflow engine</h2>
 <p>Seven layers. <b>Triggers</b> start runs. You <b>define</b> the graph, and the <b>compiler</b> checks and plans it once. The <b>runtime core</b> runs it: the scheduler decides what may run, the executor runs it. Nodes call <b>integrations</b>. Data lives in <b>state and storage</b>. <b>Observability</b> lets you see and steer it, and <b>safety</b> wraps all of it.</p>
 <h3>The life of one run</h3>
@@ -195,11 +238,11 @@ flowchart LR
   <tr><td>tracing</td><td>LangChain callbacks → LangSmith</td><td>trace consumers: a local run folder, Langfuse, run stores → Studio</td></tr>
   <tr><td>triggers · ops</td><td>LangGraph Platform / Server</td><td><code>Application</code>: services, jobs, schedules, evals</td></tr>
 </table>
-<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · LangGraph, inside →</button></div>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · LangGraph, inside →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
-<section class="beat" data-beat="4" hidden>
+<section class="beat" data-beat="5" hidden>
 <h2>LangGraph, inside: supersteps</h2>
 <p>All nodes share <b>one dict</b>, and several nodes may write the same key. To keep that safe, LangGraph runs the graph in <b>supersteps</b> (the Pregel model):</p>
 <ol>
@@ -231,11 +274,11 @@ g.add_edge(&quot;triage&quot;, &quot;recall&quot;)
 g.add_edge(&quot;triage&quot;, &quot;calendar&quot;)
 g.add_edge([&quot;recall&quot;, &quot;calendar&quot;], &quot;brief&quot;)
 app = g.compile(checkpointer=InMemorySaver())</pre>
-<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · OperonX, inside →</button></div>
+<div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · OperonX, inside →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
-<section class="beat" data-beat="5" hidden>
+<section class="beat" data-beat="6" hidden>
 <h2>OperonX, inside: dataflow</h2>
 <p>OperonX also keeps <b>one shared state</b> for the run, but every value has its own address: <b>(op, output, context)</b>. Context is <code>main</code>, a loop iteration, or a stream item like <code>[1]</code>. Each op writes only its own slots and reads others' by reference (<code>op["x"]</code>); a slot that really is shared gets a reducer.</p>
 <p>So there is nothing to wait on. Each op emits its results as events; the scheduler counts them against each successor, and a successor whose count reaches zero <b>starts right away</b>. A fast branch runs ahead, and a stream's item 1 is downstream while item 2 is still being made.</p>
@@ -253,11 +296,11 @@ def prepare(email):
     brief = write_brief(lead=lead[&quot;lead&quot;], notes=notes[&quot;notes&quot;],
                         meetings=meetings[&quot;meetings&quot;])
     START &gt;&gt; lead &gt;&gt; [notes, meetings] &gt;&gt; brief &gt;&gt; END</pre>
-<div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · Why OperonX →</button></div>
+<div class="beat-nav"><button class="beat-next" data-go="7">Next: 7 · Why OperonX →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
-<section class="beat" data-beat="6" hidden>
+<section class="beat" data-beat="7" hidden>
 <h2>Why OperonX</h2>
 <p>We built OperonX because the workflow is the product, and the engine under it should be fast, terse, and ours to bend the same week.</p>
 <div class="callout navy"><b class="t">The honest line</b><p>LangGraph is stronger at <b>durable checkpoints</b> (resume after a crash, pause for days) and has the bigger ecosystem. We pay for OperonX too: we maintain it.</p></div>
@@ -272,6 +315,7 @@ def prepare(email):
 <script src="../assets/decoder.js"></script>
 <script src="../assets/tabs.js"></script>
 <script src="../assets/stepper.js"></script>
+<script src="../assets/wfgraph.js"></script>
 <script src="../assets/cards.js"></script>
 </body>
 </html>
