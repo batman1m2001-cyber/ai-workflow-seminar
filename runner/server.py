@@ -57,8 +57,67 @@ app = FastAPI(title="ai-workflow-seminar runner")
 
 
 def _real() -> dict:
-    env = {**dotenv_values(ROOT / ".env"), **{k: v for k, v in os.environ.items() if k.startswith(("OPENAI_", "SEMINAR_"))}}
+    env = {**dotenv_values(ROOT / ".env"),
+           **{k: v for k, v in os.environ.items() if k.startswith(("OPENAI_", "SEMINAR_", "INHOUSE_"))}}
     return {k: v for k, v in env.items() if v}
+
+
+# ── the real model: one door, two backends ───────────────────────────────
+# Code in real mode talks to /llm/v1 as if it were OpenAI. A request that sends
+# `tools` goes to OpenAI (SEMINAR_TOOLS_MODEL, gpt-4o-mini); every other chat goes
+# to the in-house model (INHOUSE_*); embeddings go to OpenAI. Without INHOUSE_*,
+# everything goes to OpenAI. The keys stay here; callers present ROUTER_KEY.
+
+ROUTER_KEY = os.environ.get("SEMINAR_PASSWORD") or "seminar-local"
+
+
+def _backend(body: dict, kind: str) -> tuple:
+    real = _real()
+    openai = (real.get("OPENAI_BASE_URL", "https://api.openai.com/v1"), real.get("OPENAI_API_KEY", ""))
+    if kind == "embeddings":
+        return (*openai, real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
+    if body.get("tools") or body.get("functions") or not real.get("INHOUSE_BASE_URL"):
+        return (*openai, real.get("SEMINAR_TOOLS_MODEL", "gpt-4o-mini"))
+    return real["INHOUSE_BASE_URL"], real.get("INHOUSE_API_KEY", ""), real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it")
+
+
+async def _forward(request: Request, kind: str):
+    import httpx
+    from fastapi.responses import StreamingResponse
+    if request.headers.get("authorization", "") != f"Bearer {ROUTER_KEY}":
+        return JSONResponse({"error": {"message": "wrong key for the seminar's model router"}}, status_code=401)
+    body = await request.json()
+    base, key, model = _backend(body, kind)
+    if not key:
+        return JSONResponse({"error": {"message": f"no API key for {base}: see .env.example"}}, status_code=503)
+    body["model"] = model
+    url, headers = f"{base.rstrip('/')}/{kind.replace('chat', 'chat/completions')}", {"authorization": f"Bearer {key}"}
+    client = httpx.AsyncClient(timeout=120)
+    if body.get("stream"):
+        resp = await client.send(client.build_request("POST", url, json=body, headers=headers), stream=True)
+
+        async def chunks():
+            try:
+                async for c in resp.aiter_raw():
+                    yield c
+            finally:
+                await resp.aclose(); await client.aclose()
+        return StreamingResponse(chunks(), status_code=resp.status_code,
+                                 media_type=resp.headers.get("content-type", "text/event-stream"))
+    async with client:
+        resp = await client.post(url, json=body, headers=headers)
+    return Response(resp.content, status_code=resp.status_code, media_type="application/json",
+                    headers={"x-seminar-backend": model})
+
+
+@app.post("/llm/v1/chat/completions")
+async def llm_chat(request: Request):
+    return await _forward(request, "chat")
+
+
+@app.post("/llm/v1/embeddings")
+async def llm_embeddings(request: Request):
+    return await _forward(request, "embeddings")
 
 
 # ── the mock model ───────────────────────────────────────────────────────
@@ -86,9 +145,11 @@ class Run(BaseModel):
 @app.get("/api/health")
 def health():
     real = _real()
+    inhouse = real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it") if real.get("INHOUSE_BASE_URL") else None
+    tools = real.get("SEMINAR_TOOLS_MODEL", "gpt-4o-mini")
     return {"ok": True, "real": bool(real.get("OPENAI_API_KEY")),
-            "model": real.get("SEMINAR_MODEL", "gpt-4o-mini"),
-            "base_url": real.get("OPENAI_BASE_URL", "https://api.openai.com/v1")}
+            "model": f"{inhouse} · tools: {tools}" if inhouse else tools,
+            "base_url": f"http://127.0.0.1:{PORT}/llm/v1"}
 
 
 @app.post("/api/run")
@@ -102,9 +163,9 @@ def run(req: Run):
         if not real.get("OPENAI_API_KEY"):
             return JSONResponse({"stdout": "", "stderr": "Real mode needs OPENAI_API_KEY in .env (see .env.example).",
                                  "exit": 2, "ms": 0}, status_code=200)
-        env.update(OPENAI_API_KEY=real["OPENAI_API_KEY"],
-                   OPENAI_BASE_URL=real.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-                   SEMINAR_MODEL=real.get("SEMINAR_MODEL", "gpt-4o-mini"),
+        # through the router: the code never sees a real key, and tool calls reach gpt-4o-mini
+        env.update(OPENAI_API_KEY=ROUTER_KEY, OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/llm/v1",
+                   SEMINAR_MODEL="gpt-4o-mini",
                    SEMINAR_EMBED_MODEL=real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
     else:
         env.update(OPENAI_API_KEY="mock-key", OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/mock/v1",
@@ -134,7 +195,7 @@ async def password(request: Request, call_next):
     """With SEMINAR_PASSWORD set (a public tunnel), every request needs it — a tunnel
     arrives from 127.0.0.1, so the address can't tell the room from the internet.
     /mock/v1 stays open: the demo app calls it, and it only answers scripted text."""
-    if PASSWORD and not request.url.path.startswith("/mock/"):
+    if PASSWORD and not request.url.path.startswith(("/mock/", "/llm/")):   # /llm checks its own key
         import base64
         import secrets
         given = ""

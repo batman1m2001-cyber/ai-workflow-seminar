@@ -28,7 +28,7 @@
 
   var MODE_KEY = "seminar.mode";
   var mode = "mock";
-  try { mode = localStorage.getItem(MODE_KEY) || "mock"; } catch (e) {}
+  try { mode = localStorage.getItem(MODE_KEY) || "real"; } catch (e) { mode = "real"; }   // falls back to mock when the runner has no key
   var runner = null;          // /api/health answer, or null when no runner
 
   // ── layout ──────────────────────────────────────────────────────────

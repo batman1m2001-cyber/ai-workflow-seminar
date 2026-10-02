@@ -16,6 +16,8 @@
 #   ../meeting-prep-projects   (MEETING_PREP_DIR)
 #   operonx-studio             (STUDIO_DIR, default ../../operonx-studio)
 # PREP_DB_PORT moves the database off 5433 when another Postgres holds it.
+# SEMINAR_MODEL_MODE=real (default) sends meeting-prep's model calls through the runner's
+# router (.env: in-house model, tools -> gpt-4o-mini); =mock uses the scripted mock.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -29,6 +31,12 @@ mkdir -p "$RUN"
 [ -s "$RUN/password" ] || { umask 077; head -c 12 /dev/urandom | base64 | tr -d '/+=' >"$RUN/password"; }
 export SEMINAR_PASSWORD="${SEMINAR_PASSWORD:-$(cat "$RUN/password")}"
 
+if [ "${SEMINAR_MODEL_MODE:-real}" = real ]; then
+  MODEL_ENV=(OPENAI_BASE_URL=http://127.0.0.1:8000/llm/v1 OPENAI_API_KEY="$SEMINAR_PASSWORD")
+else
+  MODEL_ENV=(OPENAI_BASE_URL=http://127.0.0.1:8000/mock/v1 OPENAI_API_KEY=mock)
+fi
+
 listening() { ss -ltn 2>/dev/null | grep -q ":$1 "; }
 
 start() {   # name port dir command...
@@ -40,15 +48,16 @@ start() {   # name port dir command...
 }
 
 up() {
-  echo "world (mail :8025, db :$PREP_DB_PORT)"
+  echo "world (mail :8025, db :$PREP_DB_PORT), model: ${SEMINAR_MODEL_MODE:-real}"
   (cd "$PREP/meeting-prep-world" && docker compose up -d --quiet-pull >/dev/null && uv sync -q)
-  for _ in $(seq 30); do (cd "$PREP/meeting-prep-world" && uv run -q prep-seed >/dev/null 2>&1) && break; sleep 1; done
-  echo "  seeded"
   (cd "$ROOT" && uv sync -q)
   (cd "$PREP/meeting-prep-operonx" && uv sync -q)
   start runner 8000 "$ROOT" uv run python -m runner.server
-  start mocks 8100 "$PREP/meeting-prep-world" uv run prep-mocks
-  start app 8200 "$PREP/meeting-prep-operonx" uv run operonx-serve
+  # the knowledge base is embedded by the model in use: re-seed when it changes
+  for _ in $(seq 30); do (cd "$PREP/meeting-prep-world" && env "${MODEL_ENV[@]}" uv run -q prep-seed >/dev/null 2>&1) && break; sleep 1; done
+  echo "  seeded"
+  start mocks 8100 "$PREP/meeting-prep-world" env "${MODEL_ENV[@]}" uv run prep-mocks
+  start app 8200 "$PREP/meeting-prep-operonx" env "${MODEL_ENV[@]}" uv run operonx-serve
   # its own accounts: the first start makes "seminar" the admin, with the password
   OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
     start studio "$STUDIO_PORT" "$STUDIO_DIR" \
@@ -87,7 +96,7 @@ tunnel() {
 
 check() {
   (cd "$ROOT" && uv run python -m runner.check)
-  (cd "$PREP/meeting-prep-operonx" && uv run operonx-run golden)
+  (cd "$PREP/meeting-prep-operonx" && env "${MODEL_ENV[@]}" uv run operonx-run golden)
 }
 
 "${1:-status}"
