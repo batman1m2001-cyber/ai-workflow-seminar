@@ -35,7 +35,7 @@
 <p class="cue">[Chỉ vào khung “The thesis”.]</p>
 <h4>3 · Lộ trình và cách dùng trang <small>(~1 phút · “The route” + “How to use this site”)</small></h4>
 <p>Đây là lộ trình. Act 1, thế giới agent: mình build một agent từng phần, rồi soi X-ray từng phần. Act 2: nhìn vào hình dạng, và thấy đâu đâu cũng là workflow. Act 3: khi nào các bạn THẬT SỰ muốn một agent. Act 4: sáng thứ Hai, agent gặp hộp thư thật, sáu lỗi live. Act 5: cái engine chạy workflow, và vì sao tụi mình tự build OperonX. Act 6: cùng pattern đó trong các hệ thống production. Và Act 7: bảng giải mã, đặt từng buzzword vào đúng chỗ của nó trong workflow.</p>
-<p>Một điều nữa: trang nào cũng có code chạy được. Khối màu tối nào cũng sửa được, bấm Run hoặc Ctrl + Enter. Mặc định là Mock, chạy offline, tức thì, miễn phí. Muốn chạy model thật thì chuyển sang Real.</p>
+<p>Một điều nữa: trang nào cũng có code chạy được. Khối màu tối nào cũng sửa được, bấm Run hoặc Ctrl + Enter. Mặc định là Real: model thật, model nội bộ cho các lời gọi thường, gpt-4o-mini khi có tool. Muốn chạy offline, tức thì, miễn phí thì chuyển sang Mock.</p>
 <p>Được rồi. Mình bắt đầu với email của sáng nay. Act 1: Build an agent, one part at a time.</p>
 <p class="cue">[Bấm thẻ “Act 1 · The agent world” để sang trang tiếp.]</p>
 </div>
@@ -77,7 +77,7 @@
 <table class="plain">
   <tr><td>Run code</td><td>Every dark block is editable; <b>▶ Run</b> or <code>Ctrl + Enter</code>. Pipeline cards: <b>▶ Run</b> or <b>Step</b>.</td></tr>
   <tr><td>Start it</td><td><code>./stack.sh up</code>, then <a href="http://127.0.0.1:8000">127.0.0.1:8000</a>. It starts the meeting-prep world (mail, database, mocks), this runner, the OperonX app and Studio. Just the site: <code>uv run python -m runner.server</code>.</td></tr>
-  <tr><td>Mock or real model</td><td><b>Mock</b> (default): offline, instant, free. <b>Real</b>: your endpoint from <code>.env</code>; the key stays on the runner.</td></tr>
+  <tr><td>Mock or real model</td><td><b>Real</b> (default): the in-house model for plain calls, gpt-4o-mini for tool calls; the keys stay on the runner. <b>Mock</b>: offline, instant, free (used automatically when the runner has no key).</td></tr>
   <tr><td>Move around</td><td>The sidebar, the Previous / Next cards, or <code>Alt + ←/→</code>; inside an act, the numbered tabs or <code>← →</code>.</td></tr>
 </table>
 

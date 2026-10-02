@@ -20,7 +20,7 @@
   var MARK = "\u001e";
 
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
-  function mode() { try { return localStorage.getItem("seminar.mode") || "mock"; } catch (e) { return "mock"; } }
+  function mode() { try { return localStorage.getItem("seminar.mode") || "real"; } catch (e) { return "real"; } }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function dedent(s) {
     var lines = s.replace(/^\n+/, "").replace(/\s+$/, "").split("\n");

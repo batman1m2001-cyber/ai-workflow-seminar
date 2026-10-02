@@ -196,3 +196,8 @@ figure.wf figcaption { font-size: 13.5px; font-weight: 800; color: var(--navy); 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 6px 0 4px; }
 .chips button { border: 1px dashed #E0B25C; background: #fff; color: #8A5A12; border-radius: 999px; padding: 4px 12px; cursor: pointer; font: 700 13px "Be Vietnam Pro", sans-serif; }
 .chips button.on { background: #FFF7E8; border-style: solid; }
+
+/* phone: wide workflow figures scroll inside themselves instead of widening the page */
+figure.wf { max-width: 100%; overflow-x: auto; }
+figure.wf svg { max-width: 100%; height: auto; }
+@media (max-width: 640px) { .wf-grid { grid-template-columns: minmax(0, 1fr) !important; } }

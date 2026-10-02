@@ -209,3 +209,6 @@ details.notes.speech h4 { margin: 18px 0 4px; color: var(--navy); font-size: 15p
 details.notes.speech h4 small { color: var(--grey); font-weight: 500; }
 details.notes.speech p { margin: 6px 0; }
 details.notes.speech .cue { color: #8A5A00; font-style: italic; font-size: 14px; }
+
+/* phone: keep the Mock/Real switch on screen */
+@media (max-width: 640px) { .mode { flex-shrink: 0; } .mode button { padding-left: 8px; padding-right: 8px; font-size: 12px; } .top { gap: 10px; padding: 0 12px; } .top .crumb, .top .status { display: none; } .top .brand { font-size: 0; gap: 0; } .top .brand .dot { font-size: 15px; } }

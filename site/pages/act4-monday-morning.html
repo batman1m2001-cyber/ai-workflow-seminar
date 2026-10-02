@@ -37,7 +37,8 @@
 <p>Được rồi, các bạn sẽ nói: thế thì mình không cho agent đọc email lạ nữa. Nhưng agent còn phải đi đọc web. Thẻ thứ hai: một trang web ra lệnh.</p>
 <p>Ở đây mình làm đúng cái việc mà rất nhiều code ngoài kia đang làm: tải trang web của Red River Textiles về, lấy nguyên cái HTML thô, rồi dán thẳng vào prompt để viết brief.</p>
 <p class="cue">[Bấm Step để chạy thẻ "A page gives orders".]</p>
-<p>Các bạn xem brief bây giờ chứa gì. Trang web đó có giấu sẵn chỉ dẫn bên trong, và vì mình dán nguyên trang thô, model đã ngoan ngoãn đưa nó vào brief. Điều đáng sợ là cái brief nhìn vẫn rất ổn. Không ai để ý cả.</p>
+<p>Các bạn xem brief bây giờ chứa gì. Trang web đó có giấu sẵn chỉ dẫn bên trong, và vì mình dán nguyên trang thô, model có thể ngoan ngoãn đưa nó vào brief. Điều đáng sợ là cái brief nhìn vẫn rất ổn. Không ai để ý cả.</p>
+<p class="cue">[Đọc đúng cái thẻ vừa in ra. Nếu nó in <code>✗ the brief now contains: []</code> thì lần này model không mắc bẫy: nói thẳng là may, không phải được bảo vệ. Mình không thể trông vào may mắn khi có 10.000 email, nên vẫn phải đọc trang như người đọc và kiểm tra brief.]</p>
 
 <h4>4 · Thẻ 3: Một lần search chậm <small>(~1 phút · thẻ ⏱)</small></h4>
 <p>Thẻ thứ ba không liên quan gì tới security. Chỉ là một ngày bình thường. Inbox có ba công ty: Lotus Logistics, Halong Robotics, Mekong Microfinance. Riêng lần search cho Halong Robotics bị chậm, ba giây. Code đặt timeout một giây, và không có gì xử lý timeout cả.</p>

@@ -250,11 +250,11 @@ print("tool calls:", msg.tool_calls)
 <div class="pipeline" data-title="The CRM, over MCP">
   <div class="step" data-icon="☰" data-title="tools/list" data-desc="Ask the MCP server what it offers.">
 <script type="text/plain">
-import asyncio, json, sys
+import asyncio, json, os, sys
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-CRM = StdioServerParameters(command=sys.executable, args=["-m", "prep_world.mcp_server"])
+CRM = StdioServerParameters(command=sys.executable, args=["-m", "prep_world.mcp_server"], env=dict(os.environ))
 
 async def list_tools():
     async with stdio_client(CRM) as (r, w), ClientSession(r, w) as s:
