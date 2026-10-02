@@ -462,3 +462,14 @@ table.sdt td:first-child { font-weight: 700; color: var(--navy); white-space: no
   .st-badge { font-size: 10px; }
   .st-state td, .st-dict { font-size: 11px; word-break: break-word; }
 }
+
+/* ── home: the brief's diagram beside its own words ─────────────────── */
+.hero-pair { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 26px; align-items: start; margin: 8px 0 22px; }
+.hero-pair .hero-brief { margin: 0; }
+.brief-text { background: #fff; border: 1.5px solid var(--line); border-left: 5px solid var(--navy); border-radius: var(--radius); padding: 18px 22px; font-size: 17px; line-height: 1.6; }
+.brief-text .bt-k { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--navy); margin-bottom: 8px; }
+.brief-text p { margin: 0 0 12px; }
+.bt-req { background: var(--soft); border-radius: 10px; padding: 10px 14px; font-size: 15.5px; }
+.bt-req ol { columns: 2; margin: 6px 0 0; padding-left: 22px; }
+.bt-req li { margin: 0 0 2px; }
+@media (max-width: 860px) { .hero-pair { grid-template-columns: 1fr; } .bt-req ol { columns: 1; } }
