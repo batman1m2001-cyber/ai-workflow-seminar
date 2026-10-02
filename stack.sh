@@ -11,6 +11,8 @@
 # Studio's assistant: SEMINAR_PASSWORD, or a generated one kept in .stack/password.
 #   site:   any user name + the password (browser prompt)
 #   Studio: user "seminar" + the password
+# SEMINAR_AUTH=off (the default for the talk) turns sign-in off on both; the model
+# router still checks its key, so the API keys can't be spent through a tunnel.
 #
 # Expects the sibling checkouts:
 #   ../meeting-prep-projects   (MEETING_PREP_DIR)
@@ -32,6 +34,7 @@ RUN="$ROOT/.stack"
 mkdir -p "$RUN"
 [ -s "$RUN/password" ] || { umask 077; head -c 12 /dev/urandom | base64 | tr -d '/+=' >"$RUN/password"; }
 export SEMINAR_PASSWORD="${SEMINAR_PASSWORD:-$(cat "$RUN/password")}"
+export SEMINAR_AUTH="${SEMINAR_AUTH:-off}"
 
 if [ "${SEMINAR_MODEL_MODE:-real}" = real ]; then
   MODEL_ENV=(OPENAI_BASE_URL=http://127.0.0.1:8000/llm/v1 OPENAI_API_KEY="$SEMINAR_PASSWORD")
@@ -64,7 +67,7 @@ up() {
   start app 8200 "$PREP/meeting-prep-operonx" env "${MODEL_ENV[@]}" uv run operonx-serve
   # its own accounts: the first start makes "seminar" the admin, with the password;
   # jobs and services it starts inherit the model settings
-  OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
+  OPERONX_STUDIO_AUTH="$SEMINAR_AUTH" OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
     start studio "$STUDIO_PORT" "$STUDIO_DIR" \
     env "${MODEL_ENV[@]}" uv run operonx-studio "$PREP/meeting-prep-operonx" --port "$STUDIO_PORT" --no-open
   status
@@ -98,7 +101,7 @@ tunnel() {
     for _ in $(seq 30); do grep -qo 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" && break; sleep 1; done
     echo "  $t: $(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" | head -1)"
   done
-  echo "  password: $SEMINAR_PASSWORD   (Studio user: seminar)"
+  if [ "$SEMINAR_AUTH" = off ]; then echo "  sign-in: off (public: anyone with the URL can run code here)"; else echo "  password: $SEMINAR_PASSWORD   (Studio user: seminar)"; fi
 }
 
 check() {

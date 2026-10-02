@@ -213,6 +213,7 @@ def run(req: Run):
 
 
 PASSWORD = os.environ.get("SEMINAR_PASSWORD", "")
+AUTH = os.environ.get("SEMINAR_AUTH", "on") != "off"   # off: no sign-in (the /llm router keeps its key)
 
 
 @app.middleware("http")
@@ -220,7 +221,7 @@ async def password(request: Request, call_next):
     """With SEMINAR_PASSWORD set (a public tunnel), every request needs it — a tunnel
     arrives from 127.0.0.1, so the address can't tell the room from the internet.
     /mock/v1 stays open: the demo app calls it, and it only answers scripted text."""
-    if PASSWORD and not request.url.path.startswith(("/mock/", "/llm/")):   # /llm checks its own key
+    if AUTH and PASSWORD and not request.url.path.startswith(("/mock/", "/llm/")):   # /llm checks its own key
         import base64
         import secrets
         given = ""
