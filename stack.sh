@@ -29,10 +29,13 @@ STUDIO_DIR="${STUDIO_DIR:-$ROOT/../../operonx-studio}"
 STUDIO_PORT="${STUDIO_PORT:-8766}"
 QC="${QC_DIR:-$ROOT/../qc-snatcher}"
 QC_COMPOSE="$QC/seminar/docker-compose.yml"   # QC's Triton (BGE-M3) + pgvector, when present
+# the db port is remembered after the first `PREP_DB_PORT=… ./stack.sh up`, so later commands need nothing
+[ -z "${PREP_DB_PORT:-}" ] && [ -s "$ROOT/.stack/db_port" ] && PREP_DB_PORT="$(cat "$ROOT/.stack/db_port")"
 export PREP_DB_PORT="${PREP_DB_PORT:-5433}"
 export PREP_DB_URL="${PREP_DB_URL:-postgresql://prep:prep@127.0.0.1:$PREP_DB_PORT/prep}"
 RUN="$ROOT/.stack"
 mkdir -p "$RUN"
+echo "$PREP_DB_PORT" >"$RUN/db_port"
 [ -s "$RUN/password" ] || { umask 077; head -c 12 /dev/urandom | base64 | tr -d '/+=' >"$RUN/password"; }
 export SEMINAR_PASSWORD="${SEMINAR_PASSWORD:-$(cat "$RUN/password")}"
 export SEMINAR_AUTH="${SEMINAR_AUTH:-off}"
