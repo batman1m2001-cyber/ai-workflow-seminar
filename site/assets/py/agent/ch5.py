@@ -1,6 +1,5 @@
-"""agent.py: Linh's email in, a brief for sales out. From scratch: no agent framework."""
+"""agent.py: the meeting-prep assistant, from scratch. Linh's email in, a brief for sales out."""
 
-import inspect
 import itertools
 import json
 import os
@@ -19,23 +18,26 @@ MODEL = os.environ.get("AGENT_MODEL", "gpt-4o-mini")
 EMBED_MODEL = os.environ.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small")
 
 
+# ── the model: one HTTP POST, messages in, text out ─────────────────────────
+
+def llm(messages):
+    r = httpx.post(f"{API}/chat/completions", headers={"Authorization": f"Bearer {KEY}"},
+                   json={"model": MODEL, "messages": messages}, timeout=60)
+    return r.json()["choices"][0]["message"]["content"]
+
+
+# ── email_agent: is this email a lead? (layer 1) ────────────────────────────
+
 def read_email(email_id="lotus-intro"):
     """This morning's mail, as a dict."""
     return as_email(next(g for g in golden() if g["id"] == email_id))
 
 
-def build_prompt(email):
+def triage_prompt(email):
     """Prompt engineering: an f-string."""
     return [{"role": "system", "content": "Read the email. Reply with JSON only: "
-                                          '{"company": "...", "domain": "...", "intent": "...", "contact": "..."}'},
+                                          '{"is_lead": true, "company": "...", "domain": "...", "intent": "...", "contact": "..."}'},
             {"role": "user", "content": f"From: {email['from_name']} <{email['from']}>\n\n{email['text']}"}]
-
-
-def llm(messages):
-    """The model: one HTTP POST. Messages in, text out."""
-    r = httpx.post(f"{API}/chat/completions", headers={"Authorization": f"Bearer {KEY}"},
-                   json={"model": MODEL, "messages": messages}, timeout=60)
-    return r.json()["choices"][0]["message"]["content"]
 
 
 def parse(reply):
@@ -45,6 +47,13 @@ def parse(reply):
     return lead
 
 
+def email_agent(email):
+    """One LLM call reads the letter; code checks what it says."""
+    return parse(llm(triage_prompt(email)))
+
+
+# ── company_info: what we already know (layer 2: RAG · layer 3: MCP) ───────────────────────
+
 def embed(text):
     """Text to a vector of numbers: one HTTP POST."""
     r = httpx.post(f"{API}/embeddings", headers={"Authorization": f"Bearer {KEY}"},
@@ -53,26 +62,42 @@ def embed(text):
 
 
 def recall(question, k=3):
-    """RAG: our notes nearest to the question. The "vector store" is a table."""
+    """Our notes nearest to the question. The "vector store" is a table."""
     q = "[" + ",".join(map(str, embed(question))) + "]"
-    return db.rows("SELECT content, embedding <=> %s::vector AS distance FROM kb_chunks "
-                   "ORDER BY distance LIMIT %s", q, k)
+    return [r["content"] for r in db.rows("SELECT content, embedding <=> %s::vector AS distance FROM kb_chunks "
+                                          "ORDER BY distance LIMIT %s", q, k)]
 
 
-def brief_prompt(lead, notes, findings):
-    """The brief's prompt: the lead, our notes and what research found, pasted in."""
-    evidence = "\n".join(f"- {n['content']}" for n in notes) + f"\n- Research: {findings}"
-    return [{"role": "system", "content": "Write a one-page meeting brief for sales, in short bullets. "
-                                          "Use only the evidence. No placeholders like [Insert date]: "
-                                          "if a fact is missing, leave the line out."},
-            {"role": "user", "content": f"Lead: {json.dumps(lead)}\n\nEvidence:\n{evidence}"}]
+def company_info(crm, company, lead):
+    """Our past notes, plus the CRM's people and history (over MCP)."""
+    notes = recall(f"{lead['company']}: {lead['intent']}")
+    people = [f"Contact: {p['name']}, {p['title']}" for p in mcp_tool(crm, "crm_contacts", company_id=company["id"])]
+    history = [f"History {h['date']}: {h['note']}" for h in mcp_tool(crm, "crm_history", company_id=company["id"])]
+    return notes + people + history
 
+
+# ── report_agent: write the brief (layer 2) ─────────────────────────────────
+
+def brief_prompt(lead, evidence):
+    """The brief's prompt: the lead and the evidence, pasted in."""
+    facts = "\n".join(f"- {e}" for e in evidence)
+    return [{"role": "system", "content": "Write a one-page meeting brief for sales, in short bullets. Use only the evidence. "
+                                          "No placeholders like [Insert date]: if a fact is missing, leave the line out."},
+            {"role": "user", "content": f"Lead: {json.dumps(lead)}\n\nEvidence:\n{facts}"}]
+
+
+def report_agent(lead, evidence):
+    """One LLM call writes the brief."""
+    return llm(brief_prompt(lead, evidence))
+
+
+# ── MCP: the CRM and the calendar are another program (layer 3) ─────────────
 
 IDS = itertools.count(1)
 
 
 def start_mcp():
-    """MCP: the CRM is another program. Start it, then talk JSON-RPC over its stdin and stdout."""
+    """Start the CRM's MCP server, then talk JSON-RPC over its stdin and stdout."""
     server = subprocess.Popen([sys.executable, "-m", "prep_world.mcp_server"], text=True,
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     mcp_request(server, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
@@ -92,21 +117,43 @@ def mcp_request(server, method, params):
             return reply["result"]
 
 
-def list_tools(server):
-    """MCP tools/list: the server says what it offers, each tool a JSON schema."""
-    return mcp_request(server, "tools/list", {})["tools"]
+def mcp_tool(server, name, **args):
+    """MCP tools/call: our code calls a tool on the server and reads its JSON."""
+    result = mcp_request(server, "tools/call", {"name": name, "arguments": args})
+    if "structuredContent" in result:                      # a list comes back as {"result": [...]}
+        return result["structuredContent"].get("result", result["structuredContent"])
+    return json.loads(result["content"][0]["text"]) if result["content"] else None
 
 
-def call_tool(server, call):
-    """MCP tools/call: our code runs the tool. The model never runs anything."""
-    result = mcp_request(server, "tools/call", {"name": call["tool"], "arguments": call["args"]})
-    return "\n".join(c.get("text", "") for c in result["content"])
+def extract_company(crm, email):
+    """Who is it? The sender's domain, looked up in the CRM."""
+    return mcp_tool(crm, "crm_find_company", domain_or_name=email["from"].rpartition("@")[2])
 
 
-def tools_prompt(tools, task):
+def calendar(crm, company):
+    """Meetings already booked with this company."""
+    return [f"Meeting {m['starts_at']}: {m['title']}" for m in mcp_tool(crm, "calendar_meetings", company_id=company["id"])]
+
+
+# ── web_research: the model picks the tools (layer 3, the loop in layer 4) ────
+
+def web_search(query):
+    """Search the web. Returns titles, links and snippets."""
+    return httpx.get(f"{WEB}/search", params={"q": query}).text
+
+
+def fetch_page(url):
+    """Read a web page: the text a person would see."""
+    return visible_text(httpx.get(url).text)[:4000]
+
+
+TOOLS = {"web_search": web_search, "fetch_page": fetch_page}
+
+
+def tools_prompt(task):
     """Function calling, opened: the tools are text in the prompt, and so is the reply format."""
-    listing = "\n".join(json.dumps({"name": t["name"], "description": t["description"],
-                                    "arguments": t["inputSchema"]["properties"]}) for t in tools)
+    listing = "\n".join(json.dumps({"name": n, "description": f.__doc__, "arguments": list(f.__code__.co_varnames[:f.__code__.co_argcount])})
+                        for n, f in TOOLS.items())
     return [{"role": "system", "content": "You can use these tools:\n" + listing + "\n\n"
                                           'To use one, reply with one line of JSON only: {"tool": "<name>", "args": {...}}\n'
                                           "When you know enough, reply with your answer in plain text."},
@@ -122,28 +169,33 @@ def parse_tool_call(reply):
     return call if isinstance(call, dict) and "tool" in call else None
 
 
-def web_search(query):
-    """Search the web. Returns titles, links and snippets."""
-    return httpx.get(f"{WEB}/search", params={"q": query}).text
+def run_tool(call):
+    """Our code runs the tool the model asked for. The model never runs anything."""
+    return TOOLS[call["tool"]](**call["args"])
 
 
-def fetch_page(url):
-    """Read a web page: the text a person would see."""
-    return visible_text(httpx.get(url).text)[:4000]
+def research(task, max_turns=8):
+    """The agent: ask the model, run the tool it picks, show it the result, repeat until it answers."""
+    messages = tools_prompt(task)
+    for turn in range(1, max_turns + 1):
+        reply = llm(assemble_context(messages))
+        call = parse_tool_call(reply)
+        if call is None:                                    # no tool asked for: the model is done
+            print(f"research: {turn} requests to the model\n", end="")
+            return reply
+        result = run_tool(call)
+        messages += [{"role": "assistant", "content": reply},
+                     {"role": "user", "content": f"Result of {call['tool']}:\n{result}"}]
+    return "(out of turns)"
 
 
-LOCAL = {f.__name__: f for f in (web_search, fetch_page)}
-LOCAL_TOOLS = [{"name": n, "description": f.__doc__,
-                "inputSchema": {"properties": {p: {"type": "string"} for p in inspect.signature(f).parameters},
-                                "required": list(inspect.signature(f).parameters)}} for n, f in LOCAL.items()]
+def web_research(lead):
+    """Research the company on the web: the one real agent."""
+    return research(f"Research {lead['company']} ({lead['domain']}) for a sales meeting: "
+                    "web_search for news, then fetch_page the best result, then answer.")
 
 
-def run_tool(server, call):
-    """Our code runs the tool: a local function, or the MCP server."""
-    if call["tool"] in LOCAL:
-        return LOCAL[call["tool"]](**call["args"])
-    return call_tool(server, call)
-
+# ── context: what the model sees each turn (layer 5) ────────────────────────
 
 MEMORY = Path("site/assets/py/agent/AGENTS.md")
 
@@ -153,8 +205,7 @@ def tokens(messages):
 
 
 def assemble_context(messages):
-    """Context engineering: what the model sees this turn. Standing notes come from a file;
-    results already read shrink to one line; the newest one stays whole."""
+    """Standing notes from a file; results already read shrink to one line; the newest stays whole."""
     last = max((i for i, m in enumerate(messages) if m["content"].startswith("Result of ")), default=-1)
     seen = [dict(m, content=m["content"].split("\n")[0] + " (already read: cleared)")
             if m["content"].startswith("Result of ") and i != last else m for i, m in enumerate(messages)]
@@ -163,30 +214,24 @@ def assemble_context(messages):
     return context
 
 
-def research(server, tools, task, max_turns=8):
-    """The agent: ask the model, run the tool it picks, show it the result, repeat until it answers."""
-    messages = tools_prompt(tools, task)
-    for turn in range(1, max_turns + 1):
-        reply = llm(assemble_context(messages))
-        call = parse_tool_call(reply)
-        if call is None:                                    # no tool asked for: the model is done
-            print(f"requests to the model: {turn}\n", end="")
-            return reply
-        result = run_tool(server, call)
-        messages += [{"role": "assistant", "content": reply},
-                     {"role": "user", "content": f"Result of {call['tool']}:\n{result}"}]
-    return "(out of turns)"
+def memory_agent(*sources):
+    """Merge every source into one evidence pack, each fact once: code, not a model."""
+    facts = [f for s in sources for f in (s if isinstance(s, list) else [s])]
+    return list(dict.fromkeys(facts))
 
 
+
+# ── prepare: the flow, box by box ─────────────────────────────────────────────
 def prepare(email):
-    """The whole job, step by step."""
-    lead = parse(llm(build_prompt(email)))
-    notes = recall(f"{lead['company']}: {lead['intent']}")
+    lead = email_agent(email)
     crm = start_mcp()
-    tools = list_tools(crm) + LOCAL_TOOLS
-    findings = research(crm, tools, f"Research {lead['company']} ({lead['domain']}) for a sales meeting: "
-                                    "find it in the CRM, then web_search for news, then fetch_page the best result, then answer.")
-    return llm(brief_prompt(lead, notes, findings))
+    company = extract_company(crm, email)
+    info = company_info(crm, company, lead)
+    meetings = calendar(crm, company)
+    found = web_research(lead)
+    evidence = memory_agent(info, meetings, found)
+    brief = report_agent(lead, evidence)
+    return brief
 
 
 print(prepare(read_email()))

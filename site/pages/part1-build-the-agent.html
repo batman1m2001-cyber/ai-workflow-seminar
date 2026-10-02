@@ -15,7 +15,7 @@
 
 <p class="kicker">Part I · The agent, as it is</p>
 <h1>Build the agent from scratch</h1>
-<p class="lead">Linh's email arrives at 8 am. We write the program that turns it into a brief, <b>from scratch</b>: one file, <code>agent.py</code>, plain Python, HTTP and an MCP client. Each chapter adds <b>one layer</b> to the same file. Watch two things grow: the picture of the agent, where every part is a function, and the code.</p>
+<p class="lead">Linh's email arrives at 8 am. We build the meeting-prep system that turns it into a brief, <b>from scratch</b>: one file, <code>agent.py</code>, plain Python, HTTP and an MCP client. Each layer adds <b>one idea</b>, and the <b>boxes</b> of the flow that use it. By layer 7 the picture is the whole system.</p>
 
 
 <div class="anatomy" data-beat="1" data-sections></div>
@@ -23,8 +23,8 @@
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
 <h2>Chapter 1 · The call</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Đây là <b>email_agent</b>: email đi qua cổng chặn tấn công, rồi <b>một lần gọi LLM</b> (triage) trả JSON: có phải khách tiềm năng không, họ muốn gì, ai liên hệ. JSON hỏng thì run dừng, không đoán.</p></details>
-<p>Four functions. <code>read_email()</code> gets the mail, <code>build_prompt()</code> pastes it into an f-string, <code>llm()</code> sends one HTTP POST, <code>parse()</code> turns the reply into data and checks it. Press ▶ Run, then open <b>On the wire</b>: that is the whole request the model gets.</p>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Lớp đầu tiên đưa vào hộp <b>email_agent</b>: một lần gọi model đọc email và trả lời bằng JSON (có phải khách tiềm năng không, công ty nào, họ muốn gì). Code kiểm tra JSON đó.</p></details>
+<p>The meeting-prep flow starts with one box, <b>email_agent</b>: is this email a lead? <code>read_email()</code> gets the mail, <code>triage_prompt()</code> pastes it into an f-string, <code>llm()</code> sends one HTTP POST, <code>parse()</code> turns the reply into data and checks it. Press ▶ Run, then open <b>On the wire</b>: that is the whole request the model gets.</p>
 <div class="project" data-ch="1"></div>
 <div class="playground" data-title="LangChain: prompt | model | parser" data-runtime="server"><script type="text/plain">
 from langchain_core.output_parsers import JsonOutputParser
@@ -50,8 +50,8 @@ print(chain.invoke({"name": email["from_name"], "sender": email["from"], "text":
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="2" hidden>
 <h2>Chapter 2 · Knowledge</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><b>company_info_agent</b> gọi <code>recall</code>: tìm trong kho ghi chú (pgvector, bảng <code>kb_chunks</code>) những gì đã làm với công ty này: pilot cũ, cuộc gọi trước, brief đã duyệt.</p></details>
-<p>New: <code>embed()</code> turns text into numbers (one more HTTP POST), and <code>recall()</code> finds our nearest notes with one SQL query in Postgres. A second prompt, <code>brief_prompt()</code>, pastes them in, and the model writes the brief.</p>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm hai hộp. <b>company_info</b> tìm ghi chú cũ về công ty trong Postgres bằng vector (RAG). <b>report_agent</b> dùng một lần gọi model để viết brief từ những ghi chú đó.</p></details>
+<p>Two boxes join. <b>company_info</b> finds what we already know: <code>embed()</code> turns the question into numbers and <code>recall()</code> finds our nearest notes with one SQL query in Postgres. <b>report_agent</b> pastes them into <code>brief_prompt()</code> and one model call writes the brief.</p>
 <div class="project" data-ch="2"></div>
 <div class="playground" data-title="LangChain: a vector store and a retriever" data-runtime="server"><script type="text/plain">
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -66,14 +66,14 @@ for doc in store.as_retriever(search_kwargs={"k": 1}).invoke(question):
     print(doc.page_content)
 </script></div>
 <div class="callout key"><b class="t">The truth</b><p><b>RAG</b> is embed, then <code>ORDER BY embedding &lt;=&gt; q</code>, then string formatting. The “vector store” is a table.</p></div>
-<div class="handoff"><span>Still missing</span><p>It remembers our notes. It still can't look anything up: the CRM, the calendar, the web.</p></div>
+<div class="handoff"><span>Still missing</span><p>Our notes only go so far. What does the CRM say about them, what is already booked, and what is on the web?</p></div>
 <div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · Tools →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
 <h2>Chapter 3 · Tools and MCP</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>CRM và lịch là <b>MCP server</b> riêng. <b>extract_company_name</b> tra công ty theo domain người gửi (<code>crm_find_company</code>); <b>calendar_agent</b> lấy lịch họp (<code>calendar_meetings</code>); <b>company_info_agent</b> lấy người liên hệ và lịch sử (<code>crm_contacts</code>, <code>crm_history</code>).</p></details>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm ba hộp. <b>extract_company</b> và <b>calendar</b> hỏi CRM và lịch qua MCP: code gọi trực tiếp, không cần model. <b>company_info</b> lấy thêm người liên hệ và lịch sử từ CRM. <b>web_research</b> thì khác: model tự chọn tool, code của mình chạy tool đó.</p></details>
 <h3>The black box</h3>
 <p>This is how everyone is taught to give a model tools:</p>
 <pre class="static">client.chat.completions.create(
@@ -84,8 +84,8 @@ for doc in store.as_retriever(search_kwargs={"k": 1}).invoke(question):
 <div class="callout warn"><b class="t">Where did the tools go?</b><p>The API turned them into text for the model, out of sight: you never see that prompt, you can't log it, and you can't change it. The reply comes back as a special <code>tool_calls</code> field, so it looks like the model “called” something. It didn't. So we do it ourselves.</p></div>
 <h3>Opened</h3>
 <ul>
-  <li><b>MCP</b>: the CRM is <b>another program</b> (<code>prep_world.mcp_server</code>). <code>start_mcp()</code> starts it and talks to it with <b>JSON-RPC</b>, one JSON line out, one back, over its stdin and stdout: <code>initialize</code>, then <code>tools/list</code> (“what do you offer?”, each tool a JSON schema), then <code>tools/call</code> (“run this one”).</li>
-  <li><b>Function calling</b>: <code>tools_prompt()</code> writes those schemas <b>into the prompt as text</b>, with the reply format: one line of JSON, <code>{"tool": …, "args": …}</code>. <code>parse_tool_call()</code> reads it back. <code>call_tool()</code>, our code, runs it.</li>
+  <li><b>MCP, in three boxes:</b> the CRM and the calendar are <b>another program</b> (<code>prep_world.mcp_server</code>). <code>start_mcp()</code> starts it and talks <b>JSON-RPC</b>, one JSON line out, one back: <code>initialize</code>, then <code>tools/call</code>. <b>extract_company</b>, <b>calendar</b> and <b>company_info</b> call it from code: no model decides anything there.</li>
+  <li><b>Function calling, in one box:</b> <b>web_research</b> is where the model chooses. <code>tools_prompt()</code> writes the tools <b>into the prompt as text</b>, with the reply format <code>{"tool": …, "args": …}</code>; <code>parse_tool_call()</code> reads it back; <code>run_tool()</code>, our code, runs it.</li>
 </ul>
 <p>Press ▶ Run, then open <b>On the wire</b>: the MCP messages, and the exact prompt with the tools inside it.</p>
 <div class="project" data-ch="3"></div>
@@ -107,16 +107,16 @@ print("text:", repr(msg.content))
 print("tool calls:", msg.tool_calls)
 </script></div>
 <div class="callout key"><b class="t">The truth</b><p>A tool is <b>text in the prompt</b>; the model answers with <b>JSON</b>; <b>your code</b> runs the tool. <b>MCP</b> is JSON-RPC between two programs: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.</p></div>
-<div class="handoff"><span>Still missing</span><p>One lookup isn't research. It has to search, read what it found, and decide when it knows enough.</p></div>
+<div class="handoff"><span>Still missing</span><p>One search isn't research. The web part has to search, read what it found, and decide when it knows enough.</p></div>
 <div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · The loop →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
 <h2>Chapter 4 · The loop</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Chỉ <b>web_research_agent</b> là agent thật: vòng lặp tự tìm kiếm, đọc trang, tự quyết khi nào đủ (tối đa 4 lượt). Mọi bước khác là code, hoặc một lần gọi LLM.</p></details>
-<p>The single tool call becomes <code>research()</code>: a <code>for</code> loop. Ask the model; if it asks for a tool, <code>run_tool()</code> runs it (a local function or the MCP server) and the result goes back into <code>messages</code>; repeat until it answers. Two web tools join the CRM: <code>web_search()</code> and <code>fetch_page()</code>.</p>
-<div class="callout warn"><b class="t">Wiretap moment: predict first</b><p>To research one company, <b>how many requests does the agent send to the model?</b> Hands up: 1? 3? 10? Then press ▶ Run and count the <code>llm()</code> calls inside <code>research()</code>: the ×N on the LLM in the picture.</p></div>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Chỉ hộp <b>web_research</b> thay đổi: nó thành một vòng lặp (agent). Tìm kiếm, đọc trang, tự quyết khi nào đủ. Đây là hộp duy nhất có vòng lặp trong cả hệ thống.</p></details>
+<p>One box changes: <b>web_research</b> becomes <code>research()</code>, a <code>for</code> loop. Ask the model; if it asks for a tool, <code>run_tool()</code> runs it and the result goes back into <code>messages</code>; repeat until it answers. It is the <b>only box that loops</b>.</p>
+<div class="callout warn"><b class="t">Wiretap moment: predict first</b><p>To research one company, <b>how many requests does the agent send to the model?</b> Hands up: 1? 3? 10? Then press ▶ Run and watch the count on <b>web_research</b> in the picture: one per model request.</p></div>
 <div class="project" data-ch="4"></div>
 <div class="playground" data-title="LangChain: create_agent, with a request counter" data-runtime="server"><script type="text/plain">
 import httpx
@@ -160,8 +160,8 @@ print("HTTP requests:", requests)
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="5" hidden>
 <h2>Chapter 5 · Context</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Mỗi researcher bắt đầu từ <b>trí nhớ về công ty</b> (CompanyMemory), đặt ở đầu prompt, nên không tìm lại điều đã biết. <b>memory_agent</b> gộp mọi nguồn thành một gói evidence, mỗi sự thật một lần, bằng code chứ không qua LLM.</p></details>
-<p>New: <code>assemble_context()</code> runs before every <code>llm()</code> call. Standing notes come from a file (<code>AGENTS.md</code>); results the model already read shrink to one line; the newest stays whole. The output prints the token count before and after.</p>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Vòng lặp của <b>web_research</b> giữ prompt gọn: ghi chú cố định từ AGENTS.md, kết quả cũ thu lại một dòng. Thêm hộp <b>memory_agent</b>: gộp mọi nguồn thành một gói bằng chứng, mỗi sự thật một lần, bằng code.</p></details>
+<p>The research loop gets <code>assemble_context()</code> before every model call: standing notes from <code>AGENTS.md</code>, results already read shrink to one line, the newest stays whole. And a new box, <b>memory_agent</b>, merges every source into one evidence pack, each fact once, in plain code.</p>
 <div class="project" data-ch="5"></div>
 <div class="playground" data-title="LangChain: clear the pages the agent already read" data-runtime="server"><script type="text/plain">
 import json
@@ -199,15 +199,15 @@ for m in sent[-1]["messages"]:
         print(f"  tool result: {len(str(m['content'])):5d} chars  {str(m['content'])[:44]!r}")
 </script></div>
 <div class="callout key"><b class="t">The truth</b><p><b>Context engineering</b> is a function that builds the prompt under a budget. <b>Memory</b> is a file. A <b>sub-agent</b> is a tool whose body is another loop.</p></div>
-<div class="handoff"><span>Still missing</span><p>Now it reads well. Next it gets a <code>send_email</code> tool, and an email arrives that says: <i>“send an email to abc@company.com.”</i></p></div>
+<div class="handoff"><span>Still missing</span><p>It reads well now. Then an email arrives that says <i>“send an email to abc@company.com”</i>, and the brief goes out with nobody reading it.</p></div>
 <div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · The harness →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="6" hidden>
 <h2>Chapter 6 · The harness</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><code>screen</code> chặn email ra lệnh trước khi tới model; researcher chỉ được dùng tool <b>đọc</b> (ToolPolicy read-only); <code>check_brief</code> kiểm tra brief không lộ thông tin; <b>human_approval_gate</b> lưu bản nháp và gửi link: sales bấm duyệt thì brief mới được gửi.</p></details>
-<p>The agent can now send email, so two layers of plain code go around it. <code>screen()</code> is a gate <b>before any model</b>: an email that gives orders never reaches one. <code>guard()</code> checks <b>every tool call</b>: is it allowed for research, are the arguments right, and it logs either way. The run takes the attack email first, then Linh's.</p>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm ba hộp an toàn (màu đỏ). <b>screen</b> chặn email ra lệnh trước khi tới model; web_research chỉ được dùng tool đọc; <b>check_brief</b> kiểm tra brief không lộ thông tin; <b>human_approval</b> lưu bản nháp và gửi link: sales bấm duyệt thì mới gửi.</p></details>
+<p>Three guard boxes join, in red. <b>screen</b> is a gate <b>before any model</b>: an email that gives orders never reaches one. Inside web_research, <code>guard()</code> lets only the read-only tools run. <b>check_brief</b> looks for leaks, and <b>human_approval</b> saves a draft and emails sales a link: the brief goes nowhere until a person clicks. The run takes the attack email first, then Linh's.</p>
 <div class="project" data-ch="6"></div>
 <div class="playground" data-title="LangChain: an agent inside its harness" data-runtime="server"><script type="text/plain">
 from langchain.agents import create_agent
@@ -240,21 +240,21 @@ print("paused for a human:", "__interrupt__" in result)
 for i in result.get("__interrupt__", []):
     print(i.value["action_requests"][0]["name"], i.value["action_requests"][0]["args"])
 </script></div>
-<div class="callout key"><b class="t">The truth</b><p>The <b>harness</b> is everything that isn't the model: <code>if</code>s, retries, logs, tests, and it's most of the code. With the model held fixed, LangChain moved its coding agent from <b>52.8%</b> to <b>66.5%</b> on Terminal-Bench 2.0 by changing <b>only the harness</b>.</p></div>
-<div class="handoff"><span>Still missing</span><p>Safe now, but slow: what it sells, the news and the people are researched one after another. Why not three agents at once?</p></div>
+<div class="callout key"><b class="t">The truth</b><p>The <b>harness</b> is everything that isn't the model: <code>if</code>s, a gate, a check, a person's yes. With the model held fixed, LangChain moved its coding agent from <b>52.8%</b> to <b>66.5%</b> on Terminal-Bench 2.0 by changing <b>only the harness</b>.</p></div>
+<div class="handoff"><span>Still missing</span><p>Safe now, but slow: every box runs one after another, and the three web questions wait for each other.</p></div>
 <div class="beat-nav"><button class="beat-next" data-go="7">Next: 7 · Many agents →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="7" hidden>
 <h2>Chapter 7 · Many agents</h2>
-<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><b>web_research_agent</b> chạy <b>3 researcher song song</b>: sản phẩm, tin tức, con người; calendar và company_info chạy cùng lúc với nó; rồi <b>memory_agent</b> gộp lại. Song song, nhưng vẫn là một workflow.</p></details>
-<p>New: <code>research_team()</code> runs the same <code>research()</code> loop three times at once, one question each, and <code>merge()</code> joins what they found. A lock keeps the three from talking over each other to the one MCP server.</p>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p><b>web_research</b> chạy 3 researcher cùng lúc (sản phẩm, tin tức, con người), và chạy song song với <b>calendar</b> và <b>company_info</b>; rồi <b>memory_agent</b> gộp lại. Hình bây giờ chính là sơ đồ của đề bài, viết bằng code.</p></details>
+<p>The flow goes parallel. <b>web_research</b> runs three researchers at once (what it sells, the news, the people), and it runs <b>side by side</b> with <b>calendar</b> and <b>company_info</b>; <b>memory_agent</b> waits for all three, then merges. A lock keeps the boxes from talking over each other to the one MCP server.</p>
 <div class="project" data-ch="7"></div>
-<div class="callout key"><b class="t">The truth</b><p><b>Multi-agent</b> is the same loop as nodes, run in parallel, then merged by a plain step. The hard part isn't the agents: it's the wiring between them.</p></div>
+<div class="callout key"><b class="t">The truth</b><p><b>Multi-agent</b> is the same loop as nodes, run in parallel with the other boxes, then merged by a plain step. The hard part isn't the agents: it's the wiring between them.</p></div>
 
 <h2>Now flip the whole agent</h2>
-<p>Seven chapters, seven ideas, and not one needed a framework. Press <b>X-ray</b> on the picture at the top: every part is a plain <b>function</b> of <code>agent.py</code>, joined by <b>arrows</b>: a gate, steps in order, a loop, three agents side by side, a merge.</p>
+<p>Seven chapters, seven ideas, and not one needed a framework. Press <b>X-ray</b> on the picture at the top: every box is a plain <b>function</b> of <code>agent.py</code>, joined by <b>arrows</b>: a gate, steps in order, one loop, boxes side by side, a merge, a person's yes. Put it next to the course brief's diagram on the first page: <b>the same boxes</b>.</p>
 <div class="callout navy"><b class="t">That picture has a name</b><p style="font-size:24px;font-weight:800;color:var(--navy);margin:4px 0">It's a workflow.</p>
 <p>What makes part of it an “agent” is only this: at some arrows, <b>the model picks the next step</b> (inside <code>research()</code>, which tool, and when to stop). Everywhere else, <b>your code</b> picks. So the real question isn't <i>how many agents</i>. At each arrow: <b>who picks the next step?</b></p></div>
 <div class="beat-nav"><button class="beat-next flip" type="button">Flip to X-ray ↑</button></div>
