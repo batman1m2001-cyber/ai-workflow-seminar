@@ -79,9 +79,12 @@ def _backend(body: dict, kind: str) -> tuple:
         return (*openai, real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
     if str(body.get("model", "")).startswith("openai:"):   # a caller that picks its OpenAI model
         return (*openai, body["model"].split(":", 1)[1])
+    inhouse = (real.get("INHOUSE_BASE_URL"), real.get("INHOUSE_API_KEY", ""), real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it"))
+    if kind == "completions" or str(body.get("model", "")).startswith("inhouse:"):   # the in-house model, even with tools
+        return inhouse if inhouse[0] else (*openai, "gpt-4o-mini")
     if body.get("tools") or body.get("functions") or not real.get("INHOUSE_BASE_URL"):
         return (*openai, real.get("SEMINAR_TOOLS_MODEL", "gpt-4o-mini"))
-    return real["INHOUSE_BASE_URL"], real.get("INHOUSE_API_KEY", ""), real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it")
+    return inhouse
 
 
 FENCE = re.compile(r"^\s*```[a-zA-Z]*\s*\n(.*?)\n?```\s*$", re.S)
@@ -129,7 +132,7 @@ async def _forward(request: Request, kind: str):
     async with client:
         resp = await client.post(url, json=body, headers=headers)
     content = resp.content
-    if kind == "chat" and resp.status_code == 200:
+    if kind == "chat" and resp.status_code == 200 and request.headers.get("x-seminar-raw") != "1":   # raw: keep the fences
         content = _unfence(content)
     return Response(content, status_code=resp.status_code, media_type="application/json",
                     headers={"x-seminar-backend": model})
@@ -138,6 +141,12 @@ async def _forward(request: Request, kind: str):
 @app.post("/llm/v1/chat/completions")
 async def llm_chat(request: Request):
     return await _forward(request, "chat")
+
+
+@app.post("/llm/v1/completions")
+async def llm_completions(request: Request):
+    """Plain text in, text out, on the in-house model: a prompt already in its chat template."""
+    return await _forward(request, "completions")
 
 
 @app.post("/llm/v1/embeddings")
