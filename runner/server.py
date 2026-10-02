@@ -18,6 +18,7 @@ code it is sent, so it must never listen on a network.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -81,6 +82,25 @@ def _backend(body: dict, kind: str) -> tuple:
     return real["INHOUSE_BASE_URL"], real.get("INHOUSE_API_KEY", ""), real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it")
 
 
+FENCE = re.compile(r"^\s*```[a-zA-Z]*\s*\n(.*?)\n?```\s*$", re.S)
+
+
+def _unfence(raw: bytes) -> bytes:
+    """Small models wrap JSON in ```json fences; a reply that is ONLY a fenced block
+    becomes its contents, so `json.loads(reply)` works the same on every model."""
+    import json
+    try:
+        data = json.loads(raw)
+        for choice in data.get("choices") or []:
+            msg = choice.get("message") or {}
+            m = FENCE.match(msg.get("content") or "")
+            if m:
+                msg["content"] = m.group(1).strip()
+        return json.dumps(data).encode()
+    except (ValueError, AttributeError):
+        return raw
+
+
 async def _forward(request: Request, kind: str):
     import httpx
     from fastapi.responses import StreamingResponse
@@ -106,7 +126,10 @@ async def _forward(request: Request, kind: str):
                                  media_type=resp.headers.get("content-type", "text/event-stream"))
     async with client:
         resp = await client.post(url, json=body, headers=headers)
-    return Response(resp.content, status_code=resp.status_code, media_type="application/json",
+    content = resp.content
+    if kind == "chat" and resp.status_code == 200:
+        content = _unfence(content)
+    return Response(content, status_code=resp.status_code, media_type="application/json",
                     headers={"x-seminar-backend": model})
 
 
