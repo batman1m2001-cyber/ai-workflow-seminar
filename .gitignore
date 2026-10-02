@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.env
+.operonx/
+playground/runs/
+*.pyc
+site/assets/py/bundle.js

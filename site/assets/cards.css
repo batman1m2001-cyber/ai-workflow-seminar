@@ -1,0 +1,198 @@
+/* The agent anatomy diagram and the pipeline cards (v3). */
+
+/* ── anatomy ────────────────────────────────────────────────────────── */
+.anatomy { border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; margin: 18px 0 28px; max-width: 1100px; outline: none; }
+.anatomy:focus-visible { box-shadow: 0 0 0 3px rgba(0,183,79,.3); }
+.an-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.an-bar .spacer { flex: 1; }
+.an-beats { display: flex; gap: 6px; flex-wrap: wrap; }
+.an-beats button, .an-x {
+  border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; cursor: pointer;
+  font: 600 13.5px "Be Vietnam Pro", sans-serif; padding: 5px 12px 5px 6px; display: flex; align-items: center; gap: 7px;
+}
+.an-beats button i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); color: var(--grey); font-size: 12px; }
+.an-beats button.past i { background: var(--mint-line); color: var(--green-dk); }
+.an-beats button.on { border-color: var(--green); background: var(--mint); }
+.an-beats button.on i { background: var(--green); color: #fff; }
+.an-x { padding: 5px 14px; }
+.an-lock { font-size: 13.5px; font-weight: 700; color: var(--grey); padding-left: 6px; }
+.anatomy.locked { max-width: 900px; }
+.anatomy.locked .an-cap > b { font-size: 16px; }
+.xray .an-lock { color: #8FA0C8; }
+.an-x.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.an-stage { padding: 6px 10px 0; }
+.an-svg { display: block; width: 100%; height: auto; font-family: "Be Vietnam Pro", sans-serif; }
+.an-cap { padding: 8px 18px 16px; border-top: 1px dashed var(--line); }
+.an-cap > b { color: var(--navy); font-size: 18px; margin-right: 12px; }
+.an-cap .terms { color: var(--green-dk); font-size: 14px; font-weight: 600; }
+.an-cap p { margin: 4px 0 0; font-size: 16.5px; }
+
+.an-part rect { fill: #F3F7FF; stroke: #8FB0E6; stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.an-part.big rect { fill: #EEF3FC; stroke: var(--navy); }
+.an-part.new rect { fill: var(--mint); stroke: var(--green); stroke-width: 2.4; }
+.an-name { font-size: 16px; font-weight: 700; fill: var(--ink); }
+.an-part.big .an-name { font-size: 19px; fill: var(--navy); }
+.an-sub { font-size: 12.5px; fill: var(--grey); }
+.an-chip { fill: #fff; stroke: var(--line); }
+.an-part.new .an-chip { stroke: var(--mint-line); }
+.an-chipt { font-size: 11.5px; fill: var(--ink); font-weight: 600; }
+.an-badge { font-size: 13px; font-weight: 800; fill: var(--green-dk); }
+.an-edge path { fill: none; stroke: #9AABCB; stroke-width: 2; }
+.an-edge.new path { stroke: var(--green); stroke-width: 2.6; }
+.an-edge text { font-size: 12.5px; fill: var(--grey); font-weight: 600; }
+.an-edge.new text { fill: var(--green-dk); }
+.an-head.n { fill: #9AABCB; } .an-head.g { fill: var(--green); }
+.an-loop path { fill: none; stroke: #9AABCB; stroke-width: 2.4; stroke-dasharray: 7 5; }
+.an-loop.new path { stroke: var(--green); }
+.an-loopt { font-size: 14px; font-weight: 700; fill: var(--navy); }
+.an-loop.new .an-loopt { fill: var(--green-dk); }
+.an-loops { font-size: 12px; fill: var(--grey); }
+.an-harness > rect:first-child { fill: none; stroke: var(--navy); stroke-width: 2; stroke-dasharray: 10 6; }
+.an-harness.new > rect:first-child { stroke: var(--green); stroke-width: 2.6; }
+.an-hname { font-size: 20px; font-weight: 800; fill: var(--navy); }
+.an-harness.new .an-hname { fill: var(--green-dk); }
+.an-hchip { fill: #fff; stroke: var(--navy); }
+.an-harness.new .an-hchip { fill: var(--mint); stroke: var(--green); }
+.an-hchipt { font-size: 12px; font-weight: 700; fill: var(--ink); }
+
+/* X-ray: every part is just code */
+.anatomy.xray { background: var(--code-bg); border-color: var(--code-bg); }
+.anatomy.xray .an-bar, .anatomy.xray .an-cap { border-color: #22325F; }
+.anatomy.xray .an-cap p { color: var(--code-fg); }
+.anatomy.xray .an-cap > b { color: #fff; }
+.anatomy.xray .an-cap .terms { color: #6EE7A2; }
+.xray .an-part rect, .xray .an-part.big rect { fill: #16254F; stroke: #4F6AA8; stroke-dasharray: 5 4; }
+.xray .an-part.new rect { stroke: #3DDC84; }
+.xray .an-name, .xray .an-part.big .an-name { font: 600 14.5px "JetBrains Mono", monospace; fill: #E6ECF7; }
+.xray .an-edge path, .xray .an-loop path { stroke: #4F6AA8; }
+.xray .an-edge.new path, .xray .an-loop.new path { stroke: #3DDC84; }
+.xray .an-edge text { fill: #8FA0C8; }
+.xray .an-head.n { fill: #4F6AA8; } .xray .an-head.g { fill: #3DDC84; }
+.xray .an-loopt { font-family: "JetBrains Mono", monospace; fill: #E6ECF7; }
+.xray .an-harness > rect:first-child { stroke: #4F6AA8; }
+.xray .an-harness.new > rect:first-child { stroke: #3DDC84; }
+.xray .an-hname { font-family: "JetBrains Mono", monospace; font-size: 16px; fill: #E6ECF7; }
+.xray .an-hchip, .xray .an-harness.new .an-hchip { fill: #16254F; stroke: #4F6AA8; }
+.xray .an-harness.new .an-hchip { stroke: #3DDC84; }
+.xray .an-hchipt { fill: #C9D4EE; }
+
+/* the beats as tabs: one section shown under the diagram */
+.anatomy[data-sections] { position: relative; scroll-margin-top: calc(var(--head) + 12px); }
+section.beat { border-left: 4px solid var(--green); padding: 2px 0 8px 26px; margin: 8px 0 30px; animation: beat-in .25s ease-out; }
+section.beat[hidden] { display: none; }
+section.beat > h2:first-child { margin-top: 6px; }
+@keyframes beat-in { from { opacity: 0; transform: translateY(6px); } }
+.beat-nav { display: flex; justify-content: flex-end; margin-top: 26px; }
+.beat-next { border: 0; background: var(--green); color: #fff; border-radius: 10px; padding: 10px 20px; cursor: pointer; font: 700 15px "Be Vietnam Pro", sans-serif; }
+.beat-next:hover { background: var(--green-dk); }
+
+/* ── pipeline cards ─────────────────────────────────────────────────── */
+.pipeline { border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; margin: 18px 0 28px; max-width: 900px; }
+.pl-head { display: flex; align-items: center; gap: 14px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.pl-title { font-weight: 800; color: var(--navy); font-size: 17px; }
+.pl-map { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.pl-map .chip { font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--soft); color: var(--grey); border: 1px solid var(--line); transition: all .25s; }
+.pl-map .chip.run { background: #FFF6E0; color: var(--amber); border-color: #F5D38A; }
+.pl-map .chip.done { background: var(--mint); color: var(--green-dk); border-color: var(--mint-line); }
+.pl-map .chip.fail { background: #FDECEC; color: var(--red); border-color: #F3B4B2; }
+.pl-map .arr { color: var(--grey); font-size: 12px; }
+.pl-ctl { display: flex; gap: 8px; }
+.pl-ctl button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 9px; padding: 7px 14px; cursor: pointer; font: 700 14px "Be Vietnam Pro", sans-serif; }
+.pl-ctl button.run { background: var(--green); border-color: var(--green); color: #fff; padding: 7px 18px; }
+.pl-ctl button:disabled { opacity: .6; cursor: progress; }
+.pl-cards { padding: 18px 22px 20px; }
+
+.pcard { border: 1.5px solid var(--line); border-radius: 14px; background: #fff; transition: border-color .25s, box-shadow .25s, opacity .25s; }
+.c-head { display: flex; align-items: center; gap: 14px; padding: 12px 14px; cursor: pointer; }
+.c-icon { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; font-size: 22px; font-weight: 700; color: var(--navy); background: var(--soft); transition: background .25s; }
+.c-txt { flex: 1; min-width: 0; }
+.c-title { font-weight: 800; font-size: 18px; color: var(--ink); line-height: 1.3; }
+.c-desc { font-size: 14.5px; color: var(--grey); line-height: 1.4; }
+.c-stat { font: 600 13px "JetBrains Mono", monospace; color: var(--grey); white-space: nowrap; }
+.c-tog { font: 700 13px "JetBrains Mono", monospace; color: var(--grey); border: 1px solid var(--line); border-radius: 7px; padding: 2px 7px; }
+.pcard.open .c-tog { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.pcard.run { border-color: #F5B642; box-shadow: 0 0 0 4px rgba(245,182,66,.18); }
+.pcard.run .c-icon { background: #FFF6E0; animation: c-pulse 0.9s ease-in-out infinite; }
+.pcard.done { border-color: var(--mint-line); }
+.pcard.done .c-icon { background: var(--mint); }
+.pcard.done .c-stat { color: var(--green-dk); }
+.pcard.fail { border-color: var(--red); box-shadow: 0 0 0 4px rgba(214,50,46,.12); }
+.pcard.fail .c-icon { background: #FDECEC; }
+.pcard.fail .c-stat { color: var(--red); }
+.pcard.dim { opacity: .45; }
+@keyframes c-pulse { 50% { transform: scale(1.08); } }
+
+.c-body { display: none; border-top: 1px solid var(--line); }
+.pcard.open .c-body { display: block; }
+.c-tabs { display: flex; gap: 2px; padding: 6px 10px 0; background: var(--soft); }
+.c-tabs button { border: 0; background: none; padding: 6px 12px; font: 600 13px "Be Vietnam Pro", sans-serif; color: var(--grey); cursor: pointer; border-radius: 8px 8px 0 0; }
+.c-tabs button.on { background: var(--code-bg); color: #fff; }
+.c-pane.code { background: var(--code-bg); border-radius: 0 0 12px 12px; overflow: hidden; }
+.c-pane.code .CodeMirror { height: auto; font: 14.5px/1.55 "JetBrains Mono", monospace; background: var(--code-bg); color: var(--code-fg); }
+.c-pane.code > pre { margin: 0; padding: 12px 16px; color: var(--code-fg); font: 14.5px/1.55 "JetBrains Mono", monospace; overflow-x: auto; }
+.c-pane.out { display: none; margin: 0; padding: 12px 16px; background: var(--out-bg); color: var(--code-fg); font: 14px/1.5 "JetBrains Mono", monospace; white-space: pre-wrap; border-radius: 0 0 12px 12px; min-height: 44px; }
+.pcard.show-out .c-pane.code { display: none; }
+.pcard.show-out .c-pane.out { display: block; }
+
+.c-link { display: flex; align-items: center; gap: 12px; height: 34px; padding-left: 34px; }
+.c-link .line { width: 2px; height: 100%; background: var(--line); position: relative; transition: background .25s; }
+.c-link .line::after { content: ""; position: absolute; bottom: -1px; left: -5px; border: 6px solid transparent; border-top-color: var(--line); border-bottom: 0; transition: border-color .25s; }
+.c-link.done .line { background: var(--green); }
+.c-link.done .line::after { border-top-color: var(--green); }
+.c-link .carry { font: 13px "JetBrains Mono", monospace; color: var(--green-dk); background: var(--mint); border-radius: 6px; padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+.c-link .carry:empty { display: none; }
+.pl-err { display: none; margin: 0 22px 18px; padding: 10px 14px; border-radius: 10px; background: #FDECEC; color: var(--red); font: 13px/1.5 "JetBrains Mono", monospace; white-space: pre-wrap; }
+.pl-err.on { display: block; }
+
+@media (max-width: 700px) {
+  .pl-cards { padding: 14px 12px; }
+  .c-title { font-size: 16px; }
+  .pl-map { display: none; }
+}
+
+/* ── workflow graphs (tabs.js) ──────────────────────────────────────── */
+.tabs-stage { padding: 14px 16px 6px; }
+.tab[hidden] { display: none; }
+.wf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 12px 18px; }
+.wf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+figure.wf { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px 6px; }
+figure.wf figcaption { font-size: 13.5px; font-weight: 800; color: var(--navy); text-align: center; padding-top: 2px; }
+.wf-svg { display: block; width: 100%; height: auto; font-family: "Be Vietnam Pro", sans-serif; }
+.wf-node rect { fill: #F6F8FC; stroke: #9AABCB; stroke-width: 1.4; }
+.wf-node text { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+.wf-node.llm rect { fill: var(--mint); stroke: var(--green); }
+.wf-node.llm text { fill: var(--green-dk); }
+.wf-node.tool rect { fill: #FFF7E8; stroke: #E0B25C; }
+.wf-node.io rect { fill: #fff; stroke: var(--line); }
+.wf-node.io text { fill: var(--grey); font-weight: 600; }
+.wf-edge path { fill: none; stroke: #8E9DBB; stroke-width: 1.8; }
+.wf-label { font-size: 11.5px; fill: var(--grey); font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.wf-label.llm { fill: #B7791F; }
+.wf-edge.llm path { stroke: #D9962B; stroke-dasharray: 6 4; stroke-width: 2.2; }
+.wf-edge.back path { stroke-dasharray: 5 4; }
+.wf-head.n { fill: #8E9DBB; } .wf-head.a { fill: #D9962B; }
+.wf-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--grey); padding: 10px 2px 0; }
+.wf-legend span::before { content: ""; display: inline-block; width: 14px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1.4px solid #9AABCB; background: #F6F8FC; }
+.wf-legend .llm::before { background: var(--mint); border-color: var(--green); }
+.wf-legend .tool::before { background: #FFF7E8; border-color: #E0B25C; }
+.wf-legend .pick::before { border: 0; border-top: 2.2px dashed #D9962B; height: 0; border-radius: 0; vertical-align: 3px; background: none; }
+@media (max-width: 760px) { .wf-pair { grid-template-columns: 1fr; } }
+
+/* ── the 2-D map ────────────────────────────────────────────────────── */
+.map-svg { display: block; width: 100%; height: auto; font-family: "Be Vietnam Pro", sans-serif; }
+.map-svg .ax { stroke: var(--ink); stroke-width: 1.6; }
+.map-svg .axt { font-size: 13px; font-weight: 700; fill: var(--grey); }
+.map-svg .zone { fill: var(--soft); }
+.map-legend { font-size: 13px; color: var(--grey); padding-top: 4px; }
+.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 6px 0 14px; vertical-align: 0; }
+.map-svg .zone-t { font-size: 12px; font-weight: 800; letter-spacing: .1em; fill: #B4BED0; }
+.map-svg .pt circle { fill: var(--navy); }
+.map-svg .pt text { font-size: 13.5px; font-weight: 700; fill: var(--ink); }
+.map-svg .pt.hy circle { fill: var(--green); }
+.map-svg .bz { opacity: 0; transition: opacity .3s; }
+.map-svg .bz.on { opacity: 1; }
+.map-svg .bz rect { fill: #FFF7E8; stroke: #E0B25C; }
+.map-svg .bz text { font-size: 13px; font-weight: 700; fill: #8A5A12; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 6px 0 4px; }
+.chips button { border: 1px dashed #E0B25C; background: #fff; color: #8A5A12; border-radius: 999px; padding: 4px 12px; cursor: pointer; font: 700 13px "Be Vietnam Pro", sans-serif; }
+.chips button.on { background: #FFF7E8; border-style: solid; }

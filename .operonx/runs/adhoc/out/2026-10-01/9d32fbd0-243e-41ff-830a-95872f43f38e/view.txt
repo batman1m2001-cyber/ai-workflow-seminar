@@ -1,0 +1,40 @@
+========================================================================
+out   trace_id=9d32fbd0-243e-41ff-830a-95872f43f38e   dur=1258ms   nodes=9
+request_id=9d32fbd0-243e-41ff-830a-95872f43f38e  user_id=02989d18-c2b7-458f-829c-78be6a814dae  session_id=3233857d-8bf6-4f4b-98c5-9c28990c7aad
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  t                       [main]       0ms  ['ticket']→['query', 'priority']
+              in  ticket='URGENT: what is 15 * 7, and tell me about machine …(+9)'
+              out query='URGENT: what is 15 * 7, and tell me about machine …(+9)' priority='high'
+    0.000s  init                    [main]       0ms  ['query']→['messages', 'done', 'answer']
+              in  query='URGENT: what is 15 * 7, and tell me about machine …(+9)'
+              out messages=[1 items] done=False answer=''
+    0.000s  llm                     [main]     653ms  ['messages', 'temperature', 'tools']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras']
+              in  messages=[1 items] temperature=0.0 tools=[2 items]
+              out role='assistant' content='' finish_reason='tool_calls' model_used='gpt-4o-mini' tool_calls=[2 items] usage={6 keys} cost_usd=None extras={3 keys}
+    0.653s  proc                    [main]       0ms  ['content', 'tool_calls', 'messages']→['messages', 'done', 'answer']
+              in  content='' tool_calls=[2 items] messages=[1 items]
+              out messages=[4 items] done=False answer=''
+    0.653s  route_1                 [main]       0ms  ['done']→['target', 'matched', '__branch_target__']
+              in  done=False
+              out target='llm' matched='default' __branch_target__='llm'
+
+    0.654s  llm                     [main.out.a.loop.__loop_0__#1]     605ms  ['messages', 'temperature', 'tools']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras']
+              in  messages=[4 items] temperature=0.0 tools=[2 items]
+              out role='assistant' content='Here is what I found: {"result": 105} | {"result":…(+41)' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys}
+    1.258s  proc                    [main.out.a.loop.__loop_0__#1]       0ms  ['content', 'tool_calls', 'messages']→['messages', 'done', 'answer']
+              in  content='Here is what I found: {"result": 105} | {"result":…(+41)' tool_calls=[0 items] messages=[4 items]
+              out messages=[4 items] done=True answer='Here is what I found: {"result": 105} | {"result":…(+41)'
+    1.258s  route_1                 [main.out.a.loop.__loop_0__#1]       0ms  ['done']→['target', 'matched', '__branch_target__']
+              in  done=True
+              out target='__END__' matched='done == True' __branch_target__='__END__'
+
+    1.258s  f                       [main]       0ms  ['answer', 'priority']→['reply']
+              in  answer='Here is what I found: {"result": 105} | {"result":…(+41)' priority='high'
+              out reply='[high] Here is what I found: {"result": 105} | {"r…(+48)'
+
+========================================================================
+SUMMARY  nodes=9  errors=0
+========================================================================

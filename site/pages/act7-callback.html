@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The decoder · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+</head>
+<body data-page="act7-callback" data-root="..">
+<main class="content">
+
+<p class="kicker">Act 7 · Callback</p>
+<h1>Every buzzword has a place in the workflow</h1>
+<p class="lead">The chain from the start of the talk, decoded. Each word is a step, an edge, or something around them.</p>
+
+<table>
+  <tr><th>you hear</th><th>it is, in the workflow</th><th>where we saw it</th></tr>
+  <tr><td>prompt engineering</td><td>a step's arguments</td><td>Act 1 · beat 1</td></tr>
+  <tr><td>structured output</td><td>a parse step that fails loudly</td><td>Act 1 · beat 1</td></tr>
+  <tr><td>RAG</td><td>retrieve → paste → call</td><td>Act 1 · beat 2</td></tr>
+  <tr><td>function calling · MCP</td><td>a step the model asks for; a protocol to reach it</td><td>Act 1 · beat 3</td></tr>
+  <tr><td>agent</td><td>a loop whose next edge the model picks</td><td>Act 1 · beat 4</td></tr>
+  <tr><td>context engineering · memory · skills</td><td>the step that assembles the prompt</td><td>Act 1 · beat 5</td></tr>
+  <tr><td>sub-agent · multi-agent</td><td>a node that is itself an agent; agents in parallel, merged</td><td>Act 2 · tab 3</td></tr>
+  <tr><td>handoff · A2A</td><td>an edge the model picks; an edge across processes</td><td>Act 2 · tab 3</td></tr>
+  <tr><td>harness engineering · guardrails</td><td>gates, permissions, retries, traces, evals around the steps</td><td>Act 1 · beat 6, Act 4</td></tr>
+  <tr><td>human-in-the-loop</td><td>a gate: a draft and a link</td><td>Act 5 · live</td></tr>
+  <tr><td>durable · background agents</td><td>a workflow with triggers and stored state</td><td>Act 5 · live</td></tr>
+  <tr><td>agent evals</td><td>a golden set as a deploy gate</td><td>Act 5, Act 6</td></tr>
+</table>
+
+<div class="callout navy"><b class="t">The last line</b><p style="font-size:22px;font-weight:800;color:var(--navy);margin:6px 0">Don't ask how many agents. Ask what workflow the system needs, and which steps the model must decide.</p></div>
+
+<h2>Take it home</h2>
+<table class="plain">
+  <tr><td><b>the checklist</b></td><td>open-ended path · high value per run · cheap to check · slow is fine · small blast radius (Act 3)</td></tr>
+  <tr><td><b>the engine list</b></td><td>what any engine must give you (Act 5, tab 1)</td></tr>
+  <tr><td><b>the code</b></td><td><code>meeting-prep-world</code>, <code>meeting-prep-operonx</code>, <code>meeting-prep-langgraph</code>: the same system built twice, with its golden set</td></tr>
+  <tr><td><b>this site</b></td><td>every block runs: <code>uv run python -m runner.server</code></td></tr>
+</table>
+
+</main>
+<script src="../assets/app.js"></script>
+</body>
+</html>

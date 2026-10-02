@@ -1,0 +1,17 @@
+========================================================================
+engine   trace_id=89799671-6d73-4ba5-a3c2-b5af87326a18   dur=404ms   nodes=2
+request_id=89799671-6d73-4ba5-a3c2-b5af87326a18  user_id=cdc78f47-ed71-4fa8-b5b4-9783111d12cb  session_id=d810f424-8bb3-4acf-b252-b2e7cacad1b5
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  c                       [main]       0ms  ['ticket']→['text']
+              in  ticket='Hello?'
+              out text='Hello?'
+    0.000s  llm                     [main]     404ms  ['prompt', 'temperature', 'text']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras', 'intent', 'error']
+              in  prompt='Reply as <intent>...</intent>\nMessage: {text}' temperature=0.0 text='Hello?'
+              out role='assistant' content='<intent>question</intent>' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys} intent='question' error=None
+
+========================================================================
+SUMMARY  nodes=2  errors=0
+========================================================================

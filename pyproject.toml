@@ -1,0 +1,31 @@
+[project]
+name = "ai-workflow-seminar"
+version = "0.1.0"
+description = "Workflow Is All You Need — the seminar site, its playgrounds and their runner."
+requires-python = ">=3.11"
+dependencies = [
+    "operonx[openai]>=1.11.1",
+    "openai>=1.40",
+    "faiss-cpu>=1.8",
+    "numpy>=1.26",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-dotenv>=1.0",
+    "langchain>=1.4.3",
+    "langchain-openai>=1.6.6",
+    "langgraph>=1.2.12",
+    "openai-agents>=0.22.3",
+    "aiohttp>=3.14.3",
+    "meeting-prep-world",
+]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+[tool.uv.sources]
+meeting-prep-world = { path = "../meeting-prep-world", editable = true }
+
+[tool.uv]
+package = false

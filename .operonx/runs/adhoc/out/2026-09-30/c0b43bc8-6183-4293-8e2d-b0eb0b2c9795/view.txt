@@ -1,0 +1,22 @@
+========================================================================
+out   trace_id=c0b43bc8-6183-4293-8e2d-b0eb0b2c9795   dur=504ms   nodes=4
+request_id=c0b43bc8-6183-4293-8e2d-b0eb0b2c9795  user_id=ae1b7503-65ab-4157-8b8c-163033e2f361  session_id=5b16629d-272f-4dec-a54a-a998e2c6cdec
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  d                       [main]       0ms  ['transcript']→['row']
+              in  transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out row={3 keys}
+    0.000s  c                       [main]       0ms  ['transcript']→['row']
+              in  transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out row={3 keys}
+    0.000s  llm                     [main]     503ms  ['prompt', 'temperature', 'transcript']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras', 'violation', 'error']
+              in  prompt='Does the agent insult or threaten the customer?\nTr…(+22)' temperature=0.0 transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out role='assistant' content='(mock model) You said: Does the agent insult or th…(+93)' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys} violation=None error='Missing field(s) in xml output: violation. Parsed …(+8)'
+    0.504s  p                       [main]       0ms  ['error']→[]
+              in  error='Missing field(s) in xml output: violation. Parsed …(+8)'
+
+========================================================================
+SUMMARY  nodes=4  errors=1
+========================================================================

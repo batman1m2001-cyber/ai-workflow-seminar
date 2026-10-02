@@ -1,0 +1,26 @@
+========================================================================
+out   trace_id=dedf9f55-08d7-4499-9220-13c75fceacef   dur=605ms   nodes=5
+request_id=dedf9f55-08d7-4499-9220-13c75fceacef  user_id=e66a31a4-4ae6-4b80-a361-c861cc235ada  session_id=e7c4b8f4-90e1-4aed-a378-23173371fd40
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  d                       [main]       0ms  ['transcript']→['row']
+              in  transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out row={3 keys}
+    0.000s  c                       [main]       0ms  ['transcript']→['row']
+              in  transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out row={3 keys}
+    0.000s  llm                     [main]     605ms  ['prompt', 'temperature', 'transcript']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras', 'violation', 'error']
+              in  prompt='Does the agent insult or threaten the customer?\nRe…(+69)' temperature=0.0 transcript='Agent: Chào anh, em là Lan gọi từ ngân hàng.\nCusto…(+81)'
+              out role='assistant' content='<violation>True</violation>' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys} violation='True' error=None
+    0.605s  p                       [main]       0ms  ['violation']→['row']
+              in  violation='True'
+              out row={3 keys}
+    0.605s  f                       [main]       0ms  ['disclosure_row', 'card_row', 'polite_row']→['rows', 'score']
+              in  disclosure_row={3 keys} card_row={3 keys} polite_row={3 keys}
+              out rows=[3 items] score=-50
+
+========================================================================
+SUMMARY  nodes=5  errors=0
+========================================================================

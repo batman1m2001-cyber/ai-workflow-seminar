@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="index" data-root=".">
+<main class="content">
+
+<div class="hero">
+  <div class="kicker">Seminar · AI Engineering</div>
+  <h1><span>Workflow</span> Is All You Need</h1>
+  <p>Agents, RAG, tool calling, context engineering: the same primitives, one engine. Every page has runnable code: read it, change it, press <b>Run</b>.</p>
+</div>
+
+<h2 style="margin-top:10px">Every six months, a new “engineering”</h2>
+<div class="chips">
+  <span class="chip">Prompt Engineering</span><span class="arr">→</span>
+  <span class="chip">RAG</span><span class="arr">→</span>
+  <span class="chip">Function Calling</span><span class="arr">→</span>
+  <span class="chip on">Agents</span><span class="arr">→</span>
+  <span class="chip">Context Engineering</span><span class="arr">→</span>
+  <span class="chip">Harness Engineering</span><span class="arr">→</span>
+  <span class="chip">Loop Engineering</span><span class="arr">→</span>
+  <span class="chip">Graph Engineering</span><span class="arr">→</span>
+  <span class="chip">…</span>
+</div>
+<p class="quote">At 8 am an email arrives from a lead. By the meeting, sales wants a brief. <em>How many agents does that take?</em></p>
+
+<p class="lead">This seminar takes the agent world seriously. We build an agent part by part, look at its shape, measure when agents pay, break it on Monday morning, and run the whole system on a workflow engine — live, end to end.</p>
+
+<div class="callout key">
+  <b class="t">The thesis</b>
+  <p>Every GenAI system is a workflow. The real question for each step is <b>who decides the next one</b>: your code, or the model.</p>
+</div>
+
+<h2>The route</h2>
+<div class="cards">
+  <a class="card" href="pages/act1-agent-world.html"><span class="k">Act 1 · The agent world</span><b>Build an agent, one part at a time</b><span>Call, knowledge, tools and MCP, the loop, context, the harness — each built, then X-rayed.</span></a>
+  <a class="card" href="pages/act2-all-workflows.html"><span class="k">Act 2 · It's all workflows</span><b>Look at the shape</b><span>Same shape everywhere; who picks the edge; seven agents redrawn; the map.</span></a>
+  <a class="card" href="pages/act3-when-agents.html"><span class="k">Act 3 · When you DO want an agent</span><b>Agents are real. Use them where they pay.</b><span>Five questions, and the two designs measured.</span></a>
+  <a class="card" href="pages/act4-monday-morning.html"><span class="k">Act 4 · Monday morning</span><b>The agent meets the inbox</b><span>Six live failures, and the iceberg underneath.</span></a>
+  <a class="card" href="pages/act5-the-engine.html"><span class="k">Act 5 · The engine</span><b>What runs the workflow</b><span>What an engine must do, the landscape, why we built OperonX, and the whole system live.</span></a>
+  <a class="card" href="pages/act6-real-systems.html"><span class="k">Act 6 · Real systems</span><b>The same pattern, in production</b><span>Virtual QC, the callbot, the coding agent.</span></a>
+  <a class="card" href="pages/act7-callback.html"><span class="k">Act 7 · Callback</span><b>The decoder</b><span>Every buzzword, placed in the workflow.</span></a>
+</div>
+
+<h2>How to use this site</h2>
+<table class="plain">
+  <tr><td>Run code</td><td>Every dark block is editable; <b>▶ Run</b> or <code>Ctrl + Enter</code>. Pipeline cards: <b>▶ Run</b> or <b>Step</b>.</td></tr>
+  <tr><td>Start it</td><td><code>uv run python -m runner.server</code>, then <a href="http://127.0.0.1:8000">127.0.0.1:8000</a>. The meeting-prep world must be up: in <code>meeting-prep-world</code>, <code>docker compose up -d</code>, <code>uv run prep-seed</code>, <code>uv run prep-mocks</code>.</td></tr>
+  <tr><td>Mock or real model</td><td><b>Mock</b> (default): offline, instant, free. <b>Real</b>: your endpoint from <code>.env</code>; the key stays on the runner.</td></tr>
+  <tr><td>Move around</td><td>The sidebar, the Previous / Next cards, or <code>Alt + ←/→</code>; inside an act, the numbered tabs or <code>← →</code>.</td></tr>
+</table>
+
+<details class="notes"><summary>Presenter notes</summary>
+<p>Act 0, about 3 minutes. Show the buzzword chain, then the email in the inbox, and ask: how many agents does this take? Hand poll: who has an agent in production? Who has debugged one at 2 am? Before the talk: the world stack, the runner, operonx-serve in meeting-prep-operonx, Studio on port 8766.</p>
+</details>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

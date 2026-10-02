@@ -1,0 +1,14 @@
+{
+  "trace_id": "c206c44c-27b9-4820-aa5e-7896d70249e1",
+  "workflow_name": "engine",
+  "started_at": 766490.7432882,
+  "wall_started_at": 1790828640.0398955,
+  "ended_at": 766491.3017896,
+  "duration_ms": 558.5014000535011,
+  "node_count": 2,
+  "metadata": {
+    "request_id": "c206c44c-27b9-4820-aa5e-7896d70249e1",
+    "user_id": "3d98be58-3878-4aa4-ae8b-2431fb10137e",
+    "session_id": "6150ea50-2926-4a54-9047-93a0c5280c7b"
+  }
+}

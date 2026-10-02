@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The engine · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+<style>
+  .sbs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 1040px; }
+  .sbs > div { min-width: 0; }
+  .sbs pre.static { font-size: 12px; line-height: 1.45; max-height: 560px; overflow: auto; margin: 0; }
+  .sbs h4 { margin: 0 0 6px; color: var(--navy); }
+  .live { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; }
+  .live select { font: 600 14px "Be Vietnam Pro", sans-serif; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--line); min-width: 320px; }
+  .live button, .live a.btn { border: 0; background: var(--green); color: #fff; border-radius: 9px; padding: 9px 16px; font: 700 14px "Be Vietnam Pro", sans-serif; cursor: pointer; text-decoration: none; }
+  .live a.btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+  .live .msg { font: 13px "JetBrains Mono", monospace; color: var(--green-dk); width: 100%; }
+  @media (max-width: 900px) { .sbs { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-page="act5-the-engine" data-root="..">
+<main class="content">
+
+<p class="kicker">Act 5 · The engine</p>
+<h1>What runs the workflow</h1>
+<p class="lead">Act 4's iceberg is the same for every team. So: what must an engine do, which one should you use, why did we build our own, and does it hold up with the whole system running live?</p>
+
+<div class="tabs">
+  <div class="tab" data-name="What an engine must do" data-say="Every line answers a wound from Monday morning. <b>Engine-agnostic</b>: hold any engine to this list.">
+    <table class="plain" style="margin:0">
+      <tr><th>the engine gives you</th><th>Monday's wound</th></tr>
+      <tr><td>steps and edges, branches, loops, state</td><td>the shape of every system in Act 2</td></tr>
+      <tr><td>bounded parallelism</td><td>50 at once, 40 rejected</td></tr>
+      <tr><td>failures as values, timeouts, retries</td><td>one timeout lost the batch</td></tr>
+      <tr><td>parsing that fails loudly</td><td>chatty JSON became “no”</td></tr>
+      <tr><td>gates and least privilege as steps</td><td>an email and a page gave orders</td></tr>
+      <tr><td>a trace per run, per step</td><td>“why did it say that?”</td></tr>
+      <tr><td>evals as a deploy gate</td><td>“is the new prompt better?”</td></tr>
+      <tr><td>triggers, approvals, durable state</td><td>a webhook, 8 am, a human's yes</td></tr>
+      <tr><td>jobs and services from the same graph</td><td>the batch and the live inbox are one system</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="The landscape" data-say="Three honest options. Each is <b>strongest</b> somewhere.">
+    <table class="plain" style="margin:0">
+      <tr><th></th><th>strongest at</th><th>weaker at</th></tr>
+      <tr><td><b>LangGraph</b></td><td>the agent ecosystem, docs, hiring pool, checkpoints, interrupts, LangSmith</td><td>state dict + reducers on every step; string-wired graphs; heavier per-step overhead; triggers, eval gates and jobs are yours to build</td></tr>
+      <tr><td><b>Temporal · Restate · DBOS</b></td><td>durable execution across days, at any scale</td><td>not built for LLM steps; heavy for a team's pipelines</td></tr>
+      <tr><td><b>OperonX</b></td><td>speed, terse syntax, jobs + evals + triggers built in, pluggable trace consumers, Studio drawing the real graph</td><td>small community; serves one team; we maintain it</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="Why we built OperonX" data-say="Measured, not claimed: the <b>engine overhead</b>, the <b>same system built twice</b>, and <b>four engine fixes in one week</b>.">
+    <table class="plain" style="margin:0">
+      <tr><th>engine overhead, same graphs, no LLM</th><th>OperonX</th><th>LangGraph</th><th></th></tr>
+      <tr><td>chain, 10 steps</td><td>0.2 ms</td><td>2.7 ms</td><td>~15×</td></tr>
+      <tr><td>fan-out, 50 × 10 ms in parallel</td><td>15.7 ms</td><td>31 ms</td><td>~2×</td></tr>
+      <tr><td>stream, 1,000 items through a step</td><td>35 ms</td><td>172 ms</td><td>~5×</td></tr>
+      <tr><td>loop, 100 iterations</td><td>4.7 ms</td><td>37 ms</td><td>~8×</td></tr>
+      <tr><td>load: 500 chains at once</td><td>105 ms</td><td>1,055 ms</td><td>~10×</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="The whole system, live" data-say="A customer email, sent from this page. Watch the <b>inbox</b> and <b>Studio</b>.">
+    <div class="live">
+      <select id="golden"></select>
+      <button id="send">Send as customer</button>
+      <a class="btn ghost" href="http://127.0.0.1:8025" target="_blank" rel="noopener">Open the inbox</a>
+      <a class="btn ghost" href="http://127.0.0.1:8766" target="_blank" rel="noopener">Open Studio</a>
+      <div class="msg" id="sent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="1">
+<h2>What an engine must do</h2>
+<p>The list is the real thesis of this talk, more than any product: <b>steps and edges, branches, loops, bounded parallelism, failures as values, durable state, traces, evals as gates, human approval, jobs and services</b>. If your agent runs in production, something does all of this. The only choice is whether it's an engine or 150 lines per agent.</p>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The landscape →</button></div>
+</section>
+
+<section class="beat" data-beat="2" hidden>
+<h2>The landscape, fairly</h2>
+<p>LangGraph is a good engine and the best-supported one. Temporal-class engines win when a run must survive for days. We use OperonX for the reasons on the next tab, and we pay for it: we maintain it, and it serves one team.</p>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · Why we built OperonX →</button></div>
+</section>
+
+<section class="beat" data-beat="3" hidden>
+<h2>Why we built OperonX</h2>
+<p><b>Speed.</b> Each step runs the moment its inputs are ready: no waiting for a whole round of steps, no merging the full state between rounds. An LLM call (hundreds of ms) dwarfs that overhead in one conversation; it matters for <b>batch</b> (10,000 calls a night), <b>streaming</b> (voice, per-chunk steps) and <b>many small steps</b>. We measured it on the meeting-prep golden set too: both engines take about 14.5 s, because the model dominates.</p>
+
+<h3>The same system, built twice</h3>
+<p>Both builds answer all 19 golden emails. Here is the wiring of each, as written:</p>
+<div class="sbs">
+  <div><h4>OperonX: the graph is the code</h4><pre class="static">@graph
+def prepare(email, deliver):
+    gate = ops.screen(email=email)
+    stop = ops.blocked(reason=gate[&quot;reason&quot;])
+    read = ops.letter(email=email)
+    triage = LLMOp.of(
+        resource=&quot;assistant&quot;,
+        prompt={&quot;system&quot;: TRIAGE, &quot;user&quot;: &quot;{letter}&quot;},
+        fields=[&quot;is_lead: bool&quot;, &quot;intent: str&quot;, &quot;contact: str&quot;],
+        parser=&quot;json&quot;,
+        on_failure=&quot;error&quot;,
+        letter=read[&quot;text&quot;],
+    )
+    skip = ops.not_a_lead(intent=triage[&quot;intent&quot;])
+
+    who = ops.identify(email=email)
+    crm = ops.crm(company_id=who[&quot;company_id&quot;])
+    cal = ops.calendar(company_id=who[&quot;company_id&quot;])
+    memory = ops.recall(company=who[&quot;company&quot;])
+    asks = ops.research_tasks(company=who[&quot;company&quot;])
+    website = researcher()(messages=asks[&quot;website&quot;])
+    news = researcher()(messages=asks[&quot;news&quot;])
+    people = researcher()(messages=asks[&quot;people&quot;])
+
+    facts = ops.evidence(
+        email=email, company=who[&quot;company&quot;], contacts=crm[&quot;contacts&quot;], history=crm[&quot;history&quot;],
+        meetings=cal[&quot;meetings&quot;], memory=memory[&quot;memory&quot;],
+        website=website[&quot;final&quot;], news=news[&quot;final&quot;], people=people[&quot;final&quot;],
+    )
+    brief = LLMOp.of(
+        resource=&quot;assistant&quot;,
+        prompt={&quot;system&quot;: BRIEF, &quot;user&quot;: &quot;Company: {company}\n\nEvidence:\n{evidence}&quot;},
+        company=who[&quot;name&quot;],
+        evidence=facts[&quot;text&quot;],
+    )
+    check = ops.check_brief(brief=brief[&quot;content&quot;], company=who[&quot;company&quot;])
+    ask = ops.request_approval(email=email, company=who[&quot;company&quot;], brief=brief[&quot;content&quot;], deliver=deliver)
+    hold = ops.held(company=who[&quot;company&quot;], brief=brief[&quot;content&quot;], problems=check[&quot;problems&quot;])
+    done = ops.settle(a=stop[&quot;outcome&quot;], b=skip[&quot;outcome&quot;], c=ask[&quot;outcome&quot;], d=hold[&quot;outcome&quot;])
+
+    START &gt;&gt; gate &gt;&gt; if_(gate[&quot;blocked&quot;] == True, stop).else_(read)  # noqa: E712
+    read &gt;&gt; triage &gt;&gt; if_(triage[&quot;is_lead&quot;] == False, skip).else_(who)  # noqa: E712
+    who &gt;&gt; [crm, cal, memory, asks]
+    asks &gt;&gt; [website, news, people]
+    [crm, cal, memory, website, news, people] &gt;&gt; facts
+    facts &gt;&gt; brief &gt;&gt; check &gt;&gt; if_(check[&quot;ok&quot;] == True, ask).else_(hold)  # noqa: E712
+    [stop, skip, ask, hold] &gt;&gt; done &gt;&gt; END</pre></div>
+  <div><h4>LangGraph: a state class, then nodes wired by name</h4><pre class="static">class State(TypedDict, total=False):
+    email: dict
+    deliver: bool
+    thread: str
+    reason: Optional[str]
+    is_lead: bool
+    intent: Optional[str]
+    company: Optional[dict]
+    contacts: list
+    history: list
+    meetings: list
+    memory: list
+    research: Annotated[dict, operator.or_]  # three agents write here in parallel
+    evidence: str
+    brief: str
+    problems: list
+    outcome: dict
+    decision: str
+
+
+def build(checkpointer: Any = None):
+    g = StateGraph(State)
+    for name, fn in [(&quot;screen&quot;, screen), (&quot;blocked&quot;, blocked), (&quot;triage&quot;, triage), (&quot;not_a_lead&quot;, not_a_lead),
+                     (&quot;identify&quot;, identify), (&quot;crm&quot;, crm), (&quot;calendar&quot;, calendar), (&quot;recall&quot;, recall),
+                     (&quot;website&quot;, research(&quot;website&quot;, &quot;what it does and sells&quot;)), (&quot;news&quot;, research(&quot;news&quot;, &quot;news&quot;)),
+                     (&quot;people&quot;, research(&quot;people&quot;, &quot;team&quot;)), (&quot;evidence&quot;, evidence), (&quot;brief&quot;, brief),
+                     (&quot;check&quot;, check), (&quot;held&quot;, held), (&quot;request_approval&quot;, request_approval),
+                     (&quot;wait_for_sales&quot;, wait_for_sales), (&quot;finish&quot;, finish)]:
+        g.add_node(name, fn)
+    fan = [&quot;crm&quot;, &quot;calendar&quot;, &quot;recall&quot;, &quot;website&quot;, &quot;news&quot;, &quot;people&quot;]
+    g.add_edge(START, &quot;screen&quot;)
+    g.add_conditional_edges(&quot;screen&quot;, lambda s: &quot;blocked&quot; if s.get(&quot;reason&quot;) else &quot;triage&quot;, [&quot;blocked&quot;, &quot;triage&quot;])
+    g.add_conditional_edges(&quot;triage&quot;, lambda s: &quot;identify&quot; if s[&quot;is_lead&quot;] else &quot;not_a_lead&quot;, [&quot;identify&quot;, &quot;not_a_lead&quot;])
+    for n in fan:
+        g.add_edge(&quot;identify&quot;, n)
+    g.add_edge(fan, &quot;evidence&quot;)
+    g.add_edge(&quot;evidence&quot;, &quot;brief&quot;)
+    g.add_edge(&quot;brief&quot;, &quot;check&quot;)
+    g.add_conditional_edges(&quot;check&quot;, lambda s: &quot;held&quot; if s[&quot;problems&quot;] else &quot;request_approval&quot;, [&quot;held&quot;, &quot;request_approval&quot;])
+    g.add_conditional_edges(&quot;request_approval&quot;, lambda s: &quot;wait_for_sales&quot; if s[&quot;outcome&quot;].get(&quot;draft_id&quot;) else END,
+                            [&quot;wait_for_sales&quot;, END])
+    g.add_edge(&quot;wait_for_sales&quot;, &quot;finish&quot;)
+    for n in (&quot;blocked&quot;, &quot;not_a_lead&quot;, &quot;held&quot;, &quot;finish&quot;):
+        g.add_edge(n, END)
+    return g.compile(checkpointer=checkpointer or InMemorySaver())</pre></div>
+</div>
+<table class="plain">
+  <tr><th></th><th>OperonX build</th><th>LangGraph build</th></tr>
+  <tr><td>golden emails</td><td>19/19 · 14.5 s</td><td>19/19 · 14.4 s</td></tr>
+  <tr><td>code lines</td><td>309</td><td>257, and it does less</td></tr>
+  <tr><td>webhook, 08:00 schedule, eval gate</td><td>built in</td><td>hand-written; no schedule</td></tr>
+  <tr><td>approval after a restart</td><td>survives (a draft in the database)</td><td>lost with the in-memory checkpointer</td></tr>
+  <tr><td>trap hit</td><td>a transient input has one reader</td><td><code>interrupt()</code> re-runs its node: the approval email went out twice</td></tr>
+</table>
+
+<h3>Build your own: the AI-era argument</h3>
+<p>The field changes every quarter. Owning the engine means bending it to the goal <b>the same week</b>. Building this demo found four gaps in OperonX, and all four were fixed, tested and released as <b>1.12.0</b> before the talk:</p>
+<table class="plain">
+  <tr><td><b>an agent inside a graph lost its question</b></td><td>a real engine bug: a nested graph's merged cell dropped its input and doubled its writes, fixed at the root, with tests</td></tr>
+  <tr><td><b><code>agent["final"]</code></b></td><td>the agent is one node; the next step reads its answer</td></tr>
+  <tr><td><b><code>webhook(...)</code>, <code>schedule(...)</code></b></td><td>runs started by an email or by 8 am</td></tr>
+  <tr><td><b><code>MCPClient.call_value</code></b></td><td>an MCP tool's value, not its text</td></tr>
+</table>
+<div class="callout navy"><b class="t">The honest cost</b><p>We maintain it, and it serves <b>our</b> team. It's not a product for everyone. Build only what you'd otherwise fight.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · The whole system, live →</button></div>
+</section>
+
+<section class="beat" data-beat="4" hidden>
+<h2>The whole system, live</h2>
+<ol>
+  <li>Pick an email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>
+  <li>The inbox's webhook starts the OperonX graph: Studio lights it up. Screen, triage, identify, then CRM, calendar and memory beside <b>three research agents</b>, then the brief, the check, and the approval request.</li>
+  <li><b>“[Approve?] Brief: …”</b> lands in the inbox. Click <b>Approve</b>: the brief goes to sales and into memory.</li>
+  <li>Now send an <b>attack</b>. It's held at the gate in milliseconds, and nothing is sent.</li>
+</ol>
+<p>The Act 1 agent is one node in this graph. The golden emails gate every deploy (<code>operonx-run golden</code>), and every run is a trace in Studio.</p>
+</section>
+
+<details class="notes"><summary>Presenter notes</summary>
+<p>About 16 minutes. Before the talk: <code>docker compose up -d</code>, <code>prep-seed</code>, <code>prep-mocks</code>, the seminar runner, <code>operonx-serve</code> in meeting-prep-operonx (port 8200), and Studio on that project (port 8766). Tab 4 runs live; keep the recorded fallback ready. Say the LangGraph column out loud: it passed too.</p>
+</details>
+
+</main>
+<script src="../assets/app.js"></script>
+<script src="../assets/tabs.js"></script>
+<script>
+(function () {
+  var sel = document.getElementById("golden"), out = document.getElementById("sent");
+  fetch("../api/prep/golden").then(function (r) { return r.json(); }).then(function (rows) {
+    rows.forEach(function (g) {
+      var o = document.createElement("option");
+      o.value = g.id; o.textContent = (g.action === "block" ? "⚠ attack · " : g.action === "skip" ? "· not a lead · " : "✉ ") + g.subject;
+      sel.appendChild(o);
+    });
+  }).catch(function () { out.textContent = "start the seminar runner to send emails from here"; });
+  document.getElementById("send").onclick = function () {
+    out.textContent = "sending…";
+    fetch("../api/prep/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: sel.value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (r) { out.textContent = r.error ? "✗ " + r.error : "✓ sent “" + r.subject + "” from " + r.from + ". Watch the inbox and Studio."; });
+  };
+})();
+</script>
+</body>
+</html>

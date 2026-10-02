@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real systems · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+</head>
+<body data-page="act6-real-systems" data-root="..">
+<main class="content">
+
+<p class="kicker">Act 6 · Real systems (pick per audience)</p>
+<h1>The same pattern, in production</h1>
+<p class="lead">The meeting-prep assistant is a demo. These run every day on the same engine, and each proves one thing.</p>
+
+<div class="tabs">
+  <div class="tab" data-name="Virtual QC" data-say="Call-centre compliance, scored after every call: <b>seven checks in parallel</b>, and a failure is never a verdict.">
+<script type="application/json" class="wf">
+{"title": "One call, scored", "w": 900, "h": 316,
+ "nodes": [["c", "call transcript", 80, 158, "io"],
+           ["a", "hang-up", 330, 22, "llm"], ["b", "promise to pay", 330, 67, "llm"], ["d", "disclosure", 330, 112, "llm"],
+           ["e", "card number", 330, 157], ["f", "phone source", 330, 202], ["g", "customer tone", 330, 247, "llm"],
+           ["s", "agent tone ×4", 330, 292, "llm"],
+           ["z", "finalize: score", 640, 158], ["o", "QC row", 820, 158, "io"]],
+ "edges": [["c", "a"], ["c", "b"], ["c", "d"], ["c", "e"], ["c", "f"], ["c", "g"], ["c", "s"],
+           ["a", "z"], ["b", "z"], ["d", "z"], ["e", "z"], ["f", "z"], ["g", "z"], ["s", "z"], ["z", "o"]]}
+</script>
+  </div>
+  <div class="tab" data-name="The callbot" data-say="A <b>voice agent</b> is a streaming workflow: the LLM is one step inside one turn, and only when the rules can't decide.">
+<script type="application/json" class="wf">
+{"title": "One phone call, audio packet in to hang-up out", "w": 900, "h": 220,
+ "nodes": [["i", "audio in", 70, 40, "io"], ["v", "speech detect", 200, 40], ["s", "transcribe", 330, 40, "tool"],
+           ["n", "normalize", 460, 40], ["r", "rules", 590, 40], ["l", "LLM classify", 720, 100, "llm"], ["o", "rule only", 720, 20],
+           ["x", "script state", 590, 170], ["t", "speak", 460, 170, "tool"], ["p", "play", 330, 170, "io"], ["h", "heartbeat", 70, 170]],
+ "edges": [["i", "v"], ["v", "s"], ["s", "n"], ["n", "r"], ["r", "l", "unsure"], ["r", "o", "sure"], ["l", "x"], ["o", "x"], ["x", "t"], ["t", "p"]]}
+</script>
+  </div>
+  <div class="tab" data-name="The coding agent" data-say="The most agentic thing in the room — <b>still inside a harness</b>.">
+<script type="application/json" class="wf">
+{"title": "Studio's assistant changing a project", "w": 900, "h": 120,
+ "nodes": [["u", "request", 70, 60, "io"], ["a", "Claude Code", 230, 60, "llm"], ["t", "read · edit · run", 410, 25, "tool"],
+           ["g", "permission gate", 410, 95], ["e", "tests + golden eval", 600, 60], ["h", "human review", 770, 60, "io"]],
+ "edges": [["u", "a"], ["a", "t", "picks", "llm"], ["t", "a", "", "back"], ["a", "g"], ["g", "e"], ["e", "h"]]}
+</script>
+  </div>
+</div>
+
+<section class="beat" data-beat="1">
+<h2>Virtual QC</h2>
+<p>Every collection call is scored for compliance violations and the agent's and customer's tone. Seven checks run <b>in parallel</b> per call; one of them, agent tone, is four layers: cheap gates, a scanner, a decider, a strict re-check that sets the severity.</p>
+<table class="plain">
+  <tr><td><b>a failure is never a verdict</b></td><td>a model call that can't be parsed raises; the call is recorded as an error, never as “clean”</td></tr>
+  <tr><td><b>an eval gates every deploy</b></td><td>90 fixture calls against their recorded verdicts; pass means at least 85% match</td></tr>
+  <tr><td><b>gate on a rate, not exact match</b></td><td>the same model flips about a quarter of final results between identical runs, so a healthy run matches about 90–93%</td></tr>
+  <tr><td><b>more agentic cost us 10 points of F1</b></td><td>splitting the decider into more autonomous agents lost to the simpler staged workflow, even on a stronger model</td></tr>
+  <tr><td><b>traces without PII</b></td><td>a trace consumer keeps every step and timing, but references the transcript instead of copying it: 1.38 MB to 0.05 MB per call</td></tr>
+</table>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The callbot →</button></div>
+</section>
+
+<section class="beat" data-beat="2" hidden>
+<h2>The callbot</h2>
+<p>A phone call is one long-lived run fed 8 kHz audio packets: speech detection, transcription, then a <b>turn</b>. The turn runs rules first and calls the LLM <b>only when the rules can't decide</b> (<code>if_(needs_llm)</code>); a script state machine picks the reply; speech synthesis plays it, while a heartbeat runs beside the call.</p>
+<table class="plain">
+  <tr><td><b>four bots, one graph</b></td><td>each bot is a prompt file, not new code</td></tr>
+  <tr><td><b>per-step overhead matters here</b></td><td>a streaming workflow runs steps per audio chunk: this is where the 5× streaming result from Act 5 pays</td></tr>
+  <tr><td><b>backpressure</b></td><td>a bounded stream edge keeps a slow model from flooding memory during a call</td></tr>
+</table>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The coding agent →</button></div>
+</section>
+
+<section class="beat" data-beat="3" hidden>
+<h2>The coding agent</h2>
+<p>OperonX Studio has Claude Code built in: it reads the project, edits it, runs its services and jobs, and reads its runs. That's an agent in every sense of Act 3: open-ended, high value, slow is fine. And it still runs <b>inside a harness</b>: tools behind permissions, changes checked by the tests and the golden eval, and a human reviewing before anything ships.</p>
+<div class="callout key"><b class="t">The bridge</b><p>Meeting prep, QC, the callbot, the coding agent: four systems, one pattern. <b>A workflow, with the model deciding only the steps that need it.</b></p></div>
+</section>
+
+<details class="notes"><summary>Presenter notes</summary>
+<p>Pick one or two tabs per audience, about 5 minutes each. QC numbers are aggregates only; never show a transcript. For the coding agent, a short live demo in Studio works well: ask it to add a step to meeting-prep and run the golden eval.</p>
+</details>
+
+</main>
+<script src="../assets/app.js"></script>
+<script src="../assets/tabs.js"></script>
+</body>
+</html>

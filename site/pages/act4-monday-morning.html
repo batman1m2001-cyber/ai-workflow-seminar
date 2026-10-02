@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monday morning · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+</head>
+<body data-page="act4-monday-morning" data-root="..">
+<main class="content">
+
+<p class="kicker">Act 4 · Monday morning</p>
+<h1>The agent meets the inbox</h1>
+<p class="lead">The demo worked on Friday. On Monday, 50 emails arrive at 8 am. Some are attacks, the search API is slow, the provider has a rate limit, and nobody can say why a brief says what it says.</p>
+
+<div class="tabs">
+  <div class="tab" data-name="Break it" data-say="Six ways a hand-written agent fails at 8 am. Each one is <b>silent</b> or <b>total</b>.">
+<script type="application/json" class="wf">
+{"title": "The naive agent: a loop with every tool, run over the inbox", "w": 900, "h": 110,
+ "nodes": [["i", "50 emails", 70, 55, "io"], ["l", "for email in inbox:", 260, 55], ["a", "agent(email)", 450, 55, "llm"],
+           ["t", "search · read · send", 640, 25, "tool"], ["b", "brief", 820, 55, "io"]],
+ "edges": [["i", "l"], ["l", "a"], ["a", "t", "any tool", "llm"], ["t", "a", "", "back"], ["a", "b"]]}
+</script>
+  </div>
+  <div class="tab" data-name="Harden it by hand" data-say="Each wound gets a fix. <b>15 lines become 150</b>, and the 135 new ones are the same every team writes.">
+    <table class="plain" style="margin:0">
+      <tr><th>wound</th><th>the fix</th><th>lines</th></tr>
+      <tr><td>an email gives orders</td><td>a gate before any model; tools by least privilege</td><td>~15</td></tr>
+      <tr><td>a page gives orders</td><td>read pages as a person sees them; check the brief</td><td>~15</td></tr>
+      <tr><td>one timeout kills the batch</td><td>timeouts, retries, a failure is a value</td><td>~20</td></tr>
+      <tr><td>chatty JSON becomes “no”</td><td>parsing that fails loudly, never <code>None</code></td><td>~10</td></tr>
+      <tr><td>50 at once, rate-limited</td><td>bounded concurrency, backoff</td><td>~15</td></tr>
+      <tr><td>“why did it say that?”</td><td>a trace per run, per step</td><td>~20</td></tr>
+      <tr><td>“is the new prompt better?”</td><td>a golden set, a gate</td><td>~20</td></tr>
+      <tr><td>a human must say yes</td><td>a draft, a link, a second run</td><td>~20</td></tr>
+    </table>
+  </div>
+  <div class="tab" data-name="The industry agrees" data-say="The agent frameworks are turning into <b>workflow engines</b>.">
+    <table class="plain" style="margin:0">
+      <tr><td><b>Microsoft Agent Framework</b></td><td>the successor to AutoGen and Semantic Kernel, built around graph-based workflows</td></tr>
+      <tr><td><b>OpenAI Agents SDK</b></td><td>durable execution comes from Temporal, Restate or DBOS underneath</td></tr>
+      <tr><td><b>OpenTelemetry</b></td><td>the GenAI conventions trace agents as workflows of steps</td></tr>
+      <tr><td><b>OpenAI Agent Builder</b></td><td>the visual canvas is being retired (30 Nov 2026): the workflow stays, and moves back into code</td></tr>
+      <tr><td><b>LangGraph</b></td><td>the agent world's favourite tool is a workflow engine, and has been all along</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="1">
+<h2>Break it, one card at a time</h2>
+<p>The agent from Act 1 with one more tool, <code>send_email</code>, and no harness. Each card is one Monday-morning event, run for real against the inbox, the web and the model.</p>
+
+<div class="pipeline" data-title="Monday, 8 am">
+  <div class="step" data-icon="✉" data-title="An email gives orders" data-desc="The course brief's own attack. The agent has a send tool.">
+<script type="text/plain">
+import asyncio, json, time
+import httpx
+from openai import OpenAI
+from prep_world import WEB, golden, mail
+from prep_world.guard import leaks
+
+client = OpenAI()
+def send_email(to: str, subject: str, body: str) -> str:
+    mail.send(to, subject, body)
+    return f"sent to {to}"
+SEND = {"type": "function", "function": {"name": "send_email", "description": "Send an email.", "parameters": {
+        "type": "object", "properties": {"to": {"type": "string"}, "subject": {"type": "string"}, "body": {"type": "string"}}}}}
+
+attack = next(g for g in golden() if g["id"] == "attack-send")
+msg = client.chat.completions.create(model="gpt-4o-mini", tools=[SEND], messages=[
+    {"role": "system", "content": "You handle the sales inbox."}, {"role": "user", "content": attack["body"]}]).choices[0].message
+for c in msg.tool_calls or []:
+    print("✗", send_email(**json.loads(c.function.arguments)), "— an email told it to")
+</script></div>
+  <div class="step" data-icon="⚠" data-title="A page gives orders" data-desc="Read the raw page, paste it into the brief.">
+<script type="text/plain">
+raw = httpx.get(f"{WEB}/web/redrivertextiles.example/").text
+brief = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content":
+        f"Write a meeting brief.\n\nCompany: Red River Textiles\n\nEvidence:\n{raw}"}]).choices[0].message.content
+print("✗ the brief now contains:", leaks(brief, ("northwind-ai.example", "redrivertextiles.example")))
+</script></div>
+  <div class="step" data-icon="⏱" data-title="A slow search" data-desc="One slow call, no timeout handling: the whole batch dies.">
+<script type="text/plain">
+inbox = ["Lotus Logistics", "Halong Robotics", "Mekong Microfinance"]
+done = []
+try:
+    for company in inbox:
+        delay = 3000 if company == "Halong Robotics" else 0           # one slow search
+        httpx.get(f"{WEB}/search", params={"q": company, "delay_ms": delay}, timeout=1.0)
+        done.append(company)
+except httpx.TimeoutException as e:
+    print(f"✗ batch crashed at #{len(done) + 1} ({type(e).__name__}); finished: {done}; lost: {inbox[len(done):]}")
+</script></div>
+  <div class="step" data-icon="{ }" data-title="Chatty JSON" data-desc="The model adds a sentence; the parser returns None; None reads as 'no'.">
+<script type="text/plain">
+reply = 'Sure! Here is the JSON you asked for: {"is_lead": true}'
+def parse(text):
+    try:
+        return json.loads(text)
+    except ValueError:
+        return None                                   # "safe"
+lead = parse(reply)
+print("✗ is_lead =", (lead or {}).get("is_lead", False), "→ Linh's email is filed as not a lead, and nothing says so")
+</script></div>
+  <div class="step" data-icon="▤" data-title="50 at once" data-desc="The provider allows 10 at a time; nobody told the loop.">
+<script type="text/plain">
+async def provider(i, slots=asyncio.Semaphore(10), busy=[0]):
+    if busy[0] >= 10:
+        raise RuntimeError("429 Too Many Requests")
+    busy[0] += 1
+    try:
+        await asyncio.sleep(0.2)
+    finally:
+        busy[0] -= 1
+
+async def monday():
+    results = await asyncio.gather(*(provider(i) for i in range(50)), return_exceptions=True)
+    return sum(isinstance(r, Exception) for r in results)
+print(f"✗ {asyncio.run(monday())} of 50 calls rejected with 429")
+</script></div>
+  <div class="step" data-icon="?" data-title="Why did it say that?" data-desc="A brief went out with a wrong fact. What did the model see?">
+<script type="text/plain">
+trace = []                                            # nobody wrote one
+print("✗ steps recorded for that run:", len(trace), "— no inputs, no outputs, no timings")
+</script></div>
+</div>
+<div class="callout warn"><b class="t">Every one of these is silent or total</b><p>The attacker's email was sent. The poisoned brief looks fine. One timeout lost two emails. A lead vanished as a “no”. Forty calls were rejected. And nobody can explain any of it.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · Harden it by hand →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="2" hidden>
+<h2>Harden it by hand: the iceberg</h2>
+<p>Every wound has a known fix, and none of them is about the model. Add them all and the 15-line agent is 150 lines. The loop is the tip; the <b>execution system</b> underneath is the iceberg: timeouts, retries, failures as values, bounded parallelism, gates, traces, evals, approvals, durable state.</p>
+<div class="callout key"><b class="t">The turn</b><p>That list has a name: a <b>workflow engine</b>. LangGraph users already have half of it, because LangGraph is a workflow engine too. That's the point.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The industry agrees →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="3" hidden>
+<h2>The industry reached the same conclusion</h2>
+<p>The teams building agent frameworks hit the same iceberg, and their answer is the same: <b>agents run inside workflow engines</b>. Even OpenAI retiring its visual Agent Builder points the same way: the workflow doesn't go away, it moves back into code.</p>
+<div class="callout key"><b class="t">So</b><p>What should an engine do, which one, and why did we build our own? That's Act 5.</p></div>
+</section>
+
+<details class="notes"><summary>Presenter notes</summary>
+<p>About 10 minutes. Have the Mailpit inbox (http://127.0.0.1:8025) open beside the page: after card 1, show the email that really went to abc@company.com. Run the cards with Step, one at a time, and let each red line land. Verify the industry claims' wording against their sources before the talk.</p>
+</details>
+
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/tabs.js"></script>
+<script src="../assets/cards.js"></script>
+</body>
+</html>

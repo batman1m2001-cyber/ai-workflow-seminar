@@ -1,0 +1,17 @@
+========================================================================
+engine   trace_id=21491129-0421-4b7a-8de2-0c4e2ee42764   dur=679ms   nodes=2
+request_id=21491129-0421-4b7a-8de2-0c4e2ee42764  user_id=d546caaf-6ee7-422c-a081-b52052a74b56  session_id=06cd50be-d139-4bb6-872d-179d22cdd34c
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  c                       [main]       0ms  ['ticket']→['text']
+              in  ticket='I want a refund'
+              out text='I want a refund'
+    0.000s  llm                     [main]     678ms  ['prompt', 'temperature', 'text']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras', 'intent', 'error']
+              in  prompt='Reply as <intent>...</intent>\nMessage: {text}' temperature=0.0 text='I want a refund'
+              out role='assistant' content='<intent>refund</intent>' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys} intent='refund' error=None
+
+========================================================================
+SUMMARY  nodes=2  errors=0
+========================================================================

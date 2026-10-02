@@ -1,0 +1,17 @@
+========================================================================
+engine   trace_id=c206c44c-27b9-4820-aa5e-7896d70249e1   dur=559ms   nodes=2
+request_id=c206c44c-27b9-4820-aa5e-7896d70249e1  user_id=3d98be58-3878-4aa4-ae8b-2431fb10137e  session_id=6150ea50-2926-4a54-9047-93a0c5280c7b
+========================================================================
+
+TIMELINE  (chronological)
+
+    0.000s  c                       [main]       0ms  ['ticket']→['text']
+              in  ticket='I will pay tomorrow'
+              out text='I will pay tomorrow'
+    0.000s  llm                     [main]     558ms  ['prompt', 'temperature', 'text']→['role', 'content', 'finish_reason', 'model_used', 'tool_calls', 'usage', 'cost_usd', 'extras', 'intent', 'error']
+              in  prompt='Reply as <intent>...</intent>\nMessage: {text}' temperature=0.0 text='I will pay tomorrow'
+              out role='assistant' content='<intent>payment</intent>' finish_reason='stop' model_used='gpt-4o-mini' tool_calls=[0 items] usage={6 keys} cost_usd=None extras={3 keys} intent='payment' error=None
+
+========================================================================
+SUMMARY  nodes=2  errors=0
+========================================================================
