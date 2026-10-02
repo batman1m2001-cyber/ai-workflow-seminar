@@ -5,6 +5,7 @@
 #   ./stack.sh status   # what answers where
 #   ./stack.sh check    # every playground (mock model) + the meeting-prep golden eval
 #   ./stack.sh down     # stop everything `up` started, containers included (volumes kept)
+#   ./stack.sh reset    # before the talk: empty the inbox, re-seed the CRM/calendar/KB (drafts cleared)
 #   ./stack.sh tunnel   # public https URLs for the site and Studio (cloudflared quick tunnels)
 #
 # Everything is behind one password, so a tunnel never exposes the code runner or
@@ -102,6 +103,11 @@ tunnel() {
     echo "  $t: $(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" | head -1)"
   done
   if [ "$SEMINAR_AUTH" = off ]; then echo "  sign-in: off (public: anyone with the URL can run code here)"; else echo "  password: $SEMINAR_PASSWORD   (Studio user: seminar)"; fi
+}
+
+reset() {
+  curl -s -X DELETE http://127.0.0.1:8025/api/v1/messages >/dev/null && echo "  inbox emptied"
+  (cd "$PREP/meeting-prep-world" && env "${MODEL_ENV[@]}" uv run -q prep-seed) && echo "  world re-seeded"
 }
 
 check() {
