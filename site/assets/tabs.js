@@ -1,12 +1,12 @@
 /* Tabbed figures (Acts 2+) and the little workflow graphs drawn in them.
  *
  *   <div class="tabs">
- *     <div class="tab" data-name="Same shape" data-say="caption under the figure"> figure html </div>
+ *     <div class="tab" data-name="Same shape" data-say="caption under the figure" data-chapter="8"> figure html </div>
  *     ...
  *   </div>
  *   <section class="beat" data-beat="1"> shown while tab 1 is chosen </section>
  *
- * Same look and behaviour as the Act 1 anatomy: numbered pills, ← →, #beat-N
+ * Same look and behaviour as the Part I anatomy: numbered pills, ← →, #beat-N
  * in the URL, a .beat-next[data-go] button at the end of a section.
  *
  * A graph, inside any figure:
@@ -138,6 +138,10 @@
         if (on) s.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
       });
       if (history.replaceState) history.replaceState(null, "", "#beat-" + n);
+      setTimeout(function () {                                   // what measures itself, now that it is shown
+        if (window.seminarDiagrams) window.seminarDiagrams();
+        if (window.seminarSteppers) window.seminarSteppers();
+      }, 0);
     }
     root.addEventListener("keydown", function (e) {
       if (e.key === "ArrowRight" && cur < tabs.length) { go(cur + 1); e.preventDefault(); }
@@ -156,6 +160,22 @@
   document.querySelectorAll(".tabs").forEach(mount);
   // graphs outside tabs, too
   graphs(document);
+  // A tour (Part III's Studio screens): a step list beside one big screenshot.
+  document.querySelectorAll(".tour").forEach(function (t) {
+    var steps = [].slice.call(t.querySelectorAll(".tour-steps button"));
+    var slides = [].slice.call(t.querySelectorAll(".tour-slide"));
+    function show(i) {
+      steps.forEach(function (b, k) { b.classList.toggle("on", k === i); });
+      slides.forEach(function (s, k) { s.hidden = k !== i; });
+    }
+    steps.forEach(function (b, i) { b.onclick = function () { show(i); }; });
+    t.tabIndex = 0;
+    t.addEventListener("keydown", function (e) {
+      var cur = steps.findIndex(function (b) { return b.classList.contains("on"); });
+      if (e.key === "ArrowDown" && cur < steps.length - 1) { show(cur + 1); e.preventDefault(); e.stopPropagation(); }
+      if (e.key === "ArrowUp" && cur > 0) { show(cur - 1); e.preventDefault(); e.stopPropagation(); }
+    });
+  });
   document.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-reveal]");
     if (!b) return;

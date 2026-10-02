@@ -302,6 +302,27 @@ def chat(body: dict, sleep: bool = True) -> dict:
         results = [m for m in msgs if m.get("role") == "tool"]
         parts = [_text(m) for m in results[-4:]]
         message["content"] = "Here is what I found: " + " | ".join(parts)
+    elif '{"tool": "<name>"' in prompt and last.get("role") == "user":
+        # agent.py's format: the tools are listed in the prompt; a call is one line of JSON,
+        # a result comes back as a user turn "Result of <tool>:"
+        results = [_text(m) for m in msgs if m.get("role") == "user" and _text(m).startswith("Result of ")]
+        task = next((_text(m) for m in msgs if m.get("role") == "user"), "")
+        listed = list(dict.fromkeys(re.findall(r'"name"\s*:\s*"(\w+)"', prompt)))
+        urls = re.findall(r'https?://[^\s"\\]+', results[-1]) if results else []
+        if not results:
+            first = next((n for n in ("crm_find_company", "web_search") if n in listed and
+                          (n != "crm_find_company" or "crm" in task.lower())), listed[0] if listed else None)
+            dom = re.search(r"\(([\w.-]+\.\w+)\)", task)
+            args = {"domain_or_name": dom.group(1) if dom else _subject(task)} if first == "crm_find_company" \
+                else {"query": re.sub(r"^Research |[.:]$", "", task.split(" for a sales")[0]).strip()}
+            message["content"] = json.dumps({"tool": first, "args": args})
+        elif len(results) < 3 and "web_search" in listed and not any(r.startswith("Result of web_search") for r in results):
+            message["content"] = json.dumps({"tool": "web_search", "args": {"query": _subject(task) + " news"}})
+        elif len(results) < 3 and "fetch_page" in listed and urls:
+            message["content"] = json.dumps({"tool": "fetch_page", "args": {"url": urls[0]}})
+        else:
+            found = [r.split("\n", 1)[-1].strip()[:160] for r in results[-3:]]
+            message["content"] = "Here is what I found: " + " | ".join(found)
     elif "<tool_call>" in prompt and last.get("role") == "user":
         # tool calling done by prompt alone: the tools are described in the text
         if "<tool_result>" in user:

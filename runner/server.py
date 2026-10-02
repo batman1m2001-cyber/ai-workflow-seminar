@@ -191,6 +191,7 @@ def run(req: Run):
         # through the router: the code never sees a real key, and tool calls reach gpt-4o-mini
         env.update(OPENAI_API_KEY=ROUTER_KEY, OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/llm/v1",
                    SEMINAR_MODEL="gpt-4o-mini",
+                   AGENT_MODEL="openai:gpt-4o-mini",   # agent.py writes its tools into the prompt: keep it on OpenAI
                    SEMINAR_EMBED_MODEL=real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
     else:
         env.update(OPENAI_API_KEY="mock-key", OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/mock/v1",
@@ -245,9 +246,42 @@ async def no_cache(request: Request, call_next):
     return resp
 
 
+# ── the stack's other services, from wherever the page is opened ──────────
+# On this machine a link goes to localhost; through the public site it goes to
+# that service's own tunnel (`./stack.sh tunnel` writes them to .stack/).
+STACK = Path(os.environ.get("SEMINAR_STACK_DIR", ROOT / ".stack"))
+LOCAL = {"studio": "http://127.0.0.1:8766", "inbox": "http://127.0.0.1:8025"}
+
+
+def _public(name: str):
+    log = STACK / f"tunnel-{name}.log"
+    m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", log.read_text(errors="replace")) if log.exists() else None
+    return m.group(0) if m else None
+
+
+def _there(request: Request, name: str) -> str:
+    if request.url.hostname in ("127.0.0.1", "localhost"):
+        return LOCAL[name]
+    return _public(name) or LOCAL[name]
+
+
 @app.get("/studio")
-def studio():
-    return RedirectResponse("http://127.0.0.1:8766")      # Studio, opened on meeting-prep-operonx
+def studio(request: Request):
+    return RedirectResponse(_there(request, "studio"))
+
+
+@app.get("/inbox")
+def inbox(request: Request):
+    return RedirectResponse(_there(request, "inbox"))
+
+
+@app.get("/approve")
+async def approve(request: Request):
+    """The approval email's link: forwarded to the meeting-prep app, so it works from anywhere."""
+    import httpx
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.get("http://127.0.0.1:8200/approve", params=dict(request.query_params))
+    return Response(resp.content, status_code=resp.status_code, media_type=resp.headers.get("content-type", "text/html"))
 
 
 class Send(BaseModel):

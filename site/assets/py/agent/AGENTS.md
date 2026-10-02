@@ -1,0 +1,3 @@
+- Sales reads briefs on a phone: short bullets, no prose.
+- Always say who wrote and what they want, first.
+- Never invent a fact: if it is not in the evidence, leave it out.

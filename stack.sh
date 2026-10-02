@@ -48,6 +48,13 @@ fi
 
 listening() { ss -ltn 2>/dev/null | grep -q ":$1 "; }
 
+# the approval email links to the site's /approve: its public URL once `tunnel` ran, else localhost
+approve_url() {
+  local u; u=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-site.log" 2>/dev/null | head -1)
+  echo "${u:-http://127.0.0.1:8000}/approve"
+}
+start_app() { start app 8200 "$PREP/meeting-prep-operonx" env "${MODEL_ENV[@]}" PREP_APPROVE_URL="$(approve_url)" uv run operonx-serve; }
+
 start() {   # name port dir command...
   local name=$1 port=$2 dir=$3; shift 3
   if listening "$port"; then echo "  $name: :$port already in use, left as is"; return; fi
@@ -68,7 +75,7 @@ up() {
   for _ in $(seq 30); do (cd "$PREP/meeting-prep-world" && env "${MODEL_ENV[@]}" uv run -q prep-seed >/dev/null 2>&1) && break; sleep 1; done
   echo "  seeded"
   start mocks 8100 "$PREP/meeting-prep-world" env "${MODEL_ENV[@]}" uv run prep-mocks
-  start app 8200 "$PREP/meeting-prep-operonx" env "${MODEL_ENV[@]}" uv run operonx-serve
+  start_app
   # its own accounts: the first start makes "seminar" the admin, with the password;
   # jobs and services it starts inherit the model settings
   OPERONX_STUDIO_AUTH="$SEMINAR_AUTH" OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
@@ -95,16 +102,21 @@ status() {
 }
 
 tunnel() {
-  for t in "site 8000" "studio $STUDIO_PORT"; do
+  for t in "site 8000" "studio $STUDIO_PORT" "inbox 8025"; do
     set -- $t
     [ -e "$RUN/tunnel-$1.pid" ] && kill -0 "$(cat "$RUN/tunnel-$1.pid")" 2>/dev/null && continue
     cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$2" >"$RUN/tunnel-$1.log" 2>&1 </dev/null &
     echo $! >"$RUN/tunnel-$1.pid"
   done
-  for t in site studio; do
+  for t in site studio inbox; do
     for _ in $(seq 30); do grep -qo 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" && break; sleep 1; done
     echo "  $t: $(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" | head -1)"
   done
+  # the approval email must link to the public site: restart the app with that address
+  if [ -s "$RUN/app.pid" ] && kill -0 "$(cat "$RUN/app.pid")" 2>/dev/null; then
+    kill "$(cat "$RUN/app.pid")"; for _ in $(seq 20); do listening 8200 || break; sleep 0.5; done
+    start_app >/dev/null && echo "  approve links: $(approve_url)"
+  fi
   if [ "$SEMINAR_AUTH" = off ]; then echo "  sign-in: off (public: anyone with the URL can run code here)"; else echo "  password: $SEMINAR_PASSWORD   (Studio user: seminar)"; fi
 }
 

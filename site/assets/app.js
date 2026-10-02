@@ -9,14 +9,11 @@
   "use strict";
 
   var PAGES = [
-    { id: "index", title: "Start here", part: "Act 0 · The hook" },
-    { id: "act1-agent-world", title: "Build an agent", part: "Act 1 · The agent world" },
-    { id: "act2-all-workflows", title: "Look at the shape", part: "Act 2 · It's all workflows" },
-    { id: "act3-when-agents", title: "When agents pay", part: "Act 3 · When you DO want an agent" },
-    { id: "act4-monday-morning", title: "The agent meets the inbox", part: "Act 4 · Monday morning" },
-    { id: "act5-the-engine", title: "What runs the workflow", part: "Act 5 · The engine" },
-    { id: "act6-real-systems", title: "The same pattern, in production", part: "Act 6 · Real systems" },
-    { id: "act7-callback", title: "The decoder", part: "Act 7 · Callback" }
+    { id: "index", n: "★", title: "The email and the brief", part: "Prologue" },
+    { id: "part1-build-the-agent", n: "I", title: "Build the agent from scratch", part: "Part I · The agent, as it is" },
+    { id: "part2-who-picks", n: "II", title: "An agent is a workflow with a loop", part: "Part II · Workflow engines" },
+    { id: "part3-monday-morning", n: "III", title: "The engine at work", part: "Part III · Production" },
+    { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" }
   ];
 
   var body = document.body;
@@ -54,7 +51,7 @@
     PAGES.forEach(function (p, k) {
       if (p.part !== part) { part = p.part; html += "<h6>" + esc(part) + "</h6>"; }
       html += '<a href="' + href(p) + '"' + (k === idx ? ' class="on"' : "") + '><span class="n">' +
-        (k === 0 ? "★" : p.id.split("-")[0].replace(/^act/, "")) + "</span><span>" + esc(p.title) + "</span></a>";
+        p.n + "</span><span>" + esc(p.title) + "</span></a>";
       n++;
     });
     side.innerHTML = html;
@@ -234,19 +231,31 @@
   }
 
   // ── diagrams ────────────────────────────────────────────────────────
+  // Mermaid lays a diagram out from its size on screen, so one in a hidden tab
+  // waits: tabs.js calls window.seminarDiagrams() each time a tab is shown.
+  var mermaid = null;
+  function renderVisible() {
+    if (!mermaid) return;
+    var todo = [].slice.call(document.querySelectorAll(".mermaid:not([data-processed])"))
+      .filter(function (d) { return d.offsetParent !== null; });
+    if (todo.length) mermaid.run({ nodes: todo }).catch(function () {});
+  }
+  window.seminarDiagrams = renderVisible;
   function diagrams() {
     if (!document.querySelector(".mermaid")) return;
     import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(function (m) {
-      m.default.initialize({
+      mermaid = m.default;
+      mermaid.initialize({
         startOnLoad: false, theme: "base", securityLevel: "strict",
+        flowchart: { curve: "basis", nodeSpacing: 34, rankSpacing: 46, padding: 10, useMaxWidth: false },
         themeVariables: {
           fontFamily: "Be Vietnam Pro, sans-serif", fontSize: "15px",
-          primaryColor: "#F0FFF6", primaryBorderColor: "#00B74F", primaryTextColor: "#1D4289",
-          lineColor: "#8592AB", secondaryColor: "#EEF2FA", tertiaryColor: "#F4F5F6",
-          clusterBkg: "#F4F5F6", clusterBorder: "#DBE0E6"
+          primaryColor: "#F4F6FB", primaryBorderColor: "#9AABCB", primaryTextColor: "#1D4289",
+          lineColor: "#8592AB", secondaryColor: "#EEF2FA", tertiaryColor: "#FFFFFF",
+          clusterBkg: "#FAFBFD", clusterBorder: "#DBE0E6", edgeLabelBackground: "#FFFFFF"
         }
       });
-      m.default.run({ querySelector: ".mermaid" });
+      renderVisible();
     }).catch(function () {});
   }
 

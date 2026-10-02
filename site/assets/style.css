@@ -212,3 +212,49 @@ details.notes.speech .cue { color: #8A5A00; font-style: italic; font-size: 14px;
 
 /* phone: keep the Mock/Real switch on screen */
 @media (max-width: 640px) { .mode { flex-shrink: 0; } .mode button { padding-left: 8px; padding-right: 8px; font-size: 12px; } .top { gap: 10px; padding: 0 12px; } .top .crumb, .top .status { display: none; } .top .brand { font-size: 0; gap: 0; } .top .brand .dot { font-size: 15px; } }
+
+/* ── folded playgrounds (split.js) ──────────────────────────────────── */
+/* figures, beats, code and pipelines go wide; prose stays readable */
+.content > .anatomy, .content > .tabs, .content > section.beat { max-width: 1400px; }
+section.beat .playground, section.beat .pipeline { max-width: none; }
+section.beat > p, section.beat > ul, section.beat > ol { max-width: 80ch; }
+.pg-body[hidden] { display: none; }
+.pg-fold { margin: 4px 0 18px; }
+.pg-fold.open .pg-body { margin-top: 10px; animation: beat-in .2s ease-out; }
+.sp-ref {
+  display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; cursor: pointer;
+  border: 1.5px dashed var(--mint-line); background: var(--mint); color: var(--navy); border-radius: 999px;
+  font: 600 14px "Be Vietnam Pro", sans-serif; text-align: left; max-width: 100%;
+}
+.sp-ref:hover, .pg-fold.open .sp-ref { border-color: var(--green); border-style: solid; }
+.sp-ref-k { background: var(--green); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 12.5px; white-space: nowrap; }
+@media (max-width: 760px) { .sp-ref { border-radius: 14px; flex-wrap: wrap; } }
+
+/* ── the decoder card (decoder.js) ─────────────────────────────────── */
+.decoder { position: fixed; right: 18px; bottom: 18px; z-index: 30; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; max-width: min(460px, calc(100vw - 36px)); }
+.dc-pill { order: 2; display: flex; align-items: center; gap: 10px; border: 0; cursor: pointer; padding: 9px 16px; border-radius: 999px; background: var(--navy); color: #fff; font: 700 14px "Be Vietnam Pro", sans-serif; box-shadow: 0 6px 20px rgba(19,48,106,.25); }
+.dc-pill .dc-n { background: var(--green); border-radius: 999px; padding: 1px 9px; font-size: 12.5px; }
+.dc-pill.ping { animation: dc-ping .9s ease-out; }
+@keyframes dc-ping { 0% { box-shadow: 0 0 0 0 rgba(0,183,79,.6); } 100% { box-shadow: 0 0 0 16px rgba(0,183,79,0); } }
+.dc-panel { order: 1; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; box-shadow: 0 14px 40px rgba(19,48,106,.18); padding: 12px 16px 6px; max-height: 60vh; overflow: auto; }
+.dc-panel[hidden] { display: none; }
+.dc-h { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--green-dk); margin-bottom: 6px; }
+.dc-list { margin: 0; padding-left: 20px; }
+.dc-list li { margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
+.dc-list li b { display: block; color: var(--navy); }
+.dc-list li span { color: var(--ink); }
+.dc-list li.new { background: var(--mint); border-radius: 8px; padding: 4px 8px; margin-left: -8px; }
+.decoder-t td:last-child, .decoder-t th:last-child { text-align: center; color: var(--grey); width: 48px; }
+@media (max-width: 640px) { .decoder { right: 10px; bottom: 10px; } }
+
+/* ── a chapter: the idea, the truth, what's still missing ──────────── */
+.callout.idea { background: #EEF2FA; border-left-color: var(--navy); font-size: 18px; }
+.callout.idea b.t { color: var(--navy); }
+.handoff { display: flex; gap: 14px; align-items: baseline; margin: 26px 0 0; padding: 14px 18px; border: 1.5px dashed #F5D38A; border-radius: var(--radius); background: #FFFBF2; }
+.handoff span { flex: none; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+.handoff p { margin: 0; font-size: 18px; }
+.handoff + .beat-nav { margin-top: 14px; }
+.pl-tabs button[data-v="alt"] { color: var(--grey); font-weight: 600; }
+@media (max-width: 640px) { .handoff { flex-direction: column; gap: 4px; } }
+.dc-list li.dc-part, .decoder-t tr.dc-part td { list-style: none; margin: 12px 0 6px -20px; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--green-dk); }
+.decoder-t tr.dc-part td { background: var(--soft); padding: 6px 10px; margin: 0; }

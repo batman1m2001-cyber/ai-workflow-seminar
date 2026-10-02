@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+<style>
+  .sbs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 1040px; }
+  .sbs > div { min-width: 0; }
+  .sbs pre.static { font-size: 12px; line-height: 1.45; max-height: 560px; overflow: auto; margin: 0; }
+  .sbs h4 { margin: 0 0 6px; color: var(--navy); }
+  .live { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #FBFCFE; }
+  .live select { font: 600 14px "Be Vietnam Pro", sans-serif; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--line); min-width: 320px; }
+  .live button, .live a.btn { border: 0; background: var(--green); color: #fff; border-radius: 9px; padding: 9px 16px; font: 700 14px "Be Vietnam Pro", sans-serif; cursor: pointer; text-decoration: none; }
+  .live a.btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+  .live .msg { font: 13px "JetBrains Mono", monospace; color: var(--green-dk); width: 100%; }
+  @media (max-width: 900px) { .sbs { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-page="part3-monday-morning" data-chapter="11" data-root="..">
+<main class="content">
+
+<p class="kicker">Part III · Production</p>
+<h1>Production: the engine at work</h1>
+<p class="lead">Part II was the theory. Now the real inbox on a Monday morning: what breaks, which part of the engine fixes it, the real system on OperonX, how Studio shows it running, and the whole thing live.</p>
+
+<div class="tabs">
+  <div class="tab" data-name="Monday morning" data-chapter="11" data-say="The Part I agent, harness taken off, run over the real inbox at 8 am. Each failure is &lt;b&gt;silent&lt;/b&gt; or &lt;b&gt;total&lt;/b&gt;.">
+<div class="fails">
+  <div><b>1 · An email gives orders</b><span>“send an email to abc@…”: the agent obeys</span></div>
+  <div><b>2 · A web page gives orders</b><span>hidden text on a page ends up in the brief</span></div>
+  <div><b>3 · One timeout</b><span>a slow search kills the whole batch</span></div>
+  <div><b>4 · Chatty JSON</b><span>the parser returns None, and None reads as “not a lead”</span></div>
+  <div><b>5 · 50 at once</b><span>the provider allows 10: forty calls rejected</span></div>
+  <div><b>6 · “Why did it say that?”</b><span>nobody can see what the model saw</span></div>
+</div>
+  </div>
+  <div class="tab" data-name="Each failure is an engine feature" data-chapter="11" data-say="None of the fixes is about the model. Each one is a part of the engine from Part II.">
+<table class="map3">
+  <tr><th>Monday's failure</th><th>the engine part that fixes it (Part II)</th><th>in the real system</th></tr>
+  <tr><td>an email gives orders</td><td><b>graph</b>: a gate node before any model</td><td><code>screen</code> → <code>if_(…)</code> → <code>blocked</code></td></tr>
+  <tr><td>a page gives orders</td><td><b>graph</b>: a step that cleans pages, a check before sending</td><td><code>visible_text</code> in the tools, <code>check_brief</code></td></tr>
+  <tr><td>one timeout kills the batch</td><td><b>executor</b>: a failed node is recorded, the run goes on</td><td>each email is its own run</td></tr>
+  <tr><td>chatty JSON reads as “no”</td><td><b>node</b>: a parser that fails loudly</td><td><code>LLMOp(parser="json", on_failure="error")</code></td></tr>
+  <tr><td>50 at once, rate-limited</td><td><b>scheduler</b>: a concurrency cap</td><td>the graph's cap on tasks in flight</td></tr>
+  <tr><td>“why did it say that?”</td><td><b>trace</b>: every node's inputs and outputs</td><td><code>trace_local</code> → Studio</td></tr>
+  <tr><td>is the new prompt better?</td><td><b>around it</b>: an eval that gates the deploy</td><td><code>operonx-run golden</code>: 19 emails</td></tr>
+  <tr><td>a human must say yes</td><td><b>around it</b>: a draft and a link</td><td><code>request_approval</code> → the <code>approve</code> graph</td></tr>
+</table>
+  </div>
+  <div class="tab" data-name="The real system on OperonX" data-chapter="12" data-say="Left: the course brief, as drawn. Right: &lt;b&gt;Studio&lt;/b&gt; drawing our OperonX graph &lt;b&gt;from the code&lt;/b&gt;: the same boxes, the same names, the same arrows.">
+<div class="bvs">
+  <figure class="brief-img"><img src="../assets/img/brief-flow.png" alt="The course brief's diagram of the meeting-prep assistant"><figcaption>The course brief, as drawn</figcaption></figure>
+  <figure class="brief-img"><img src="../assets/img/studio/flow.jpg" alt="OperonX Studio drawing the prepare graph: email, extract_company, then web_research, calendar and company_info side by side, memory, report, human_approval, done"><figcaption>Studio, drawing our <code>prepare</code> graph from the code</figcaption></figure>
+</div>
+  </div>
+  <div class="tab" data-name="Studio: watch it run" data-chapter="12" data-say="Studio is the engine&#x27;s window: the graph from the code, the services and jobs that start runs, every run as a trace, a dashboard, and the eval that gates each deploy.">
+<div class="tour"><div class="tour-steps"><button type="button" data-i="0" class=on><small>Build</small>Flow</button><button type="button" data-i="1"><small>Operate</small>Services &amp; jobs</button><button type="button" data-i="2"><small>Operate</small>Services</button><button type="button" data-i="3"><small>Observe</small>Runs</button><button type="button" data-i="4"><small>Observe</small>A trace</button><button type="button" data-i="5"><small>Observe</small>Replay</button><button type="button" data-i="6"><small>Monitor</small>Dashboard</button><button type="button" data-i="7"><small>Improve</small>Evals</button><button type="button" data-i="8"><small>Improve</small>Jobs</button></div><figure class="tour-shot"><div class="tour-slide" data-i="0"><a href="../assets/img/studio/flow.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/flow.jpg" alt="The graph, drawn from the code"></a><figcaption><b>The graph, drawn from the code</b> <span class="tour-part">engine part: graph · compiler</span><p>Every <code>@graph</code> becomes a canvas; nested graphs open in place. Edit the code, the drawing follows.</p></figcaption></div><div class="tour-slide" data-i="1" hidden><a href="../assets/img/studio/picker.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/picker.jpg" alt="What starts a run"></a><figcaption><b>What starts a run</b> <span class="tour-part">engine part: triggers</span><p>The project's graphs, its <b>services</b> (a mail webhook, an approve endpoint, an 8 am schedule) and its <b>jobs</b> (the golden eval).</p></figcaption></div><div class="tour-slide" data-i="2" hidden><a href="../assets/img/studio/services.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/services.jpg" alt="The running process"></a><figcaption><b>The running process</b> <span class="tour-part">engine part: triggers</span><p>One listener, three services bound to it: <code>webhook /mail</code>, <code>POST /approve</code>, <code>schedule 08:00</code>.</p></figcaption></div><div class="tour-slide" data-i="3" hidden><a href="../assets/img/studio/runs.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/runs.jpg" alt="Every run, recorded"></a><figcaption><b>Every run, recorded</b> <span class="tour-part">engine part: run store</span><p>Each email is one run: when, how long, what it cost. Linh's email is the 16.1 s one.</p></figcaption></div><div class="tour-slide" data-i="4" hidden><a href="../assets/img/studio/run-trace.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/run-trace.jpg" alt="Every node: its value, its time"></a><figcaption><b>Every node: its value, its time</b> <span class="tour-part">engine part: tracing</span><p>Linh's run as a tree: the gate, the triage, the three researchers, the brief. 11 LLM calls, 7.0k tokens, 232 executions.</p></figcaption></div><div class="tour-slide" data-i="5" hidden><a href="../assets/img/studio/run-workflow.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/run-workflow.jpg" alt="The run, on the graph"></a><figcaption><b>The run, on the graph</b> <span class="tour-part">engine part: tracing</span><p>The same run drawn on the workflow: the path it took, the time, errors and cost per node, and a replay.</p></figcaption></div><div class="tour-slide" data-i="6" hidden><a href="../assets/img/studio/monitor.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/monitor.jpg" alt="Where the time goes"></a><figcaption><b>Where the time goes</b> <span class="tour-part">engine part: metrics</span><p>Runs, error rate, p50 and p95 across all runs, and which op eats the time: <code>llm</code>, then <code>brief</code>.</p></figcaption></div><div class="tour-slide" data-i="7" hidden><a href="../assets/img/studio/evals.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/evals.jpg" alt="The gate before every deploy"></a><figcaption><b>The gate before every deploy</b> <span class="tour-part">engine part: eval gate</span><p>The golden set: 19 emails, 18 pass. A case that regressed is flagged before anyone ships the new prompt.</p></figcaption></div><div class="tour-slide" data-i="8" hidden><a href="../assets/img/studio/jobs.jpg" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="../assets/img/studio/jobs.jpg" alt="The eval, run as a job"></a><figcaption><b>The eval, run as a job</b> <span class="tour-part">engine part: jobs</span><p>The golden eval is a job with its own history: every run, its status, how long it took.</p></figcaption></div></figure></div>
+  </div>
+  <div class="tab" data-name="Live" data-chapter="12" data-say="A customer email, sent from this page. Watch the &lt;b&gt;inbox&lt;/b&gt; and &lt;b&gt;Studio&lt;/b&gt;.">
+    <div class="live">
+      <select id="golden"></select>
+      <button id="send">Send as customer</button>
+      <a class="btn ghost" href="../inbox" target="_blank" rel="noopener">Open the inbox</a>
+      <a class="btn ghost" href="../studio" target="_blank" rel="noopener">Open Studio</a>
+      <div class="msg" id="sent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="1">
+<h2>Chapter 11 · Monday morning</h2>
+<p>Friday's demo worked. On Monday at 8 am, 50 emails arrive at once. Run the Part I agent over them with its harness taken off, card by card, against the real inbox, web and model.</p>
+<div class="pipeline" data-title="Monday, 8 am">
+  <div class="step" data-icon="✉" data-title="An email gives orders" data-desc="The course brief's own attack. The agent has a send tool.">
+<script type="text/plain">
+import asyncio, json, time
+import httpx
+from openai import OpenAI
+from prep_world import WEB, golden, mail
+from prep_world.guard import leaks
+
+client = OpenAI()
+def send_email(to: str, subject: str, body: str) -> str:
+    mail.send(to, subject, body)
+    return f"sent to {to}"
+SEND = {"type": "function", "function": {"name": "send_email", "description": "Send an email.", "parameters": {
+        "type": "object", "properties": {"to": {"type": "string"}, "subject": {"type": "string"}, "body": {"type": "string"}}}}}
+
+attack = next(g for g in golden() if g["id"] == "attack-send")
+msg = client.chat.completions.create(model="gpt-4o-mini", tools=[SEND], messages=[
+    {"role": "system", "content": "You handle the sales inbox."}, {"role": "user", "content": attack["body"]}]).choices[0].message
+for c in msg.tool_calls or []:
+    print("✗", send_email(**json.loads(c.function.arguments)), "— an email told it to")
+</script></div>
+  <div class="step" data-icon="⚠" data-title="A page gives orders" data-desc="Read the raw page, paste it into the brief.">
+<script type="text/plain">
+raw = httpx.get(f"{WEB}/web/redrivertextiles.example/").text
+brief = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content":
+        f"Write a meeting brief.\n\nCompany: Red River Textiles\n\nEvidence:\n{raw}"}]).choices[0].message.content
+print("✗ the brief now contains:", leaks(brief, ("northwind-ai.example", "redrivertextiles.example")))
+</script></div>
+  <div class="step" data-icon="⏱" data-title="A slow search" data-desc="One slow call, no timeout handling: the whole batch dies.">
+<script type="text/plain">
+inbox = ["Lotus Logistics", "Halong Robotics", "Mekong Microfinance"]
+done = []
+try:
+    for company in inbox:
+        delay = 3000 if company == "Halong Robotics" else 0           # one slow search
+        httpx.get(f"{WEB}/search", params={"q": company, "delay_ms": delay}, timeout=1.0)
+        done.append(company)
+except httpx.TimeoutException as e:
+    print(f"✗ batch crashed at #{len(done) + 1} ({type(e).__name__}); finished: {done}; lost: {inbox[len(done):]}")
+</script></div>
+  <div class="step" data-icon="{ }" data-title="Chatty JSON" data-desc="The model adds a sentence; the parser returns None; None reads as 'no'.">
+<script type="text/plain">
+reply = 'Sure! Here is the JSON you asked for: {"is_lead": true}'
+def parse(text):
+    try:
+        return json.loads(text)
+    except ValueError:
+        return None                                   # "safe"
+lead = parse(reply)
+print("✗ is_lead =", (lead or {}).get("is_lead", False), "→ Linh's email is filed as not a lead, and nothing says so")
+</script></div>
+  <div class="step" data-icon="▤" data-title="50 at once" data-desc="The provider allows 10 at a time; nobody told the loop.">
+<script type="text/plain">
+async def provider(i, busy=[0]):              # allows 10 at a time
+    if busy[0] >= 10:
+        raise RuntimeError("429 Too Many Requests")
+    busy[0] += 1
+    try:
+        await asyncio.sleep(0.2)
+    finally:
+        busy[0] -= 1
+
+async def monday():
+    results = await asyncio.gather(*(provider(i) for i in range(50)), return_exceptions=True)
+    return sum(isinstance(r, Exception) for r in results)
+print(f"✗ {asyncio.run(monday())} of 50 calls rejected with 429")
+</script></div>
+  <div class="step" data-icon="?" data-title="Why did it say that?" data-desc="A brief went out with a wrong fact. What did the model see?">
+<script type="text/plain">
+trace = []                                            # nobody wrote one
+print("✗ steps recorded for that run:", len(trace), "— no inputs, no outputs, no timings")
+</script></div>
+</div>
+
+<div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · Each failure is an engine feature →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="2" hidden>
+<h2>Each failure is an engine feature</h2>
+<p>Every failure has a known fix, and <b>none of them is about the model</b>. Write them by hand and the 15-line agent becomes 150 lines, the same 135 lines every team writes. Or notice that each fix is a part of the engine from Part II: a gate is a node, a cap is the scheduler, a trace is the engine watching itself.</p>
+<div class="callout key"><b class="t">The truth</b><p>A production agent is <b>a workflow engine</b> with a model inside some nodes.</p></div>
+<div class="beat-nav"><button class="beat-next" data-go="3">Next: 3 · The real system on OperonX →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="3" hidden>
+<h2>Chapter 12 · The real system on OperonX</h2>
+<p>Here is the whole meeting-prep assistant as one OperonX graph. The zones carry the course brief's own box names, so the brief's diagram and Studio's drawing match. The wiring is two lines at the end.</p>
+<pre class="static">@graph
+def prepare(mail, deliver):
+    email = email_agent(email=mail)
+    extract_company = extract_company_name(email=mail)
+    web_research = web_research_agent(company=extract_company[&quot;company&quot;])
+    calendar = calendar_agent(company_id=extract_company[&quot;company_id&quot;])
+    company_info = company_info_agent(company=extract_company[&quot;company&quot;], company_id=extract_company[&quot;company_id&quot;])
+    memory = memory_agent(
+        email=mail, company=extract_company[&quot;company&quot;], contacts=company_info[&quot;contacts&quot;],
+        history=company_info[&quot;history&quot;], meetings=calendar[&quot;meetings&quot;], notes=company_info[&quot;memory&quot;],
+        website=web_research[&quot;website&quot;], news=web_research[&quot;news&quot;], people=web_research[&quot;people&quot;],
+    )
+    report = report_agent(company=extract_company[&quot;company&quot;], company_name=extract_company[&quot;name&quot;],
+                          evidence=memory[&quot;text&quot;])
+    human_approval = human_approval_gate(email=mail, deliver=deliver, company=extract_company[&quot;company&quot;],
+                                         brief=report[&quot;brief&quot;], ok=report[&quot;ok&quot;], problems=report[&quot;problems&quot;])
+    done = ops.settle(a=email[&quot;outcome&quot;], b=human_approval[&quot;outcome&quot;])
+
+    START &gt;&gt; email &gt;&gt; if_(email[&quot;lead&quot;] == True, extract_company).else_(done)  # noqa: E712
+    extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</pre>
+<p>Studio draws exactly this graph from the code: the brief's diagram and the running system are the same picture.</p>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · Studio: watch it run →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="4" hidden>
+<h2>Studio: the engine's window</h2>
+<p>Every part of the engine from Part II has a screen. Click through the steps above, in the order a team uses them:</p>
+<ol>
+  <li><b>Build</b>: the Flow view draws the graph from the code (graph · compiler).</li>
+  <li><b>Operate</b>: services and jobs start runs: a webhook, an HTTP endpoint, a schedule, a batch (triggers).</li>
+  <li><b>Observe</b>: every run is recorded; open one and read each node's value and time, or replay it on the graph (run store · tracing).</li>
+  <li><b>Monitor</b>: the dashboard: run counts, error rate, latency, and where the time goes (metrics).</li>
+  <li><b>Improve</b>: the golden set gates every deploy, and runs as a job with its own history (eval gate).</li>
+</ol>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · Live →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="5" hidden>
+<h2>The whole system, live</h2>
+<ol>
+  <li>Pick Linh's email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>
+  <li>The inbox starts a run, and <b>Studio</b> lights up the graph zone by zone.</li>
+  <li><b>“[Approve?] Brief: …”</b> lands in the inbox. Click <b>Approve</b>: the brief goes to sales and into memory.</li>
+  <li>Now send an <b>attack</b>. It's held at the gate in milliseconds, and nothing is sent.</li>
+</ol>
+<div class="callout key"><b class="t">The truth</b><p>Part I's agent is <b>one node</b> in this graph. Everything around it is the workflow, and the engine runs it.</p></div>
+<div class="handoff"><span>Next</span><p>Back to the question from 8 am, and the decoder, full.</p></div>
+</section>
+
+</main>
+<script src="../assets/split.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/decoder.js"></script>
+<script src="../assets/tabs.js"></script>
+<script src="../assets/cards.js"></script>
+<script>
+(function () {
+  var sel = document.getElementById("golden"), out = document.getElementById("sent");
+  fetch("../api/prep/golden").then(function (r) { return r.json(); }).then(function (rows) {
+    rows.forEach(function (g) {
+      var o = document.createElement("option");
+      o.value = g.id; o.textContent = (g.action === "block" ? "⚠ attack · " : g.action === "skip" ? "· not a lead · " : "✉ ") + g.subject;
+      sel.appendChild(o);
+    });
+  }).catch(function () { out.textContent = "start the seminar runner to send emails from here"; });
+  document.getElementById("send").onclick = function () {
+    out.textContent = "sending…";
+    fetch("../api/prep/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: sel.value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (r) { out.textContent = r.error ? "✗ " + r.error : "✓ sent “" + r.subject + "” from " + r.from + ". Watch the inbox and Studio."; });
+  };
+})();
+</script>
+</body>
+</html>

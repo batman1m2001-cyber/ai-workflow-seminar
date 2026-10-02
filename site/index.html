@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/cards.css">
 </head>
 <body data-page="index" data-root=".">
 <main class="content">
@@ -18,28 +19,6 @@
   <p>Agents, RAG, tool calling, context engineering: the same primitives, one engine. Every page has runnable code: read it, change it, press <b>Run</b>.</p>
 </div>
 
-<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 3 phút</summary>
-<div class="speech">
-<p class="cue">[Trước giờ nói: chạy <code>./stack.sh up</code> rồi <code>./stack.sh check</code>. Mở sẵn trang này, cuộn lên đầu.]</p>
-<h4>1 · Mở màn: mỗi sáu tháng, một “engineering” mới <small>(~1 phút · hero + chuỗi buzzword)</small></h4>
-<p>Chào các bạn. Hôm nay mình nói về một câu hơi “ngông”: Workflow Is All You Need.</p>
-<p>Trước khi vào, mình hỏi nhanh một chút. Ai ở đây đang có một agent chạy trong production? Giơ tay giúp mình. Rồi, giờ ai đã từng phải debug một agent lúc hai giờ sáng? À, vẫn còn kha khá tay đấy.</p>
-<p>Các bạn nhìn dòng chữ này. Prompt Engineering. Rồi RAG. Rồi Function Calling. Rồi Agents. Rồi Context Engineering, Harness Engineering, Loop Engineering, Graph Engineering… và dấu ba chấm. Cứ khoảng sáu tháng, ngành mình lại có thêm một chữ “engineering” mới. Mỗi lần như vậy là một đợt blog, một đợt framework, một đợt khóa học.</p>
-<p>Câu hỏi mình muốn đặt ra là: đây thật sự là tám thứ khác nhau, hay chỉ là một thứ, được gọi bằng tám cái tên?</p>
-<p class="cue">[Chỉ vào chuỗi chip, dừng ở chip “Agents” đang được tô.]</p>
-<h4>2 · Email lúc 8 giờ sáng và luận điểm <small>(~1 phút · câu hỏi + “The thesis”)</small></h4>
-<p>Để khỏi nói suông, cả buổi hôm nay mình bám theo đúng một bài toán. Tám giờ sáng, có một email từ một lead gửi tới. Trước buổi họp, team sales muốn có một bản brief về công ty đó. Vậy thôi, rất đời thường.</p>
-<p>Và câu hỏi cho các bạn: việc này cần bao nhiêu agent? Một? Ba? Một “multi-agent system”? Các bạn giữ câu trả lời trong đầu nhé, cuối buổi mình quay lại.</p>
-<p>Buổi seminar này nhìn thế giới agent một cách nghiêm túc. Mình sẽ build một agent từng phần một, nhìn vào hình dạng của nó, đo xem khi nào agent thật sự đáng tiền, làm nó gãy vào một sáng thứ Hai, rồi chạy cả hệ thống trên một workflow engine, live, từ đầu tới cuối.</p>
-<p>Luận điểm của mình chỉ có một câu: mọi hệ thống GenAI đều là một workflow. Câu hỏi thật sự ở mỗi bước là: ai quyết định bước tiếp theo? Code của các bạn, hay là model?</p>
-<p class="cue">[Chỉ vào khung “The thesis”.]</p>
-<h4>3 · Lộ trình và cách dùng trang <small>(~1 phút · “The route” + “How to use this site”)</small></h4>
-<p>Đây là lộ trình. Act 1, thế giới agent: mình build một agent từng phần, rồi soi X-ray từng phần. Act 2: nhìn vào hình dạng, và thấy đâu đâu cũng là workflow. Act 3: khi nào các bạn THẬT SỰ muốn một agent. Act 4: sáng thứ Hai, agent gặp hộp thư thật, sáu lỗi live. Act 5: cái engine chạy workflow, và vì sao tụi mình tự build OperonX. Act 6: cùng pattern đó trong các hệ thống production. Và Act 7: bảng giải mã, đặt từng buzzword vào đúng chỗ của nó trong workflow.</p>
-<p>Một điều nữa: trang nào cũng có code chạy được. Khối màu tối nào cũng sửa được, bấm Run hoặc Ctrl + Enter. Mặc định là Real: model thật, model nội bộ cho các lời gọi thường, gpt-4o-mini khi có tool. Muốn chạy offline, tức thì, miễn phí thì chuyển sang Mock.</p>
-<p>Được rồi. Mình bắt đầu với email của sáng nay. Act 1: Build an agent, one part at a time.</p>
-<p class="cue">[Bấm thẻ “Act 1 · The agent world” để sang trang tiếp.]</p>
-</div>
-</details>
 
 <h2 style="margin-top:10px">Every six months, a new “engineering”</h2>
 <div class="chips">
@@ -53,32 +32,22 @@
   <span class="chip">Graph Engineering</span><span class="arr">→</span>
   <span class="chip">…</span>
 </div>
-<p class="quote">At 8 am an email arrives from a lead. By the meeting, sales wants a brief. <em>How many agents does that take?</em></p>
-
-<p class="lead">This seminar takes the agent world seriously. We build an agent part by part, look at its shape, measure when agents pay, break it on Monday morning, and run the whole system on a workflow engine — live, end to end.</p>
-
-<div class="callout key">
-  <b class="t">The thesis</b>
-  <p>Every GenAI system is a workflow. The real question for each step is <b>who decides the next one</b>: your code, or the model.</p>
-</div>
-
+<p class="quote">At 8 am an email arrives from Linh Tran, COO of Lotus Logistics. Before Wednesday's call, sales wants a one-page brief. The course brief says: build it as <b>seven agents</b>. <em>How many agents does it really take?</em></p>
+<figure class="brief-img hero-brief"><img src="assets/img/brief-flow.png" alt="The course brief's diagram of seven agents: Email Agent, Extract Company Name, Web Research, Calendar and Company Info agents in parallel, Memory Agent, Report Agent, Human Approval, Send Brief / Save to KB"><figcaption>The course brief: seven “agents”</figcaption></figure>
+<p class="lead">No framework today. We build every agent idea <b>from scratch</b>, in a few lines each, and look at what's underneath. Then we count the agents, measure two real builds, break one on Monday morning, and run the whole system live.</p>
 <h2>The route</h2>
 <div class="cards">
-  <a class="card" href="pages/act1-agent-world.html"><span class="k">Act 1 · The agent world</span><b>Build an agent, one part at a time</b><span>Call, knowledge, tools and MCP, the loop, context, the harness — each built, then X-rayed.</span></a>
-  <a class="card" href="pages/act2-all-workflows.html"><span class="k">Act 2 · It's all workflows</span><b>Look at the shape</b><span>Same shape everywhere; who picks the edge; seven agents redrawn; the map.</span></a>
-  <a class="card" href="pages/act3-when-agents.html"><span class="k">Act 3 · When you DO want an agent</span><b>Agents are real. Use them where they pay.</b><span>Five questions, and the two designs measured.</span></a>
-  <a class="card" href="pages/act4-monday-morning.html"><span class="k">Act 4 · Monday morning</span><b>The agent meets the inbox</b><span>Six live failures, and the iceberg underneath.</span></a>
-  <a class="card" href="pages/act5-the-engine.html"><span class="k">Act 5 · The engine</span><b>What runs the workflow</b><span>What an engine must do, the landscape, why we built OperonX, and the whole system live.</span></a>
-  <a class="card" href="pages/act6-real-systems.html"><span class="k">Act 6 · Real systems</span><b>The same pattern, in production</b><span>Virtual QC, the callbot, the coding agent.</span></a>
-  <a class="card" href="pages/act7-callback.html"><span class="k">Act 7 · Callback</span><b>The decoder</b><span>Every buzzword, placed in the workflow.</span></a>
+  <a class="card" href="pages/part1-build-the-agent.html"><span class="k">Part I · The agent, as it is</span><b>Build the agent from scratch</b><span>One file, <code>agent.py</code>, seven layers: the call, knowledge, tools and MCP, the loop, context, the harness, many agents. The code and its function graph grow together.</span></a>
+  <a class="card" href="pages/part2-who-picks.html"><span class="k">Part II · Workflow engines</span><b>An agent is a workflow with a loop</b><span>Where one agent hits a wall, why it is just a graph, and what runs graphs: inside LangGraph and OperonX.</span></a>
+  <a class="card" href="pages/part3-monday-morning.html"><span class="k">Part III · Production</span><b>Production: the engine at work</b><span>What breaks on a Monday morning, which engine part fixes it, and the real system live on OperonX.</span></a>
+  <a class="card" href="pages/epilogue.html"><span class="k">Epilogue</span><b>The decoder</b><span>The answer to the 8 am question, and every buzzword as what it really is.</span></a>
 </div>
-
 <h2>How to use this site</h2>
 <table class="plain">
-  <tr><td>Run code</td><td>Every dark block is editable; <b>▶ Run</b> or <code>Ctrl + Enter</code>. Pipeline cards: <b>▶ Run</b> or <b>Step</b>.</td></tr>
+  <tr><td>Run code</td><td>Pipelines: <b>▶ Run</b> or <b>Step</b> lights each step and shows what it produced; the <b>Code</b> tab holds the whole program, editable. <b>＋ The same in LangChain</b> is there for comparison, outside the talk.</td></tr>
   <tr><td>Start it</td><td><code>./stack.sh up</code>, then <a href="http://127.0.0.1:8000">127.0.0.1:8000</a>. It starts the meeting-prep world (mail, database, mocks), this runner, the OperonX app and Studio. Just the site: <code>uv run python -m runner.server</code>.</td></tr>
   <tr><td>Mock or real model</td><td><b>Real</b> (default): the in-house model for plain calls, gpt-4o-mini for tool calls; the keys stay on the runner. <b>Mock</b>: offline, instant, free (used automatically when the runner has no key).</td></tr>
-  <tr><td>Move around</td><td>The sidebar, the Previous / Next cards, or <code>Alt + ←/→</code>; inside an act, the numbered tabs or <code>← →</code>.</td></tr>
+  <tr><td>Move around</td><td>The sidebar, the Previous / Next cards, or <code>Alt + ←/→</code>; inside a part, the numbered tabs or <code>← →</code>. The <b>Decoder</b> button (bottom right) collects what each word really is, one line per chapter.</td></tr>
 </table>
 
 

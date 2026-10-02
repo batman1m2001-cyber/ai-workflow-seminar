@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Epilogue · Workflow Is All You Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/cards.css">
+</head>
+<body data-page="epilogue" data-chapter="12" data-root="..">
+<main class="content">
+
+<p class="kicker">Epilogue</p>
+<h1>How many agents does it take?</h1>
+<p class="lead">Back to the question from 8 am, and the decoder, full.</p>
+
+
+<div class="callout navy"><b class="t">How many agents does Linh's email take?</b><p style="font-size:26px;font-weight:800;color:var(--navy);margin:4px 0">One. Inside a workflow.</p>
+<p>One loop where the path can't be known (research), and code, one LLM call or a person everywhere else, run by an engine.</p></div>
+
+<h2>The decoder</h2>
+<p>Every word in the chain from the start of the talk is a <b>step</b>, an <b>arrow</b>, or something <b>around</b> them. You watched this table fill up, one chapter at a time.</p>
+<div class="decoder-full"></div>
+
+<div class="callout key"><b class="t">The last line</b><p style="font-size:20px">Don't ask <i>how many agents</i>. Ask what <b>workflow</b> the system needs, and which steps the <b>model</b> must decide.</p></div>
+
+<h3>Take it home</h3>
+<table class="plain">
+  <tr><td><b><code>agent.py</code></b></td><td>the agent from scratch, chapter by chapter: <code>site/assets/py/agent/ch1.py</code> … <code>ch7.py</code></td></tr>
+  <tr><td><b>the five questions</b></td><td>open-ended path · high value per run · cheap to check · slow is fine · small blast radius (Part II)</td></tr>
+  <tr><td><b>the engine list</b></td><td>what any engine must give you (Part III)</td></tr>
+  <tr><td><b>the code</b></td><td><code>meeting-prep-world</code>, <code>meeting-prep-brd</code> (the brief, as drawn), <code>meeting-prep-operonx</code> (the workflow, on OperonX): one system, built two ways, with its golden set</td></tr>
+  <tr><td><b>this site</b></td><td>every block runs: <code>uv run python -m runner.server</code></td></tr>
+</table>
+
+</main>
+<script src="../assets/split.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/decoder.js"></script>
+</body>
+</html>
