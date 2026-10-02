@@ -50,19 +50,63 @@ flowchart LR
   style RS fill:#FFF6E0,stroke:#D9962B,stroke-width:2px
 </pre></figure></div>
   </div>
-  <div class="tab" data-name="Inside a workflow engine" data-chapter="10" data-say="Every workflow engine is these five parts. The interesting differences are in &lt;b&gt;state&lt;/b&gt; and the &lt;b&gt;scheduler&lt;/b&gt;.">
-<div class="eng">
-  <div class="eng-c"><i>1</i><b>Graph</b><span>nodes are functions; edges are fixed, a branch, a loop, a fan-out</span></div>
-  <span class="eng-a">→</span>
-  <div class="eng-c"><i>2</i><b>Compile</b><span>check the graph, plan the run</span></div>
-  <span class="eng-a">→</span>
-  <div class="eng-c key"><i>3</i><b>Scheduler</b><span>which node may run now?</span></div>
-  <span class="eng-a">⇄</span>
-  <div class="eng-c"><i>4</i><b>Executor</b><span>async tasks, many at once, under a cap</span></div>
-  <span class="eng-a">⇄</span>
-  <div class="eng-c key"><i>5</i><b>State</b><span>every node's outputs, for the next node to read</span></div>
+  <div class="tab" data-name="Inside a workflow engine" data-chapter="10" data-say="A workflow engine, as a system: what starts a run, what you write, the runtime core, what nodes call, where data lives, how you see it, and the safety around it. The green parts, &lt;b&gt;the scheduler&lt;/b&gt;, &lt;b&gt;the executor&lt;/b&gt; and &lt;b&gt;the state store&lt;/b&gt;, are where engines differ.">
+<div class="sd">
+<div class="sd-band trig"><div class="sd-name">Triggers<small>what starts a run</small></div><div class="sd-row"><div class="sd-c "><b>HTTP API</b><span>a request starts a run</span></div><div class="sd-c "><b>Webhook</b><span>an email arrives</span></div><div class="sd-c "><b>Schedule</b><span>cron: 8 am</span></div><div class="sd-c "><b>Queue · events</b><span>a message on a topic</span></div><div class="sd-c "><b>Batch job</b><span>50 emails, one run each</span></div><div class="sd-c "><b>Eval run</b><span>the golden set</span></div></div></div>
+<div class="sd-arrow "><span>start a run</span></div>
+<div class="sd-mid">
+<div class="sd-col">
+  <div class="sd-band def"><div class="sd-name">Define<small>what you write</small></div><div class="sd-stack">
+    <div class="sd-c "><b>Graph DSL</b><span>nodes · edges · branch · loop · fan-out / fan-in</span></div>
+    <div class="sd-c "><b>Node library</b><span>code · LLM call · tool · MCP · agent · sub-graph</span></div>
+    <div class="sd-c "><b>Config · manifest</b><span>models, resources, limits, secrets by name</span></div>
+  </div></div>
+  <div class="sd-arrow down"><span>build</span></div>
+  <div class="sd-band comp"><div class="sd-name">Compiler<small>once, before any run</small></div><div class="sd-stack">
+    <div class="sd-c "><b>Validate</b><span>every edge lands · every input has a source · types</span></div>
+    <div class="sd-c "><b>Rewrite</b><span>cycles → loop ops · merges after branches</span></div>
+    <div class="sd-c "><b>Plan</b><span>the execution plan: ready counts / channels</span></div>
+  </div></div>
 </div>
-<div class="eng-around"><b>around it</b> a trace per run and per node · checkpoints · triggers that start runs</div>
+<div class="sd-arrow right"><span>execution plan</span></div>
+<div class="sd-col wide">
+  <div class="sd-band core"><div class="sd-name">Runtime core<small>every run</small></div>
+    <div class="sd-core">
+      <div class="sd-c "><b>Run manager</b><span>run id · inputs · context · cancel</span></div>
+      <div class="sd-heart">
+        <div class="sd-c key"><b>Scheduler</b><span>which node may run now? ready counts (dataflow) or supersteps</span></div>
+        <span class="sd-x">⇄</span>
+        <div class="sd-c key"><b>Executor</b><span>async tasks · thread pool for CPU work</span></div>
+      </div>
+      <div class="sd-grid2">
+        <div class="sd-c "><b>Concurrency control</b><span>caps · semaphores · backpressure on streams</span></div>
+        <div class="sd-c "><b>Flow control</b><span>branches · loops · fan-out / fan-in · sub-graphs</span></div>
+        <div class="sd-c "><b>Stream router</b><span>every item in its own context · collect</span></div>
+        <div class="sd-c "><b>Interrupts</b><span>pause for a human · resume</span></div>
+        <div class="sd-c "><b>Failure handling</b><span>failure as a value · retry · timeout · fallback</span></div>
+        <div class="sd-c "><b>Context propagation</b><span>user · session · request ids · cancellation</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sd-arrow right"><span>calls</span></div>
+<div class="sd-col">
+  <div class="sd-band integ"><div class="sd-name">Integrations<small>what nodes call</small></div><div class="sd-stack">
+    <div class="sd-c "><b>LLM providers</b><span>OpenAI · in-house · routing · fallback</span></div>
+    <div class="sd-c "><b>Tools · MCP</b><span>MCP clients · local functions</span></div>
+    <div class="sd-c "><b>Data</b><span>databases · APIs · mail</span></div>
+    <div class="sd-c "><b>Memory · vector store</b><span>pgvector · knowledge base</span></div>
+    <div class="sd-c "><b>Cache · memo</b><span>identical calls run once</span></div>
+  </div></div>
+</div>
+</div>
+<div class="sd-arrow both"><span>read · write · emit events</span></div>
+<div class="sd-low">
+<div class="sd-band state"><div class="sd-name">State &amp; storage<small>where data lives</small></div><div class="sd-row"><div class="sd-c key"><b>State store</b><span>node outputs · per context · reducers</span></div><div class="sd-c "><b>Checkpointer</b><span>snapshots · resume · time-travel</span></div><div class="sd-c "><b>Run store</b><span>history · inputs · outputs</span></div><div class="sd-c "><b>Artifacts</b><span>files · media · large blobs</span></div></div></div>
+<div class="sd-band obs"><div class="sd-name">Observability &amp; ops<small>seeing and steering it</small></div><div class="sd-row"><div class="sd-c "><b>Tracing</b><span>a span per node · inputs, outputs, timing</span></div><div class="sd-c "><b>Metrics</b><span>latency · tokens · cost · errors</span></div><div class="sd-c "><b>Logs · audit</b><span>every tool call, allowed or refused</span></div><div class="sd-c "><b>Trace consumers</b><span>Studio · Langfuse · LangSmith</span></div><div class="sd-c "><b>Eval gate</b><span>golden set before every deploy</span></div><div class="sd-c "><b>Alerts</b><span>error rate · cost spikes</span></div></div></div>
+</div>
+<div class="sd-band safe"><div class="sd-name">Safety &amp; governance<small>around everything</small></div><div class="sd-row"><div class="sd-c "><b>Auth · secrets</b><span>keys stay on the server</span></div><div class="sd-c "><b>Tool policy</b><span>allow · deny · ask, per tool</span></div><div class="sd-c "><b>Guards</b><span>input gates · output checks</span></div><div class="sd-c "><b>Quotas · rate limits</b><span>per user, per provider</span></div></div></div>
+</div>
   </div>
   <div class="tab" data-name="LangGraph, inside" data-chapter="10" data-say="One shared dict, and any node may write any key, so LangGraph runs in &lt;b&gt;supersteps&lt;/b&gt;: run the ready nodes, &lt;b&gt;wait for all of them&lt;/b&gt;, merge their writes, save a checkpoint, repeat.">
 <div class="code-pair"><pre class="static"># one dict for the whole graph
@@ -162,8 +206,33 @@ def prepare(email):
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
 <h2>Chapter 10 · Inside a workflow engine</h2>
-<p>Every engine, LangGraph, OperonX, Temporal, Airflow, is these five parts. Three are plumbing. Two decide how the engine behaves: <b>where the outputs live</b> (state) and <b>when a node may run</b> (the scheduler).</p>
-<p>Two engines, the same five parts, two different answers to <b>state</b> and <b>the scheduler</b>.</p>
+<p>Seven layers. <b>Triggers</b> start runs. You <b>define</b> the graph, and the <b>compiler</b> checks and plans it once. The <b>runtime core</b> runs it: the scheduler decides what may run, the executor runs it. Nodes call <b>integrations</b>. Data lives in <b>state and storage</b>. <b>Observability</b> lets you see and steer it, and <b>safety</b> wraps all of it.</p>
+<h3>The life of one run</h3>
+<ol class="life">
+  <li><b>Trigger.</b> Linh's email hits the <b>webhook</b>; the <b>run manager</b> opens a run with an id, the email as input, and a context.</li>
+  <li><b>Plan.</b> The graph was compiled once at deploy: validated, loops rewritten, every node's ready count known.</li>
+  <li><b>Schedule.</b> The <b>scheduler</b> finds the nodes whose inputs are all in: the gate first.</li>
+  <li><b>Execute.</b> The <b>executor</b> runs them as async tasks, under the <b>concurrency cap</b>; an LLM node calls a <b>provider</b>, a tool node calls <b>MCP</b>.</li>
+  <li><b>Write.</b> Each result goes to the <b>state store</b>, at its node's address; the scheduler counts it against the next nodes, and fires those that are ready.</li>
+  <li><b>Branch, loop, fan out.</b> <b>Flow control</b> picks the branch, repeats the loop, runs the three researchers side by side and joins them.</li>
+  <li><b>Fail well.</b> A failed node is a value, not a crash; a retry or a fallback runs; the other branches go on.</li>
+  <li><b>Pause.</b> At human approval the run stops with a draft and a link (or an <b>interrupt</b> + <b>checkpoint</b>); the click resumes it.</li>
+  <li><b>See it.</b> Every node emitted a <b>span</b>: Studio draws the run, metrics count the tokens and cost, the eval set gates the next deploy.</li>
+</ol>
+<h3>The same components, in two engines</h3>
+<table class="sdt">
+  <tr><th>component</th><th>LangGraph</th><th>OperonX</th></tr>
+  <tr><td>graph DSL</td><td><code>StateGraph</code>, <code>add_node("name", fn)</code>, <code>add_edge("a", "b")</code></td><td><code>@op</code>, <code>@graph</code>, <code>a &gt;&gt; [b, c] &gt;&gt; d</code>, <code>if_(…)</code></td></tr>
+  <tr><td>compiler</td><td><code>compile()</code> → a Pregel graph of channels</td><td><code>build()</code>: validate, rewrite cycles into loops, ready counts</td></tr>
+  <tr><td>state store</td><td>one dict, a channel per key (last value or a reducer)</td><td>cells per (op, output), a value per context; reducers on shared cells</td></tr>
+  <tr><td>scheduler</td><td>supersteps: plan → run all → wait → apply writes</td><td>event-driven: each result counts down its successors; at zero they fire</td></tr>
+  <tr><td>executor</td><td>asyncio tasks, a thread pool for sync nodes, <code>max_concurrency</code></td><td>asyncio tasks, <code>to_thread</code> for CPU ops, a cap per graph</td></tr>
+  <tr><td>streams</td><td>stream modes; <code>Send</code> for map-reduce</td><td>generators: every <code>yield</code> flows on in its own context</td></tr>
+  <tr><td>failures</td><td><code>RetryPolicy</code>, <code>TimeoutPolicy</code>, error handlers</td><td>errors recorded per op; <code>LLMOp</code> retries, fallback, <code>on_failure</code></td></tr>
+  <tr><td>checkpoint · interrupt</td><td>a checkpoint every superstep; <code>interrupt()</code> + <code>Command(resume)</code></td><td>a step log in memory; <code>InterruptOp</code> pauses in the process</td></tr>
+  <tr><td>tracing</td><td>LangChain callbacks → LangSmith</td><td>trace consumers: a local run folder, Langfuse, run stores → Studio</td></tr>
+  <tr><td>triggers · ops</td><td>LangGraph Platform / Server</td><td><code>Application</code>: services, jobs, schedules, evals</td></tr>
+</table>
 <div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · LangGraph, inside →</button></div>
 </section>
 
