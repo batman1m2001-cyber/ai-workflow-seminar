@@ -25,6 +25,94 @@
 <h2>Chapter 1 · The call</h2>
 <details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Lớp đầu tiên đưa vào hộp <b>email_agent</b>: một lần gọi model đọc email và trả lời bằng JSON (có phải khách tiềm năng không, công ty nào, họ muốn gì). Code kiểm tra JSON đó.</p></details>
 <p>The meeting-prep flow starts with one box, <b>email_agent</b>: is this email a lead? <code>read_email()</code> gets the mail, <code>triage_prompt()</code> pastes it into an f-string, <code>llm()</code> sends one HTTP POST, <code>parse()</code> turns the reply into data and checks it. Press ▶ Run, then open <b>On the wire</b>: that is the whole request the model gets.</p>
+<h3>Look inside</h3>
+<!-- inside:l1 -->
+<div class="fl"><div class="fl-title">One call, all the way down<small>real data · google/gemma-4-E2B-it (our in-house model, its template is public)</small></div><div class="fl-row"><div class="fl-step k-data" data-raw="a1"><em>data</em><b><code>messages</code></b><span>system + user</span></div><div class="fl-arr"><b>→</b></div><div class="fl-grp"><div class="fl-gl">inside <code>llm()</code> · one HTTP POST</div><div class="fl-step k-net" data-raw="a2"><em>HTTP</em><b>POST</b><span>/chat/completions</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="a3"><em>text</em><b>chat template</b><span>&lt;|turn&gt;user …</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-tok" data-raw="a4"><em>numbers</em><b>114 tokens</b><span>text → ids</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-model" data-raw="a5"><em>the model</em><b>next token</b><span>× 70</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="a6"><em>text</em><b>raw reply</b><span>```json {…}```</span></div></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code" data-raw="a7"><em>your code</em><b><code>parse()</code></b><span>fences off · json.loads · check</span></div></div><p class="fl-note">GPT's template is private: same idea, hidden behind the API.</p><template class="fl-src" data-k="a1" data-t="messages: a list of dicts"><pre class="fl-pre">[
+  {
+    "role": "system",
+    "content": "Read the email. Reply with JSON only: {\"is_lead\": true, \"company\": \"...\", \"domain\": \"...\", \"intent\": \"...\", \"contact\": \"...\"}"
+  },
+  {
+    "role": "user",
+    "content": "From: Linh Tran &lt;linh.tran@lotus-logistics.example&gt;\n\nHello Northwind team,\nWe are looking at AI to read customs declarations automatically. Could you tell us\nwhat you offer? Looking forward to our call on Wednesday.\nLinh Tran, COO, Lotus Logistics\n"
+  }
+]</pre></template><template class="fl-src" data-k="a2" data-t="the request body"><pre class="fl-pre">{
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Read the email. Reply with JSON only: {\"is_lead\": true, \"company\": \"...\", \"domain\": \"...\", \"intent\": \"...\", \"contact\": \"...\"}"
+    },
+    {
+      "role": "user",
+      "content": "From: Linh Tran &lt;linh.tran@lotus-logistics.example&gt;\n\nHello Northwind team,\nWe are looking at AI to read customs declarations automatically. Could you tell us\nwhat you offer? Looking forward to our call on Wednesday.\nLinh Tran, COO, Lotus Logistics\n"
+    }
+  ]
+}</pre></template><template class="fl-src" data-k="a3" data-t="the chat template: messages → one text"><pre class="fl-pre"><span class="tk">&lt;bos&gt;</span><span class="tk">&lt;|turn&gt;</span>system
+Read the email. Reply with JSON only: {"is_lead": true, "company": "...", "domain": "...", "intent": "...", "contact": "..."} <span class="tk">&lt;turn|&gt;</span>
+<span class="tk">&lt;|turn&gt;</span>user
+From: Linh Tran &lt;linh.tran@lotus-logistics.example&gt;
+
+Hello Northwind team,
+We are looking at AI to read customs declarations automatically. Could you tell us
+what you offer? Looking forward to our call on Wednesday.
+Linh Tran, COO, Lotus Logistics<span class="tk">&lt;turn|&gt;</span>
+<span class="tk">&lt;|turn&gt;</span>model
+</pre><p class="fl-cap">The model never sees JSON. It sees this text. <b>Orange</b> = special tokens.</p></template><template class="fl-src" data-k="a4" data-t="tokens: the text as numbers"><div class="fl-toks"><span class="sp"><i>2</i>&lt;bos&gt;</span><span class="sp"><i>105</i>&lt;|turn&gt;</span><span class=""><i>9731</i>system</span><span class=""><i>107</i>⏎</span><span class=""><i>6190</i>Read</span><span class=""><i>506</i> the</span><span class=""><i>4553</i> email</span><span class=""><i>236761</i>.</span><span class=""><i>24181</i> Reply</span><span class=""><i>607</i> with</span><span class=""><i>10434</i> JSON</span><span class=""><i>1186</i> only</span><span class=""><i>236787</i>:</span><span class=""><i>3714</i> {"</span><span class=""><i>511</i>is</span><span class=""><i>236779</i>_</span><span class=""><i>40227</i>lead</span><span class=""><i>1083</i>":</span><span class=""><i>1847</i> true</span><span class=""><i>236764</i>,</span><span class=""><i>623</i> "</span><span class=""><i>25385</i>company</span><span class=""><i>1083</i>":</span><span class=""><i>623</i> "</span><span class=""><i>49256</i>...",</span><span class=""><i>623</i> "</span><span class=""><i>19645</i>domain</span><span class=""><i>1083</i>":</span><span class=""><i>623</i> "</span><span class=""><i>49256</i>...",</span><span class=""><i>623</i> "</span><span class=""><i>31871</i>intent</span><span class=""><i>1083</i>":</span><span class=""><i>623</i> "</span><span class=""><i>49256</i>...",</span><span class=""><i>623</i> "</span><span class=""><i>11607</i>contact</span><span class=""><i>1083</i>":</span><span class=""><i>623</i> "</span><span class=""><i>24002</i>..."</span><span class=""><i>236783</i>}</span><span class=""><i>236743</i> </span><span class="sp"><i>106</i>&lt;turn|&gt;</span><span class=""><i>107</i>⏎</span><span class="sp"><i>105</i>&lt;|turn&gt;</span><span class=""><i>2364</i>user</span><span class=""><i>107</i>⏎</span><span class=""><i>4663</i>From</span></div><p class="fl-cap">First 48 of 114. The server counted the same 114.</p></template><template class="fl-src" data-k="a5" data-t="the model: one token at a time"><pre class="fl-pre">google/gemma-4-E2B-it
+reads 114 tokens
+writes 1 token, then the next, … 70 times
+stops at <span class="tk">&lt;turn|&gt;</span></pre></template><template class="fl-src" data-k="a6" data-t="the raw reply"><pre class="fl-pre"><span class="tk">&lt;|turn&gt;</span>model
+```json
+{
+  "is_lead": true,
+  "company": "Lotus Logistics",
+  "domain": "lotus-logistics.example",
+  "intent": "Inquiry about AI for reading customs declarations and scheduling a call",
+  "contact": "Linh Tran"
+}
+```<span class="tk">&lt;turn|&gt;</span>
+</pre><p class="fl-cap">What came back, fences and all: small models wrap JSON in <code>```json</code>.</p></template><template class="fl-src" data-k="a7" data-t="parse(): text → a checked dict"><pre class="fl-pre">{
+  "is_lead": true,
+  "company": "Lotus Logistics",
+  "domain": "lotus-logistics.example",
+  "intent": "Inquiry about AI for reading customs declarations and scheduling a call",
+  "contact": "Linh Tran"
+}</pre></template><div class="fl-panel" hidden></div></div><div class="fl"><div class="fl-title">email_agent, step by step<small>click a box: what it really holds</small></div><div class="fl-row"><div class="fl-step k-code" data-raw="b1"><em>your code</em><b><code>read_email()</code></b><span>the mail</span></div><div class="fl-arr lab"><i>email</i><b>→</b></div><div class="fl-step k-code" data-raw="b2"><em>your code</em><b><code>triage_prompt()</code></b><span>an f-string</span></div><div class="fl-arr lab"><i>messages</i><b>→</b></div><div class="fl-step k-model" data-raw="b3"><em>LLM call</em><b><code>llm()</code></b><span>one POST</span></div><div class="fl-arr lab"><i>text</i><b>→</b></div><div class="fl-step k-code" data-raw="b4"><em>your code</em><b><code>parse()</code></b><span>json.loads + check</span></div><div class="fl-arr lab"><i>lead</i><b>→</b></div><div class="fl-step k-data" data-raw="b5"><em>data</em><b><code>lead</code></b><span>is_lead · company · intent</span></div></div><template class="fl-src" data-k="b1" data-t="read_email() → a dict"><pre class="fl-pre">{
+  "from": "linh.tran@lotus-logistics.example",
+  "from_name": "Linh Tran",
+  "subject": "Exploring AI for our customs documents",
+  "text": "Hello Northwind team,\nWe are looking at AI to read customs declarations automatically. Could you tell us\nwhat you offer? Looking forward to our call on Wednesday.\nLinh Tran, COO, Lotus Logistics\n"
+}</pre></template><template class="fl-src" data-k="b2" data-t="triage_prompt() → messages: the prompt"><pre class="fl-pre">[
+  {
+    "role": "system",
+    "content": "Read the email. Reply with JSON only: {\"is_lead\": true, \"company\": \"...\", \"domain\": \"...\", \"intent\": \"...\", \"contact\": \"...\"}"
+  },
+  {
+    "role": "user",
+    "content": "From: Linh Tran &lt;linh.tran@lotus-logistics.example&gt;\n\nHello Northwind team,\nWe are looking at AI to read customs declarations automatically. Could you tell us\nwhat you offer? Looking forward to our call on Wednesday.\nLinh Tran, COO, Lotus Logistics\n"
+  }
+]</pre></template><template class="fl-src" data-k="b3" data-t="llm() → the reply text"><pre class="fl-pre">```json
+{
+  "is_lead": true,
+  "company": "Lotus Logistics",
+  "domain": "lotus-logistics.example",
+  "intent": "Inquiry about AI for reading customs declarations and scheduling a call",
+  "contact": "Linh Tran"
+}
+```</pre></template><template class="fl-src" data-k="b4" data-t="parse() → lead"><pre class="fl-pre">{
+  "is_lead": true,
+  "company": "Lotus Logistics",
+  "domain": "lotus-logistics.example",
+  "intent": "Inquiry about AI for reading customs declarations and scheduling a call",
+  "contact": "Linh Tran"
+}</pre></template><template class="fl-src" data-k="b5" data-t="the result"><pre class="fl-pre">{
+  "is_lead": true,
+  "company": "Lotus Logistics",
+  "domain": "lotus-logistics.example",
+  "intent": "Inquiry about AI for reading customs declarations and scheduling a call",
+  "contact": "Linh Tran"
+}</pre></template><div class="fl-panel" hidden></div></div>
+<!-- /inside:l1 -->
 <div class="project" data-ch="1"></div>
 <div class="playground" data-title="LangChain: prompt | model | parser" data-runtime="server"><script type="text/plain">
 from langchain_core.output_parsers import JsonOutputParser
@@ -52,6 +140,10 @@ print(chain.invoke({"name": email["from_name"], "sender": email["from"], "text":
 <h2>Chapter 2 · Knowledge</h2>
 <details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này thêm gì vào hệ thống</summary><p>Thêm hai hộp. <b>company_info</b> tìm ghi chú cũ về công ty trong Postgres bằng vector (RAG). <b>report_agent</b> dùng một lần gọi model để viết brief từ những ghi chú đó.</p></details>
 <p>Two boxes join. <b>company_info</b> finds what we already know: <code>embed()</code> turns the question into numbers and <code>recall()</code> finds our nearest notes with one SQL query in Postgres. <b>report_agent</b> pastes them into <code>brief_prompt()</code> and one model call writes the brief.</p>
+<h3>Look inside: RAG is a whole field</h3>
+<!-- inside:l2 -->
+<div class="fl"><div class="fl-title">RAG: find the right pieces, paste them in<small>small here · a whole field out there</small></div><div class="fl-row"><div class="fl-lab">index</div><div class="fl-step k-ext"><em>sources</em><b>docs · PDFs · CRM · web</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code"><em>parse</em><b>text out of files</b><span>tables, scans, HTML</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code"><em>split</em><b>chunks?</b><span>fixed · by heading · none</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-tok"><em>embed?</em><b>text → numbers</b><span>1536 dims here</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-data"><em>store</em><b>an index</b><span>vector DB · search index · SQL · tree · wiki</span></div></div><div class="fl-down">↓ <i>ask</i></div><div class="fl-row"><div class="fl-lab">query</div><div class="fl-step k-text"><em>question</em><b>what we need</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code"><em>find</em><b>one of ①–⑦ ↓</b><span>or several</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-data"><em>top k</em><b>the best pieces</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text"><em>prompt</em><b>pasted in</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-model"><em>LLM</em><b>answers from them</b></div></div><div class="rm-grid"><div class="rm" style="--c:#0172CB"><b>① Vector search</b><span>nearest meaning</span><code>embeddings + ANN (HNSW) · pgvector, Qdrant</code><u>ours</u></div><div class="rm" style="--c:#0E8C99"><b>② Keyword</b><span>exact words</span><code>BM25, full-text · Elasticsearch, Postgres FTS</code></div><div class="rm" style="--c:#7B4FD6"><b>③ Hybrid + rerank</b><span>both, then reorder</span><code>RRF fusion · a cross-encoder reranker</code></div><div class="rm" style="--c:#00A045"><b>④ Structured</b><span>exact facts</span><code>SQL · metadata filters</code><u>ours · CRM</u></div><div class="rm" style="--c:#C9861A"><b>⑤ Page index</b><span>walk the table of contents</span><code>an LLM searches a tree · PageIndex: no vectors, no chunks</code></div><div class="rm" style="--c:#D6322E"><b>⑥ Compiled wiki</b><span>the LLM writes pages once</span><code>summaries, concepts, links · OpenKB · or long context</code></div><div class="rm" style="--c:#5B6B8C"><b>⑦ Graph</b><span>follow relations</span><code>entities + edges · GraphRAG</code></div><div class="rm" style="--c:#1D4289"><b>+ Agentic</b><span>the model picks ①–⑦</span><code>retrieval as a tool, in a loop (layer 4)</code></div></div><div class="rm-ours"><b>Ours</b><div><code>kb_chunks</code>: <b>6 notes</b> · 1536 numbers each · <code>ORDER BY embedding &lt;=&gt; q LIMIT 3</code><br>"Lotus Logistics: Inquiry about AI for reading customs declarations and…" →<ul class="rm-hits"><li class="bad"><i>0.532</i>Blue Lotus Hotels — event 2026-06-20: Met Sarah Nguyen at the Da Nang tourism expo; intere</li><li class="bad"><i>0.546</i>Saigon Fresh Foods — pilot 2025-11-12: Customer-service chatbot pilot for order questions.</li><li class="bad"><i>0.546</i>## Meeting Brief: Blue Lotus Hotels</li></ul><b style="color:var(--red)">We have no note on Lotus Logistics</b>, yet it returns 3: the nearest, not the right. Real systems add a cut-off, ② or ④.</div></div></div>
+<!-- /inside:l2 -->
 <div class="project" data-ch="2"></div>
 <div class="playground" data-title="LangChain: a vector store and a retriever" data-runtime="server"><script type="text/plain">
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -81,13 +173,294 @@ for doc in store.as_retriever(search_kwargs={"k": 1}).invoke(question):
     messages=[{"role": "user", "content": "Find Lotus Logistics in the CRM."}],
     tools=[{"type": "function", "function": {"name": "crm_find_company", "parameters": {...}}}],
 )</pre>
-<div class="callout warn"><b class="t">Where did the tools go?</b><p>The API turned them into text for the model, out of sight: you never see that prompt, you can't log it, and you can't change it. The reply comes back as a special <code>tool_calls</code> field, so it looks like the model “called” something. It didn't. So we do it ourselves.</p></div>
-<h3>Opened</h3>
-<ul>
-  <li><b>MCP, in three boxes:</b> the CRM and the calendar are <b>another program</b> (<code>prep_world.mcp_server</code>). <code>start_mcp()</code> starts it and talks <b>JSON-RPC</b>, one JSON line out, one back: <code>initialize</code>, then <code>tools/call</code>. <b>extract_company</b>, <b>calendar</b> and <b>company_info</b> call it from code: no model decides anything there.</li>
-  <li><b>Function calling, in one box:</b> <b>web_research</b> is where the model chooses. <code>tools_prompt()</code> writes the tools <b>into the prompt as text</b>, with the reply format <code>{"tool": …, "args": …}</code>; <code>parse_tool_call()</code> reads it back; <code>run_tool()</code>, our code, runs it.</li>
-</ul>
-<p>Press ▶ Run, then open <b>On the wire</b>: the MCP messages, and the exact prompt with the tools inside it.</p>
+<div class="callout warn"><b class="t">Where did the tools go?</b><p>Into text, out of sight. The reply comes back as <code>tool_calls</code>, so it looks like the model “called” something. It didn't. Open it up:</p></div>
+<h3>Look inside</h3>
+<!-- inside:l3 -->
+<div class="fl"><div class="fl-title">A tool call, all the way down<small>real data · google/gemma-4-E2B-it · tools travel as text, both ways</small></div><div class="fl-row"><div class="fl-lab">call 1</div><div class="fl-step k-data" data-raw="t1"><em>data</em><b><code>tools=[…]</code></b><span>2 JSON schemas</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="t2"><em>text</em><b>chat template</b><span>&lt;|tool&gt;declaration:…</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-model"><em>the model</em><b>writes text</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="t3"><em>text</em><b>a tool call, as text</b><span>&lt;|tool_call&gt;call:web_search{…}</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code" data-raw="t4"><em>the API server</em><b>tool-call parser</b><span>text → JSON</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-data" data-raw="t5"><em>data</em><b><code>tool_calls</code></b><span>name + arguments</span></div></div><div class="fl-down">↓ <i>the model runs nothing: your code does</i></div><div class="fl-row"><div class="fl-lab">call 2</div><div class="fl-step k-code" data-raw="t6"><em>your code</em><b>runs it</b><span>web_search(…)</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-data" data-raw="t7"><em>data</em><b><code>role: "tool"</code></b><span>the result, as a message</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="t8"><em>text</em><b>chat template</b><span>&lt;|tool_response&gt;…</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-model"><em>the model</em><b>reads it all</b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text" data-raw="t9"><em>text</em><b>the answer</b><span>plain text</span></div></div><p class="fl-note">Another tool call instead of an answer? Run it, send it back, ask again: <b>that's layer 4, the loop</b>.</p><template class="fl-src" data-k="t1" data-t="tools=[…]: what you pass the API"><pre class="fl-pre">[
+  {
+    "type": "function",
+    "function": {
+      "name": "web_search",
+      "description": "Search the web. Returns titles, links and snippets.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "what to search for"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "fetch_page",
+      "description": "Read a web page: the text a person would see.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "the page's address"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    }
+  }
+]</pre></template><template class="fl-src" data-k="t2" data-t="the template writes the tools as text"><pre class="fl-pre"><span class="tk">&lt;bos&gt;</span><span class="tk">&lt;|turn&gt;</span>system
+<span class="tk">&lt;|tool&gt;</span>declaration:web_search{description:<span class="tk">&lt;|"|&gt;</span>Search the web. Returns titles, links and snippets.<span class="tk">&lt;|"|&gt;</span>,parameters:{properties:{query:{description:<span class="tk">&lt;|"|&gt;</span>what to search for<span class="tk">&lt;|"|&gt;</span>,type:<span class="tk">&lt;|"|&gt;</span>STRING<span class="tk">&lt;|"|&gt;</span>}},required:[<span class="tk">&lt;|"|&gt;</span>query<span class="tk">&lt;|"|&gt;</span>],type:<span class="tk">&lt;|"|&gt;</span>OBJECT<span class="tk">&lt;|"|&gt;</span>}}<span class="tk">&lt;tool|&gt;</span><span class="tk">&lt;|tool&gt;</span>declaration:fetch_page{description:<span class="tk">&lt;|"|&gt;</span>Read a web page: the text a person would see.<span class="tk">&lt;|"|&gt;</span>,parameters:{properties:{url:{description:<span class="tk">&lt;|"|&gt;</span>the page's address<span class="tk">&lt;|"|&gt;</span>,type:<span class="tk">&lt;|"|&gt;</span>STRING<span class="tk">&lt;|"|&gt;</span>}},required:[<span class="tk">&lt;|"|&gt;</span>url<span class="tk">&lt;|"|&gt;</span>],type:<span class="tk">&lt;|"|&gt;</span>OBJECT<span class="tk">&lt;|"|&gt;</span>}}<span class="tk">&lt;tool|&gt;</span><span class="tk">&lt;turn|&gt;</span>
+<span class="tk">&lt;|turn&gt;</span>user
+Find recent news about Lotus Logistics (lotus-logistics.example).<span class="tk">&lt;turn|&gt;</span>
+<span class="tk">&lt;|turn&gt;</span>model
+</pre><p class="fl-cap">The tools are <b>text</b> in the system turn. That's all the model gets.</p></template><template class="fl-src" data-k="t3" data-t="a tool call is just text"><pre class="fl-pre"><span class="tk">&lt;|tool_call&gt;</span>call:web_search{query:<span class="tk">&lt;|"|&gt;</span>Lotus Logistics news<span class="tk">&lt;|"|&gt;</span>}<span class="tk">&lt;tool_call|&gt;</span></pre></template><template class="fl-src" data-k="t4" data-t="the parser: text → tool_calls"><pre class="fl-pre">"auto" tool choice requires --enable-auto-tool-choice and --tool-call-parser to be set</pre><p class="fl-cap">Our server runs without one, so it refuses <code>tools=</code>: the JSON is made by software, from the text.</p></template><template class="fl-src" data-k="t5" data-t="tool_calls: what the API hands you"><pre class="fl-pre">{
+  "role": "assistant",
+  "content": null,
+  "tool_calls": [
+    {
+      "id": "call_zrbW5w4Gqv00VGBZL2SrW7V6",
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "arguments": "{\"query\":\"Lotus Logistics news\"}"
+      }
+    }
+  ],
+  "refusal": null,
+  "annotations": []
+}</pre><p class="fl-cap">GPT-4o-mini, same request: what the API hands you.</p></template><template class="fl-src" data-k="t6" data-t="your code runs the tool"><pre class="fl-pre">{
+  "query": "Lotus Logistics news"
+}</pre><pre class="fl-pre">[{"title":"Lotus Logistics — Logistics &amp; warehousing","url":"http://127.0.0.1:8100/web/lotus-logistics.example/","snippet":"Lotus Logistics runs bonded warehouses and trucking between Hai Phong port and the northern industrial parks. It handles customs paperwork for about 300 importers.","date":null},{"title":"Lotus Logistics — our team","url":"http://127.0.0.1:8100/web/lotus-logistics.example/team","snippet":"Linh Tran, Chief Operating Officer; Bao Do, IT Manager","date":null},{"title":"Lotus L</pre></template><template class="fl-src" data-k="t7" data-t="the result goes back as a message"><pre class="fl-pre">{
+  "role": "tool",
+  "tool_call_id": "call_1",
+  "name": "web_search",
+  "content": "[{\"title\":\"Lotus Logistics — Logistics &amp; warehousing\",\"url\":\"http://127.0.0.1:8100/web/lotus-logistics.example/\",\"snippet\":\"Lotus Logistics runs bonded warehouses and trucking between Hai Phong port and the northern industrial parks. It handles customs paperwork for about 300 importers.\",\"date\":null},{\"title\":\"Lotus Logistics — our team\",\"url\":\"http://127.0.0.1:8100/web/lotus-logistics.example/team\",\"snippet\":\"Linh Tran, Chief Operating Officer; Bao Do, IT Manager\",\"date\":null},{\"title\":\"Lotus Logistics wins a five-year port services contract\",\"url\":\"http://127.0.0.1:8100/web/lotus-logistics.e"
+}</pre></template><template class="fl-src" data-k="t8" data-t="the template again: call + result as text"><pre class="fl-pre"><span class="tk">&lt;|turn&gt;</span>model
+<span class="tk">&lt;|tool_call&gt;</span>call:web_search{query:<span class="tk">&lt;|"|&gt;</span>Lotus Logistics news<span class="tk">&lt;|"|&gt;</span>}<span class="tk">&lt;tool_call|&gt;</span><span class="tk">&lt;|tool_response&gt;</span>response:web_search{value:<span class="tk">&lt;|"|&gt;</span>[{"title":"Lotus Logistics — Logistics &amp; warehousing","url":"http://127.0.0.1:8100/web/lotus-logistics.example/","snippet":"Lotus Logistics runs bonded warehouses and trucking between Hai Phong port and the northern industrial parks. It handles customs paperwork for about 300 importers.","date":null},{"title":"Lotus Logistics — our team","url":"http://127.0.0.1:8100/web/lotus-logistics.example/team","snippet":"Linh Tran, Chief Operating Officer; Bao Do, IT Manager","date":null},{"title":"Lotus Logistics wins a five-year port services contract","url":"http://127.0.0.1:8100/web/lotus-logistics.e<span class="tk">&lt;|"|&gt;</span>}<span class="tk">&lt;tool_response|&gt;</span></pre><p class="fl-cap">The call and its result, written back as text.</p></template><template class="fl-src" data-k="t9" data-t="the answer"><pre class="fl-pre">I found a few results related to "Lotus Logistics."
+
+The search results point to a website for **Lotus Logistics** which describes their services:
+*   They run bonded warehouses and trucking between Hai Phong port and the northern industrial parks.
+*   They handle customs paperwork for about 300 importers.
+
+One of the snippets mentions that **"Lotus Logistics wins a five-year port services contract,"** but the full context of this news is not available from the snippet alone.
+
+To find more *recent* news, I would need to perform a more targeted search or check if the provided URL is a real, live website. Since the provided URL seems to be a local or example address (`http://127.0.0.1:8100/...`), the search results might be limited to what is indexed about that specific domain.
+
+**Could you clarify if you are looking for news about a specific event, or if you want me to search for news from a specific time frame?**</pre></template><div class="fl-panel" hidden></div></div><div class="fl"><div class="fl-title">agent.py does it by hand<small>same steps, no hidden template, no parser to trust</small></div><div class="fl-row"><div class="fl-step k-code" data-raw="o1"><em>your code</em><b><code>tools_prompt()</code></b><span>tools as our text</span></div><div class="fl-arr lab"><i>messages</i><b>→</b></div><div class="fl-step k-model" data-raw="o2"><em>LLM call</em><b><code>llm()</code></b></div><div class="fl-arr lab"><i>text</i><b>→</b></div><div class="fl-step k-code" data-raw="o3"><em>your code</em><b><code>parse_tool_call()</code></b><span>json.loads</span></div><div class="fl-arr lab"><i>call</i><b>→</b></div><div class="fl-step k-code" data-raw="o4"><em>your code</em><b><code>run_tool()</code></b><span>web_search(…)</span></div></div><template class="fl-src" data-k="o1" data-t="tools_prompt(): the tools, in our own words"><pre class="fl-pre">[
+  {
+    "role": "system",
+    "content": "You can use these tools:\n{\"name\": \"web_search\", \"description\": \"Search the web. Returns titles, links and snippets.\", \"arguments\": [\"query\"]}\n{\"name\": \"fetch_page\", \"description\": \"Read a web page: the text a person would see.\", \"arguments\": [\"url\"]}\n\nTo use one, reply with one line of JSON only: {\"tool\": \"&lt;name&gt;\", \"args\": {...}}\nWhen you know enough, reply with your answer in plain text."
+  },
+  {
+    "role": "user",
+    "content": "Find recent news about Lotus Logistics (lotus-logistics.example)."
+  }
+]</pre></template><template class="fl-src" data-k="o2" data-t="the reply: one JSON line"><pre class="fl-pre">{"tool": "web_search", "args": {"query": "Lotus Logistics news"}}</pre></template><template class="fl-src" data-k="o3" data-t="parse_tool_call(): text → a dict"><pre class="fl-pre">{
+  "tool": "web_search",
+  "args": {
+    "query": "Lotus Logistics news"
+  }
+}</pre></template><template class="fl-src" data-k="o4" data-t="run_tool(): our code runs it"><pre class="fl-pre">[{"title":"Lotus Logistics — Logistics &amp; warehousing","url":"http://127.0.0.1:8100/web/lotus-logistics.example/","snippet":"Lotus Logistics runs bonded warehouses and trucking between Hai Phong port and the northern industrial parks. It handles customs paperwork for about 300 importers.","date":null},{"title":"Lotus Logistics — our team","url":"http://127.0.0.1:8100/web/lotus-logistics.example/tea</pre></template><div class="fl-panel" hidden></div></div><div class="fl"><div class="fl-title">MCP: how programs offer tools<small>real lines from our CRM server · protocol 2025-06-18 · mcp 2.2.0</small></div><div class="fl-row"><div class="fl-step k-code"><em>host</em><b>agent.py</b><span>your app</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code"><em>MCP client</em><b><code>mcp_request()</code></b><span>one per server</span></div><div class="fl-arr lab"><i>JSON-RPC 2.0</i><b>→</b></div><div class="fl-step k-net"><em>MCP server</em><b>crm-calendar</b><span>another program</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-ext"><em>behind it</em><b>the CRM database</b><span>or any API</span></div></div><div style="height:12px"></div><div class="seq"><div class="seq-h"><b>agent.py · client</b><b>crm-calendar · server</b></div><div class="seq-body"><div class="seq-r to" data-raw="m1"><b>initialize</b><span>my protocol version, my capabilities</span></div><div class="seq-r back" data-raw="m2"><b>result</b><span>protocolVersion 2025-06-18 · tools, resources, prompts</span></div><div class="seq-r to note" data-raw="m3"><b>notifications/initialized</b><span>no id: a notification, no reply</span></div><div class="seq-r to" data-raw="m4"><b>tools/list</b><span></span></div><div class="seq-r back" data-raw="m5"><b>result</b><span>4 tools · name, description, inputSchema</span></div><div class="seq-r to" data-raw="m6"><b>tools/call</b><span>crm_find_company {domain_or_name}</span></div><div class="seq-r back" data-raw="m7"><b>result</b><span>content[ {type: text} ] · isError</span></div></div></div><div class="chips"><i>wire</i><span class="on">stdio: one JSON per line</span><span>Streamable HTTP: POST + SSE</span></div><div class="chips"><i>server offers</i><span class="on">tools</span><span>resources</span><span>prompts</span><i style="margin-left:10px">client offers</i><span>sampling</span><span>roots</span><span>elicitation</span></div><div style="height:14px"></div><div class="fl-row"><div class="fl-step k-net"><em>MCP</em><b><code>tools/list</code></b><span>inputSchema</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-code"><em>your code</em><b>copies it</b><span>inputSchema → parameters</span></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-data"><em>data</em><b><code>tools=[…]</code></b></div><div class="fl-arr"><b>→</b></div><div class="fl-step k-text"><em>text</em><b>chat template</b><span>the model reads it</span></div></div><p class="fl-note">MCP never talks to the model. It's how <b>your code</b> finds and calls tools; the model only ever sees text.</p><template class="fl-src" data-k="m1" data-t="→ initialize"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-06-18",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "agent.py",
+      "version": "1"
+    }
+  }
+}</pre></template><template class="fl-src" data-k="m2" data-t="← result"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "capabilities": {
+      "experimental": {},
+      "prompts": {
+        "listChanged": false
+      },
+      "resources": {
+        "listChanged": false,
+        "subscribe": false
+      },
+      "tools": {
+        "listChanged": false
+      }
+    },
+    "protocolVersion": "2025-06-18",
+    "serverInfo": {
+      "name": "crm-calendar",
+      "version": ""
+    }
+  }
+}</pre></template><template class="fl-src" data-k="m3" data-t="→ notifications/initialized"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "method": "notifications/initialized"
+}</pre></template><template class="fl-src" data-k="m4" data-t="→ tools/list"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list",
+  "params": {}
+}</pre></template><template class="fl-src" data-k="m5" data-t="← result"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "tools": [
+      {
+        "description": "Find a company in the CRM by its email domain or name. Returns its profile, or {} if unknown.",
+        "inputSchema": {
+          "properties": {
+            "domain_or_name": {
+              "title": "Domain Or Name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "domain_or_name"
+          ],
+          "type": "object",
+          "title": "crm_find_companyArguments"
+        },
+        "name": "crm_find_company"
+      },
+      {
+        "description": "The people we know at a company: name, title, email.",
+        "inputSchema": {
+          "properties": {
+            "company_id": {
+              "title": "Company Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "company_id"
+          ],
+          "type": "object",
+          "title": "crm_contactsArguments"
+        },
+        "name": "crm_contacts",
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Result",
+              "type": "array"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "type": "object",
+          "title": "crm_contactsOutput"
+        }
+      },
+      {
+        "description": "Our past interactions with a company (pilots, calls, events), oldest first.",
+        "inputSchema": {
+          "properties": {
+            "company_id": {
+              "title": "Company Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "company_id"
+          ],
+          "type": "object",
+          "title": "crm_historyArguments"
+        },
+        "name": "crm_history",
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Result",
+              "type": "array"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "type": "object",
+          "title": "crm_historyOutput"
+        }
+      },
+      {
+        "description": "Upcoming meetings with a company: when, title, attendees.",
+        "inputSchema": {
+          "properties": {
+            "company_id": {
+              "title": "Company Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "company_id"
+          ],
+          "type": "object",
+          "title": "calendar_meetingsArguments"
+        },
+        "name": "calendar_meetings",
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Result",
+              "type": "array"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "type": "object",
+          "title": "calendar_meetingsOutput"
+        }
+      }
+    ]
+  }
+}</pre></template><template class="fl-src" data-k="m6" data-t="→ tools/call"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "crm_find_company",
+    "arguments": {
+      "domain_or_name": "lotus-logistics.example"
+    }
+  }
+}</pre></template><template class="fl-src" data-k="m7" data-t="← result"><pre class="fl-pre">{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [
+      {
+        "text": "{\n  \"id\": \"lotus\",\n  \"name\": \"Lotus Logistics\",\n  \"domain\": \"lotus-logistics.example\",\n  \"industry\": \"Logistics &amp; warehousing\",\n  \"hq\": \"Hai Phong, Vietnam\",\n  \"size\": \"about 1,200 staff, 9 warehouses\",\n  \"about\": \"Lotus Logistics runs bonded warehouses and trucking between Hai Phong port and the northern industrial parks. It handles customs paperwork for about 300 importers.\"\n}",
+        "type": "text"
+      }
+    ],
+    "isError": false
+  }
+}</pre></template><div class="fl-panel" hidden></div></div>
+<!-- /inside:l3 -->
+<p>Press ▶ Run, then open <b>On the wire</b>: the MCP lines, and our prompt with the tools inside.</p>
 <div class="project" data-ch="3"></div>
 <div class="playground" data-title="LangChain: @tool and bind_tools" data-runtime="server"><script type="text/plain">
 import urllib.parse
@@ -269,5 +642,6 @@ for i in result.get("__interrupt__", []):
 <script src="../assets/decoder.js"></script>
 <script src="../assets/anatomy.js"></script>
 <script src="../assets/project.js"></script>
+<script src="../assets/deep.js"></script>
 </body>
 </html>
