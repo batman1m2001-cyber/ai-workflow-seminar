@@ -331,14 +331,15 @@ print(f"model calls: {calls} · path picked by: the model · CRM checked: {'crm_
 <h2>Seven agents, redrawn</h2>
 <p>A popular course project builds this exact assistant as <b>seven agents</b>: email, web research, company info, calendar, memory, report and human approval. Ask each one the question from the last tab, <i>who picks the next step?</i></p>
 <table>
-  <tr><th>as specified</th><th>what it really is</th><th>in our build</th></tr>
-  <tr><td>Email Agent</td><td>a trigger + one structured LLM call</td><td>a webhook + <b>triage</b></td></tr>
-  <tr><td><b>Web Research Agent</b></td><td>open-ended: what to search, what to read, when it knows enough</td><td><b>the agent</b>: three of them, in parallel</td></tr>
-  <tr><td>Company Info Agent</td><td>“get info from the DB”</td><td>a SQL query, over <b>MCP</b></td></tr>
-  <tr><td>Calendar Agent</td><td>an API, filtered by the sender's domain</td><td>a tool, over <b>MCP</b></td></tr>
-  <tr><td>Memory Agent</td><td>merge, deduplicate, remember</td><td>code + <b>pgvector</b></td></tr>
-  <tr><td>Report Agent</td><td>one LLM call with a template</td><td><b>brief</b></td></tr>
-  <tr><td>Human Approval Agent</td><td>stop and wait for a yes</td><td>a <b>gate</b>: a draft and a link</td></tr>
+  <tr><th>as specified</th><th>what it really is</th><th>in our build (the same names in Studio)</th></tr>
+  <tr><td>Email Agent</td><td>a trigger + one structured LLM call</td><td>zone <code>email</code>: a webhook, a gate + <b>triage</b></td></tr>
+  <tr><td><b>Web Research Agent</b></td><td>open-ended: what to search, what to read, when it knows enough</td><td>zone <code>web_research</code>: <b>the agent</b>, three of them in parallel, starting from company memory</td></tr>
+  <tr><td>Extract Company Name</td><td>a lookup by the sender's domain</td><td>zone <code>extract_company</code>: one CRM call</td></tr>
+  <tr><td>Company Info Agent</td><td>“get info from the DB”</td><td>zone <code>company_info</code>: CRM queries over <b>MCP</b> + the knowledge base</td></tr>
+  <tr><td>Calendar Agent</td><td>an API, filtered by the sender's domain</td><td>zone <code>calendar</code>: a tool, over <b>MCP</b></td></tr>
+  <tr><td>Memory Agent</td><td>merge, deduplicate, remember</td><td>zone <code>memory</code>: code that merges and de-duplicates; remembering = <b>pgvector</b></td></tr>
+  <tr><td>Report Agent</td><td>one LLM call with a template</td><td>zone <code>report</code>: one LLM call + a check</td></tr>
+  <tr><td>Human Approval Agent</td><td>stop and wait for a yes</td><td>zone <code>human_approval</code>: a <b>gate</b>, a draft and a link; the click resumes <code>send_or_save</code></td></tr>
 </table>
 <p>One real agent. Not a takedown: the brief's own <i>tool, eval and security harnesses</i> are exactly what a workflow gives you, and the one open-ended part is where <b>multi-agent</b> pays: an orchestrator splits the research, workers run in parallel, a step merges them. Draw it and it's a workflow whose nodes are agents. A <b>handoff</b> is an edge the model picks; <b>A2A</b> is an edge between processes.</p>
 

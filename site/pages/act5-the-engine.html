@@ -82,7 +82,7 @@
 <p class="cue">[Bấm "Next: 4 · The whole system, live →" hoặc chuyển sang tab "The whole system, live". Bấm "Open the inbox" và "Open Studio", xếp hai cửa sổ cạnh trang.]</p>
 <p>Nói đủ rồi. Giờ mình cho các bạn xem cả hệ thống chạy thật. Một email của khách hàng, gửi đi ngay từ trang này. Các bạn nhìn hai chỗ: inbox, và Studio.</p>
 <p class="cue">[Chọn một email ✉ trong danh sách (không phải loại ⚠ attack hay "not a lead"), bấm "Send as customer".]</p>
-<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph OperonX. Và các bạn nhìn Studio, nó sáng lên. Screen, rồi triage, rồi identify. Sau đó CRM, calendar và memory chạy song song bên cạnh ba research agent. Rồi tới brief, check, và cuối cùng là yêu cầu approval.</p>
+<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph OperonX. Và các bạn nhìn Studio, nó sáng lên. Từng zone sáng lên, đúng thứ tự các ô trong đề bài: email, extract_company, rồi web_research, calendar và company_info chạy song song, rồi memory gộp lại, report viết brief, và cuối cùng là human_approval. Chỉ có web_research là agent thật: mở nó ra, các bạn thấy ba research agent, mỗi con một vòng lặp tím.</p>
 <p>Các bạn để ý: con agent ở Act 1 bây giờ chỉ là một node trong graph này. Nó vẫn là agent, nhưng nó sống bên trong một workflow.</p>
 <p class="cue">[Chuyển sang inbox, mở email "[Approve?] Brief: …", bấm Approve.]</p>
 <p>Đây, email "Approve?" đã vào inbox. Một con người đọc brief, và bấm Approve. Brief đi tới đội sales, và được ghi vào memory. Đó là "a human must say yes" của Act 4, nhưng lần này là một step trong engine, chứ không phải hai mươi dòng viết tay.</p>
@@ -164,53 +164,43 @@
 <h3>The same system, built twice</h3>
 <p>Both builds answer all 19 golden emails. Here is the wiring of each, as written:</p>
 <div class="sbs">
-  <div><h4>OperonX: the graph is the code</h4><pre class="static">@graph
+  <div><h4>OperonX: the graph is the code, zone by zone like the brief</h4><pre class="static">@graph
 def prepare(email, deliver):
-    gate = ops.screen(email=email)
-    stop = ops.blocked(reason=gate[&quot;reason&quot;])
-    read = ops.letter(email=email)
-    triage = LLMOp.of(
-        resource=&quot;assistant&quot;,
-        prompt={&quot;system&quot;: TRIAGE, &quot;user&quot;: &quot;{letter}&quot;},
-        fields=[&quot;is_lead: bool&quot;, &quot;intent: str&quot;, &quot;contact: str&quot;],
-        parser=&quot;json&quot;,
-        on_failure=&quot;error&quot;,
-        letter=read[&quot;text&quot;],
+    screened = email_agent(email=email, name=&quot;email&quot;)
+    who = extract_company(email=email, name=&quot;extract_company&quot;)
+    web = web_research(company=who[&quot;company&quot;], name=&quot;web_research&quot;)
+    cal = calendar_agent(company_id=who[&quot;company_id&quot;], name=&quot;calendar&quot;)
+    info = company_info(company=who[&quot;company&quot;], company_id=who[&quot;company_id&quot;], name=&quot;company_info&quot;)
+    pack = memory_agent(
+        email=email, company=who[&quot;company&quot;], contacts=info[&quot;contacts&quot;], history=info[&quot;history&quot;],
+        meetings=cal[&quot;meetings&quot;], notes=info[&quot;memory&quot;],
+        website=web[&quot;website&quot;], news=web[&quot;news&quot;], people=web[&quot;people&quot;], name=&quot;memory&quot;,
     )
-    skip = ops.not_a_lead(intent=triage[&quot;intent&quot;])
+    brief = report_agent(company=who[&quot;company&quot;], company_name=who[&quot;name&quot;], evidence=pack[&quot;text&quot;], name=&quot;report&quot;)
+    approval = human_approval(email=email, deliver=deliver, company=who[&quot;company&quot;], brief=brief[&quot;brief&quot;],
+                              ok=brief[&quot;ok&quot;], problems=brief[&quot;problems&quot;], name=&quot;human_approval&quot;)
+    done = ops.settle(a=screened[&quot;outcome&quot;], b=approval[&quot;outcome&quot;])
 
-    who = ops.identify(email=email)
-    crm = ops.crm(company_id=who[&quot;company_id&quot;])
-    cal = ops.calendar(company_id=who[&quot;company_id&quot;])
-    memory = ops.recall(company=who[&quot;company&quot;])
-    asks = ops.research_tasks(company=who[&quot;company&quot;])
-    website = researcher()(messages=asks[&quot;website&quot;])
-    news = researcher()(messages=asks[&quot;news&quot;])
-    people = researcher()(messages=asks[&quot;people&quot;])
+    START &gt;&gt; screened &gt;&gt; if_(screened[&quot;lead&quot;] == True, who).else_(done)  # noqa: E712
+    who &gt;&gt; [web, cal, info]
+    [web, cal, info] &gt;&gt; pack &gt;&gt; brief &gt;&gt; approval &gt;&gt; done &gt;&gt; END
 
-    facts = ops.evidence(
-        email=email, company=who[&quot;company&quot;], contacts=crm[&quot;contacts&quot;], history=crm[&quot;history&quot;],
-        meetings=cal[&quot;meetings&quot;], memory=memory[&quot;memory&quot;],
-        website=website[&quot;final&quot;], news=news[&quot;final&quot;], people=people[&quot;final&quot;],
-    )
-    brief = LLMOp.of(
-        resource=&quot;assistant&quot;,
-        prompt={&quot;system&quot;: BRIEF, &quot;user&quot;: &quot;Company: {company}\n\nEvidence:\n{evidence}&quot;},
-        company=who[&quot;name&quot;],
-        evidence=facts[&quot;text&quot;],
-    )
-    check = ops.check_brief(brief=brief[&quot;content&quot;], company=who[&quot;company&quot;])
-    ask = ops.request_approval(email=email, company=who[&quot;company&quot;], brief=brief[&quot;content&quot;], deliver=deliver)
-    hold = ops.held(company=who[&quot;company&quot;], brief=brief[&quot;content&quot;], problems=check[&quot;problems&quot;])
-    done = ops.settle(a=stop[&quot;outcome&quot;], b=skip[&quot;outcome&quot;], c=ask[&quot;outcome&quot;], d=hold[&quot;outcome&quot;])
 
-    START &gt;&gt; gate &gt;&gt; if_(gate[&quot;blocked&quot;] == True, stop).else_(read)  # noqa: E712
-    read &gt;&gt; triage &gt;&gt; if_(triage[&quot;is_lead&quot;] == False, skip).else_(who)  # noqa: E712
-    who &gt;&gt; [crm, cal, memory, asks]
-    asks &gt;&gt; [website, news, people]
-    [crm, cal, memory, website, news, people] &gt;&gt; facts
-    facts &gt;&gt; brief &gt;&gt; check &gt;&gt; if_(check[&quot;ok&quot;] == True, ask).else_(hold)  # noqa: E712
-    [stop, skip, ask, hold] &gt;&gt; done &gt;&gt; END</pre></div>
+# one zone, opened: the only real agents
+@graph
+def web_research(company=None):
+    &quot;&quot;&quot;Web Research Agent: three ReAct agents (website, news, people) at once.&quot;&quot;&quot;
+    tasks = ops.research_tasks(company=company)
+    known = company_memory(website=tasks[&quot;website&quot;], news=tasks[&quot;news&quot;], people=tasks[&quot;people&quot;],
+                           name=&quot;company_memory&quot;)
+    website = researcher()(messages=tasks[&quot;website&quot;])
+    news = researcher()(messages=tasks[&quot;news&quot;])
+    people = researcher()(messages=tasks[&quot;people&quot;])
+    website[&quot;final&quot;] &gt;&gt; PARENT[&quot;website&quot;]
+    news[&quot;final&quot;] &gt;&gt; PARENT[&quot;news&quot;]
+    people[&quot;final&quot;] &gt;&gt; PARENT[&quot;people&quot;]
+    START &gt;&gt; tasks &gt;&gt; known &gt;&gt; [website, news, people]
+    [website, news, people] &gt;&gt; END</pre></div>
   <div><h4>LangGraph: a state class, then nodes wired by name</h4><pre class="static">class State(TypedDict, total=False):
     email: dict
     deliver: bool
