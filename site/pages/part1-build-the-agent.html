@@ -23,6 +23,7 @@
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
 <h2>Chapter 1 · The call</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Đây là <b>email_agent</b>: email đi qua cổng chặn tấn công, rồi <b>một lần gọi LLM</b> (triage) trả JSON: có phải khách tiềm năng không, họ muốn gì, ai liên hệ. JSON hỏng thì run dừng, không đoán.</p></details>
 <p>Four functions. <code>read_email()</code> gets the mail, <code>build_prompt()</code> pastes it into an f-string, <code>llm()</code> sends one HTTP POST, <code>parse()</code> turns the reply into data and checks it. Press ▶ Run, then open <b>On the wire</b>: that is the whole request the model gets.</p>
 <div class="project" data-ch="1"></div>
 <div class="playground" data-title="LangChain: prompt | model | parser" data-runtime="server"><script type="text/plain">
@@ -49,6 +50,7 @@ print(chain.invoke({"name": email["from_name"], "sender": email["from"], "text":
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="2" hidden>
 <h2>Chapter 2 · Knowledge</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><b>company_info_agent</b> gọi <code>recall</code>: tìm trong kho ghi chú (pgvector, bảng <code>kb_chunks</code>) những gì đã làm với công ty này: pilot cũ, cuộc gọi trước, brief đã duyệt.</p></details>
 <p>New: <code>embed()</code> turns text into numbers (one more HTTP POST), and <code>recall()</code> finds our nearest notes with one SQL query in Postgres. A second prompt, <code>brief_prompt()</code>, pastes them in, and the model writes the brief.</p>
 <div class="project" data-ch="2"></div>
 <div class="playground" data-title="LangChain: a vector store and a retriever" data-runtime="server"><script type="text/plain">
@@ -71,6 +73,7 @@ for doc in store.as_retriever(search_kwargs={"k": 1}).invoke(question):
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="3" hidden>
 <h2>Chapter 3 · Tools and MCP</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>CRM và lịch là <b>MCP server</b> riêng. <b>extract_company_name</b> tra công ty theo domain người gửi (<code>crm_find_company</code>); <b>calendar_agent</b> lấy lịch họp (<code>calendar_meetings</code>); <b>company_info_agent</b> lấy người liên hệ và lịch sử (<code>crm_contacts</code>, <code>crm_history</code>).</p></details>
 <h3>The black box</h3>
 <p>This is how everyone is taught to give a model tools:</p>
 <pre class="static">client.chat.completions.create(
@@ -111,6 +114,7 @@ print("tool calls:", msg.tool_calls)
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
 <h2>Chapter 4 · The loop</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Chỉ <b>web_research_agent</b> là agent thật: vòng lặp tự tìm kiếm, đọc trang, tự quyết khi nào đủ (tối đa 4 lượt). Mọi bước khác là code, hoặc một lần gọi LLM.</p></details>
 <p>The single tool call becomes <code>research()</code>: a <code>for</code> loop. Ask the model; if it asks for a tool, <code>run_tool()</code> runs it (a local function or the MCP server) and the result goes back into <code>messages</code>; repeat until it answers. Two web tools join the CRM: <code>web_search()</code> and <code>fetch_page()</code>.</p>
 <div class="callout warn"><b class="t">Wiretap moment: predict first</b><p>To research one company, <b>how many requests does the agent send to the model?</b> Hands up: 1? 3? 10? Then press ▶ Run and count the <code>llm()</code> calls inside <code>research()</code>: the ×N on the LLM in the picture.</p></div>
 <div class="project" data-ch="4"></div>
@@ -156,6 +160,7 @@ print("HTTP requests:", requests)
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="5" hidden>
 <h2>Chapter 5 · Context</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p>Mỗi researcher bắt đầu từ <b>trí nhớ về công ty</b> (CompanyMemory), đặt ở đầu prompt, nên không tìm lại điều đã biết. <b>memory_agent</b> gộp mọi nguồn thành một gói evidence, mỗi sự thật một lần, bằng code chứ không qua LLM.</p></details>
 <p>New: <code>assemble_context()</code> runs before every <code>llm()</code> call. Standing notes come from a file (<code>AGENTS.md</code>); results the model already read shrink to one line; the newest stays whole. The output prints the token count before and after.</p>
 <div class="project" data-ch="5"></div>
 <div class="playground" data-title="LangChain: clear the pages the agent already read" data-runtime="server"><script type="text/plain">
@@ -201,6 +206,7 @@ for m in sent[-1]["messages"]:
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="6" hidden>
 <h2>Chapter 6 · The harness</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><code>screen</code> chặn email ra lệnh trước khi tới model; researcher chỉ được dùng tool <b>đọc</b> (ToolPolicy read-only); <code>check_brief</code> kiểm tra brief không lộ thông tin; <b>human_approval_gate</b> lưu bản nháp và gửi link: sales bấm duyệt thì brief mới được gửi.</p></details>
 <p>The agent can now send email, so two layers of plain code go around it. <code>screen()</code> is a gate <b>before any model</b>: an email that gives orders never reaches one. <code>guard()</code> checks <b>every tool call</b>: is it allowed for research, are the arguments right, and it logs either way. The run takes the attack email first, then Linh's.</p>
 <div class="project" data-ch="6"></div>
 <div class="playground" data-title="LangChain: an agent inside its harness" data-runtime="server"><script type="text/plain">
@@ -242,6 +248,7 @@ for i in result.get("__interrupt__", []):
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="7" hidden>
 <h2>Chapter 7 · Many agents</h2>
+<details class="vi-note" lang="vi"><summary>Tiếng Việt · lớp này trong meeting-prep thật</summary><p><b>web_research_agent</b> chạy <b>3 researcher song song</b>: sản phẩm, tin tức, con người; calendar và company_info chạy cùng lúc với nó; rồi <b>memory_agent</b> gộp lại. Song song, nhưng vẫn là một workflow.</p></details>
 <p>New: <code>research_team()</code> runs the same <code>research()</code> loop three times at once, one question each, and <code>merge()</code> joins what they found. A lock keeps the three from talking over each other to the one MCP server.</p>
 <div class="project" data-ch="7"></div>
 <div class="callout key"><b class="t">The truth</b><p><b>Multi-agent</b> is the same loop as nodes, run in parallel, then merged by a plain step. The hard part isn't the agents: it's the wiring between them.</p></div>

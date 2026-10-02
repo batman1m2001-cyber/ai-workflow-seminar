@@ -53,7 +53,7 @@
     { id: "mcp", b: 3, x: 740, y: 490, w: 150, h: 64, name: "CRM · MCP", sub: "call_tool()", xr: "JSON-RPC, stdio" },
     { id: "context", b: 5, x: 235, y: 134, w: 410, h: 64, name: "Context", sub: "assemble_context()", xr: "a function, under a budget", big: true },
     { id: "memory", b: 5, x: 50, y: 134, w: 130, h: 64, name: "Memory", sub: "AGENTS.md", xr: "a .md file" },
-    { id: "team", b: 7, x: 920, y: 470, w: 130, h: 64, name: "3 agents", sub: "research_team()", xr: "3 threads + merge()" }
+    { id: "team", b: 7, x: 905, y: 470, w: 160, h: 64, name: "3 researchers", sub: "research_team()", xr: "3 threads + merge()" }
   ];
 
   // from · to · beat · label · route ("v" = vertical)

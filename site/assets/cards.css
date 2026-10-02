@@ -473,3 +473,9 @@ table.sdt td:first-child { font-weight: 700; color: var(--navy); white-space: no
 .bt-req ol { columns: 2; margin: 6px 0 0; padding-left: 22px; }
 .bt-req li { margin: 0 0 2px; }
 @media (max-width: 860px) { .hero-pair { grid-template-columns: 1fr; } .bt-req ol { columns: 1; } }
+
+/* ── Part I: a chapter's Vietnamese note, folded ─────────────────────── */
+details.vi-note { margin: 4px 0 14px; border: 1px dashed #C9D3E3; border-radius: 10px; background: #FAFBFD; }
+details.vi-note summary { cursor: pointer; padding: 6px 12px; font-size: 13px; font-weight: 700; color: var(--grey); }
+details.vi-note[open] summary { color: var(--navy); }
+details.vi-note p { margin: 0; padding: 2px 14px 10px; font-size: 15.5px; }
