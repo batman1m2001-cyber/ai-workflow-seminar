@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Workflow Is All You Need — the seminar site, its playgrounds and their runner."
 requires-python = ">=3.11"
 dependencies = [
-    "operonx[openai]>=1.12.0",
+    "operonx[openai]>=1.12.1",
     "openai>=1.40",
     "faiss-cpu>=1.8",
     "numpy>=1.26",
