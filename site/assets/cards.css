@@ -144,8 +144,6 @@ section.beat > h2:first-child { margin-top: 6px; }
 .pl-view.alt { padding: 14px 16px 4px; }
 .pl-view.alt .playground { margin: 0 0 10px; max-width: none; }
 
-.pl-err { display: none; margin: 0 20px 18px; padding: 10px 14px; border-radius: 10px; background: #FDECEC; color: var(--red); font: 13px/1.5 "JetBrains Mono", monospace; white-space: pre-wrap; }
-.pl-err.on { display: block; }
 
 @media (max-width: 760px) {
   .pl-view.xray { padding: 14px 10px; }

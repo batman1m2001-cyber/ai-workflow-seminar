@@ -86,15 +86,14 @@
       '<button class="run" title="Run the whole pipeline">▶ Run</button></div></div>' +
       '<div class="pl-view xray"><div class="pl-flow"></div><div class="pl-focus"><div class="f-head"></div><pre class="f-out"></pre></div></div>' +
       '<div class="pl-view code" hidden><div class="pl-ed"></div></div>' +
-      (alt ? '<div class="pl-view alt" hidden></div>' : "") +
-      '<div class="pl-err"></div>';
+      (alt ? '<div class="pl-view alt" hidden></div>' : "");
     if (alt) pl.querySelector(".pl-view.alt").appendChild(alt);
 
-    var flow = pl.querySelector(".pl-flow"), errBox = pl.querySelector(".pl-err");
+    var flow = pl.querySelector(".pl-flow");
     var fHead = pl.querySelector(".f-head"), fOut = pl.querySelector(".f-out"), focus = pl.querySelector(".pl-focus");
     var runBtn = pl.querySelector(".run"), stepBtn = pl.querySelector(".step-btn");
     var ctl = pl.querySelector(".pl-ctl");
-    var result = null, shown = -1, busy = false, picked = -1, cm = null, edited = null;
+    var result = null, shown = -1, busy = false, picked = -1, cm = null;
 
     var tiles = steps.map(function (s, i) {
       if (i) {
@@ -131,7 +130,7 @@
         if (v === "code" && !cm && window.CodeMirror) {
           cm = window.CodeMirror(pl.querySelector(".pl-ed"), { value: codeText(), mode: "python", theme: "seminar",
             lineNumbers: true, indentUnit: 4, viewportMargin: Infinity });
-          cm.on("change", function () { result = null; edited = cut(cm.getValue(), steps.length); });
+          cm.on("change", function () { result = null; });
         }
         pl.querySelectorAll(".pl-view:not([hidden]) .CodeMirror").forEach(function (e) { e.CodeMirror && e.CodeMirror.refresh(); });
       };
@@ -149,8 +148,8 @@
     }
 
     function codes() {
-      if (cm && !edited) return null;                      // the "# ── n ·" lines were edited away
-      return edited || steps.map(function (s) { return s.code; });
+      if (cm) return cut(cm.getValue(), steps.length);     // null: the "# ── n ·" lines were edited away
+      return steps.map(function (s) { return s.code; });
     }
     function fetchRun() {
       if (result) return Promise.resolve(result);
@@ -171,7 +170,7 @@
         });
     }
     function reset() {
-      shown = -1; errBox.textContent = ""; errBox.classList.remove("on");
+      shown = -1;
       tiles.forEach(function (t) {
         t.classList.remove("run", "done", "fail", "dim");
         t.querySelector(".t-stat").textContent = ""; t.querySelector(".t-out").textContent = "";
@@ -194,7 +193,6 @@
         var err = (result.res.stderr || "").trim().split("\n").slice(-6).join("\n");
         result.failAt = i; result.err = err;
         t.querySelector(".t-out").textContent = err.split("\n").pop();
-        errBox.textContent = err; errBox.classList.add("on");
         for (var k = i + 1; k < tiles.length; k++) tiles[k].classList.add("dim");
         pick(i);
         return false;
