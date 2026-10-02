@@ -25,7 +25,7 @@ url = "https://pypi.org/simple"
 default = true
 
 [tool.uv.sources]
-meeting-prep-world = { path = "../meeting-prep-world", editable = true }
+meeting-prep-world = { git = "https://github.com/batman1m2001-cyber/meeting-prep-projects", subdirectory = "meeting-prep-world" }
 
 [tool.uv]
 package = false

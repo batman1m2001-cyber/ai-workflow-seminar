@@ -36,7 +36,7 @@ requires-dist = [
     { name = "langchain", specifier = ">=1.4.3" },
     { name = "langchain-openai", specifier = ">=1.6.6" },
     { name = "langgraph", specifier = ">=1.2.12" },
-    { name = "meeting-prep-world", editable = "../meeting-prep-world" },
+    { name = "meeting-prep-world", git = "https://github.com/batman1m2001-cyber/meeting-prep-projects?subdirectory=meeting-prep-world" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "openai", specifier = ">=1.40" },
     { name = "openai-agents", specifier = ">=0.22.3" },
@@ -1164,7 +1164,7 @@ wheels = [
 [[package]]
 name = "meeting-prep-world"
 version = "0.1.0"
-source = { editable = "../meeting-prep-world" }
+source = { git = "https://github.com/batman1m2001-cyber/meeting-prep-projects?subdirectory=meeting-prep-world#cdcad163c373096be4222c4a7ce2699d24e83019" }
 dependencies = [
     { name = "fastapi" },
     { name = "mcp" },
@@ -1172,16 +1172,6 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pyyaml" },
     { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "mcp", specifier = ">=1.10" },
-    { name = "openai", specifier = ">=1.60" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
-    { name = "pyyaml", specifier = ">=6" },
-    { name = "uvicorn", specifier = ">=0.30" },
 ]
 
 [[package]]

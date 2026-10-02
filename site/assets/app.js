@@ -215,7 +215,7 @@
         else if (runtime === "auto") job = runInBrowser(cm.getValue());
         else job = Promise.resolve({
           stdout: "", exit: 1, ms: 0, where: "no runner",
-          stderr: "This playground runs real operonx, which needs the local runner:\n\n    cd D:\\ai-workflow-seminar\n    uv run python -m runner.server\n\nthen open http://127.0.0.1:8000"
+          stderr: "This playground runs real operonx, which needs the local runner:\n\n    cd ai-workflow-seminar\n    uv run python -m runner.server\n\nthen open http://127.0.0.1:8000"
         });
         job.then(function (res) {
           var ok = res.exit === 0;
