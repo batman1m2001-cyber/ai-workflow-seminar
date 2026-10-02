@@ -126,7 +126,7 @@ def prepare(email):
     crm = start_mcp()
     tools = list_tools(crm)
     call = parse_tool_call(llm(tools_prompt(tools, f"Find {lead['company']} ({lead['domain']}) in the CRM.")))
-    findings = call_tool(crm, call)
+    findings = call_tool(crm, call) if call else "(the model asked for no tool)"
     return llm(brief_prompt(lead, notes, findings))
 
 
