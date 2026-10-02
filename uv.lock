@@ -1164,7 +1164,7 @@ wheels = [
 [[package]]
 name = "meeting-prep-world"
 version = "0.1.0"
-source = { git = "https://github.com/batman1m2001-cyber/meeting-prep-projects?subdirectory=meeting-prep-world#cdcad163c373096be4222c4a7ce2699d24e83019" }
+source = { git = "https://github.com/batman1m2001-cyber/meeting-prep-projects?subdirectory=meeting-prep-world#5b8c01e5453af3cc5f9ef69c272afe497f91999f" }
 dependencies = [
     { name = "fastapi" },
     { name = "mcp" },
