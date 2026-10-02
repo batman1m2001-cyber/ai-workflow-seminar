@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  var W = 1100, H = 470;
+  var W = 1180, H = 494, TOP = 24;   // TOP: room above for the loop
 
   // each layer adds an idea, and the boxes of the real meeting-prep flow that use it
   var BEATS = [
@@ -42,20 +42,20 @@
 
   // the boxes: where they sit, when they join, what they are · what they are in code
   var PARTS = [
-    { id: "email", b: 1, x: 20, y: 200, w: 110, h: 64, name: "Email", sub: "read_email()", xr: "a dict", kind: "io" },
-    { id: "screen", b: 6, x: 150, y: 200, w: 112, h: 64, name: "screen", sub: "the gate", xr: "if attack:", kind: "harness" },
-    { id: "email_agent", b: 1, x: 282, y: 192, w: 160, h: 80, name: "email_agent", sub: "1 LLM call → JSON", xr: "parse(llm(prompt))" },
-    { id: "extract", b: 3, x: 462, y: 200, w: 166, h: 64, name: "extract_company", sub: "CRM · MCP", xr: "crm_find_company" },
-    { id: "web", b: 3, x: 650, y: 40, w: 196, h: 92, name: "web_research",
+    { id: "email", b: 1, x: 20, y: 200, w: 106, h: 64, name: "Email", sub: "read_email()", xr: "a dict", kind: "io" },
+    { id: "screen", b: 6, x: 156, y: 200, w: 104, h: 64, name: "screen", sub: "the gate", xr: "if attack:", kind: "harness" },
+    { id: "email_agent", b: 1, x: 296, y: 192, w: 156, h: 80, name: "email_agent", sub: "1 LLM call → JSON", xr: "parse(llm(prompt))" },
+    { id: "extract", b: 3, x: 492, y: 200, w: 164, h: 64, name: "extract_company", sub: "CRM · MCP", xr: "crm_find_company" },
+    { id: "web", b: 3, x: 700, y: 40, w: 196, h: 92, name: "web_research",
       subs: { 3: "the model picks a tool", 4: "the agent: a loop", 5: "loop · small context", 6: "loop · read-only tools", 7: "3 researchers at once" },
       xr: "for turn: llm → tool" },
-    { id: "calendar", b: 3, x: 650, y: 200, w: 196, h: 64, name: "calendar", sub: "meetings · MCP", xr: "calendar_meetings" },
-    { id: "company_info", b: 2, x: 650, y: 330, w: 196, h: 92, name: "company_info",
+    { id: "calendar", b: 3, x: 700, y: 200, w: 196, h: 64, name: "calendar", sub: "meetings · MCP", xr: "calendar_meetings" },
+    { id: "company_info", b: 2, x: 700, y: 330, w: 196, h: 92, name: "company_info",
       subs: { 2: "our notes · RAG", 3: "notes · RAG + CRM · MCP" }, xr: "recall() + crm_*" },
-    { id: "memory", b: 5, x: 872, y: 40, w: 206, h: 64, name: "memory_agent", sub: "merge, each fact once", xr: "dict.fromkeys(facts)" },
-    { id: "report", b: 2, x: 872, y: 150, w: 206, h: 72, name: "report_agent", sub: "1 LLM call writes the brief", xr: "llm(brief_prompt())" },
-    { id: "check", b: 6, x: 872, y: 262, w: 206, h: 58, name: "check_brief", sub: "no leaks", xr: "if leaks(brief):", kind: "harness" },
-    { id: "approval", b: 6, x: 872, y: 352, w: 206, h: 70, name: "human_approval", sub: "a draft + a link · a person", xr: "save_draft; mail.send", kind: "harness" }
+    { id: "memory", b: 5, x: 940, y: 40, w: 206, h: 64, name: "memory_agent", sub: "merge, each fact once", xr: "dict.fromkeys(facts)" },
+    { id: "report", b: 2, x: 940, y: 150, w: 206, h: 72, name: "report_agent", sub: "1 LLM call writes the brief", xr: "llm(brief_prompt())" },
+    { id: "check", b: 6, x: 940, y: 262, w: 206, h: 58, name: "check_brief", sub: "no leaks", xr: "if leaks(brief):", kind: "harness" },
+    { id: "approval", b: 6, x: 940, y: 352, w: 206, h: 70, name: "human_approval", sub: "a draft + a link · a person", xr: "save_draft; mail.send", kind: "harness" }
   ];
 
   // from · to · first layer · last layer (0: still there) · label · "v": top/bottom
@@ -121,13 +121,15 @@
       defs.appendChild(m);
     });
     svg.appendChild(defs);
+    var top = el("g", { transform: "translate(0 " + TOP + ")" });
+    svg.appendChild(top);
 
     // layer 7: the three boxes that run side by side
     if (beat >= 7) {
       var G = el("g", { "class": "an-par" + (beat === 7 ? " new" : "") });
-      G.appendChild(el("rect", { x: 636, y: 14, width: 224, height: 446, rx: 18 }));
-      G.appendChild(el("text", { x: 748, y: 452, "text-anchor": "middle" }, xray ? "ThreadPoolExecutor()" : "side by side"));
-      svg.appendChild(G);
+      G.appendChild(el("rect", { x: 688, y: -14, width: 220, height: 474, rx: 18 }));
+      G.appendChild(el("text", { x: 798, y: 452, "text-anchor": "middle" }, xray ? "ThreadPoolExecutor()" : "side by side"));
+      top.appendChild(G);
     }
 
     EDGES.forEach(function (e) {
@@ -136,7 +138,7 @@
       var g = el("g", { "class": "an-edge" + (isNew ? " new" : "") });
       g.appendChild(el("path", { d: p.d, "marker-end": "url(#an-arr-" + (isNew ? "g" : "n") + ")" }));
       if (e.label) g.appendChild(el("text", { x: p.lx, y: p.ly, "text-anchor": p.mid ? "middle" : "start" }, e.label));
-      svg.appendChild(g);
+      top.appendChild(g);
     });
 
     // layer 4: the loop, on web_research only
@@ -146,7 +148,7 @@
       L.appendChild(el("path", { d: "M" + x1 + " " + w.y + " C" + x1 + " " + (w.y - 34) + " " + x0 + " " + (w.y - 34) + " " + x0 + " " + (w.y - 2),
         "marker-end": "url(#an-arr-" + (beat === 4 ? "g" : "n") + ")" }));
       L.appendChild(el("text", { x: w.x + w.w / 2, y: w.y - 30, "text-anchor": "middle", "class": "an-loopt" }, xray ? "for turn in range(8)" : "↻ loop"));
-      svg.appendChild(L);
+      top.appendChild(L);
     }
 
     PARTS.forEach(function (p) {
@@ -156,7 +158,7 @@
       // layer 7: three researchers, drawn as a stack
       if (p.id === "web" && beat >= 7) {
         [10, 5].forEach(function (d) {
-          g.appendChild(el("rect", { x: p.x + d, y: p.y - d, width: p.w, height: p.h, rx: 14, "class": "an-stack" }));
+          g.appendChild(el("rect", { x: p.x + d, y: p.y + d, width: p.w, height: p.h, rx: 14, "class": "an-stack" }));
         });
       }
       g.appendChild(el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: p.kind === "io" ? 30 : 14 }));
@@ -164,7 +166,7 @@
       g.appendChild(el("text", { x: p.x + p.w / 2, y: p.y + p.h / 2 - (sub ? 2 : -5), "text-anchor": "middle", "class": "an-name" },
         xray ? p.xr : p.name));
       if (sub && !xray) g.appendChild(el("text", { x: p.x + p.w / 2, y: p.y + p.h / 2 + 16, "text-anchor": "middle", "class": "an-sub" }, sub));
-      svg.appendChild(g);
+      top.appendChild(g);
     });
     return svg;
   }
@@ -236,10 +238,12 @@
       svg.querySelectorAll(".hot").forEach(function (x) { x.classList.remove("hot"); });
       g.classList.add("lit", "hot");
       counts[id] = (counts[id] || 0) + 1;
-      var r = g.querySelector("rect"), t = g.querySelector(".an-count");
+      var r = g.querySelector("rect:not(.an-stack)"), t = g.querySelector(".an-count");
       if (counts[id] < 2 || !r) return;
       if (!t) {
-        t = el("text", { x: +r.getAttribute("x") + +r.getAttribute("width") - 8, y: +r.getAttribute("y") - 6,
+        // web_research has the loop above it: its count goes below
+        var below = id === "web", y = +r.getAttribute("y");
+        t = el("text", { x: +r.getAttribute("x") + +r.getAttribute("width") - 8, y: below ? y + +r.getAttribute("height") + 30 : y - 6,
                          "text-anchor": "end", "class": "an-count" });
         g.appendChild(t);
       }
