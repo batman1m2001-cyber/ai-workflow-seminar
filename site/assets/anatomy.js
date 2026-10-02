@@ -1,4 +1,4 @@
-/* The agent anatomy: one SVG that grows over seven chapters, with an X-ray flip.
+/* The meeting-prep flow, one layer at a time: one SVG that grows over seven layers, with an X-ray flip.
  *
  *   <div class="anatomy" data-beat="1"></div>            ← → steps through the beats
  *   <div class="anatomy" data-beat="3" data-lock></div>  one beat, X-ray only
@@ -13,66 +13,71 @@
 (function () {
   "use strict";
 
-  var W = 1100, H = 640;
+  var W = 1180, H = 494, TOP = 24;   // TOP: room above for the loop
 
-  // each beat names its idea; each part names the agent.py function that is it
+  // each layer adds an idea, and the boxes of the real meeting-prep flow that use it
   var BEATS = [
     { n: 1, name: "The call", terms: "prompt engineering · structured output",
-      say: "The email goes in, the model answers, and a parser turns the reply into data: which company, what they want.",
-      xray: "read_email(), an f-string, one HTTP POST, json.loads with a check." },
-    { n: 2, name: "Knowledge", terms: "RAG · vector store",
-      say: "The model doesn't know our history with this company, so we fetch our notes and put them in the prompt.",
-      xray: "embed(), then one SQL query ORDER BY distance, then paste the notes into the prompt." },
-    { n: 3, name: "Tools and MCP", terms: "function calling · MCP",
-      say: "The model asks for a tool; the CRM is another program, reached over MCP.",
-      xray: "The tools are text in the prompt; the model writes JSON; our code runs it. MCP is JSON-RPC over stdin and stdout." },
+      say: "email_agent reads the email with one model call and answers in JSON: is it a lead, which company, what do they want.",
+      xray: "llm(triage_prompt(email)), then json.loads and a check." },
+    { n: 2, name: "Knowledge", terms: "RAG",
+      say: "company_info finds our past notes on this company; report_agent writes the brief from them.",
+      xray: "embed(), one SQL query ORDER BY distance, the notes pasted into brief_prompt()." },
+    { n: 3, name: "Tools and MCP", terms: "MCP · function calling",
+      say: "extract_company and calendar ask the CRM over MCP; company_info adds the CRM's people and history; web_research lets the model pick a tool.",
+      xray: "MCP: JSON-RPC to another program. Function calling: the tools are text in the prompt; the model writes JSON; our code runs it." },
     { n: 4, name: "The loop", terms: "agent · ReAct",
-      say: "Search, read, decide it knows enough: ask the model, run its tool, show it the result, until it answers.",
-      xray: "research(): a for loop around llm(). The control flow is trivial; the capability is in the model." },
+      say: "web_research becomes the agent: search, read, decide it knows enough. The only box that loops.",
+      xray: "research(): a for loop around llm(), until the model stops asking for tools." },
     { n: 5, name: "Context", terms: "context engineering · memory",
-      say: "Long runs rot the context. Choose what the model sees each turn: standing notes from a file, old results cleared.",
-      xray: "assemble_context(): a function that builds the prompt under a budget. Memory is a file: AGENTS.md." },
-    { n: 6, name: "The harness", terms: "harness engineering · guardrails",
-      say: "Everything around the model that makes it safe: a gate before any model, a check before every tool call, a log.",
-      xray: "screen() and guard(): plain ifs. Agent = Model + Harness." },
-    { n: 7, name: "Many agents", terms: "multi-agent · orchestrator · workers",
-      say: "What it sells, the news, the people: three questions, three agents at once, and one step that merges their answers.",
-      xray: "research_team(): the same loop three times in threads, then merge(). Functions joined by arrows: a workflow." }
+      say: "The research loop keeps its prompt small; memory_agent merges every source into one evidence pack, each fact once.",
+      xray: "assemble_context() before each call; memory_agent is dict.fromkeys(): code, not a model." },
+    { n: 6, name: "The harness", terms: "harness · guardrails · human-in-the-loop",
+      say: "screen stops an email that gives orders; research may only read; check_brief looks for leaks; a person approves the brief.",
+      xray: "Plain ifs around the model, and a draft with a link: the click is the next run." },
+    { n: 7, name: "Many agents", terms: "multi-agent · parallel",
+      say: "Three researchers at once, side by side with calendar and company_info, then memory_agent merges: the whole flow.",
+      xray: "ThreadPoolExecutor: four boxes at the same time, then one merge. It's a workflow." }
   ];
 
-  // x, y, w, h · beat it arrives · name · the agent.py function · what it is in code
+  // the boxes: where they sit, when they join, what they are · what they are in code
   var PARTS = [
-    { id: "user", b: 1, x: 50, y: 300, w: 130, h: 64, name: "Email", sub: "read_email()", xr: "a dict" },
-    { id: "prompt", b: 1, x: 235, y: 300, w: 160, h: 64, name: "Prompt", sub: "build_prompt()", xr: 'an f-string' },
-    { id: "llm", b: 1, x: 455, y: 280, w: 190, h: 104, name: "LLM", sub: "llm()", xr: "one HTTP POST", big: true },
-    { id: "parser", b: 1, x: 705, y: 300, w: 160, h: 64, name: "Output parser", sub: "parse()", xr: "json.loads + if" },
-    { id: "answer", b: 1, x: 920, y: 300, w: 130, h: 64, name: "Brief", sub: "brief_prompt()", xr: "llm() again" },
-    { id: "docs", b: 2, x: 50, y: 470, w: 130, h: 64, name: "Notes", sub: "kb_chunks", xr: "a table" },
-    { id: "retriever", b: 2, x: 235, y: 470, w: 160, h: 64, name: "Retriever", sub: "recall()", xr: "ORDER BY <=>" },
-    { id: "tools", b: 3, x: 455, y: 470, w: 190, h: 104, name: "Tools", sub: "tools_prompt()", xr: "schemas → prompt text", big: true },
-    { id: "mcp", b: 3, x: 740, y: 490, w: 150, h: 64, name: "CRM · MCP", sub: "call_tool()", xr: "JSON-RPC, stdio" },
-    { id: "context", b: 5, x: 235, y: 134, w: 410, h: 64, name: "Context", sub: "assemble_context()", xr: "a function, under a budget", big: true },
-    { id: "memory", b: 5, x: 50, y: 134, w: 130, h: 64, name: "Memory", sub: "AGENTS.md", xr: "a .md file" },
-    { id: "team", b: 7, x: 905, y: 470, w: 160, h: 64, name: "3 researchers", sub: "research_team()", xr: "3 threads + merge()" }
+    { id: "email", b: 1, x: 20, y: 200, w: 106, h: 64, name: "Email", sub: "read_email()", xr: "a dict", kind: "io" },
+    { id: "screen", b: 6, x: 156, y: 200, w: 104, h: 64, name: "screen", sub: "the gate", xr: "if attack:", kind: "harness" },
+    { id: "email_agent", b: 1, x: 296, y: 192, w: 156, h: 80, name: "email_agent", sub: "1 LLM call → JSON", xr: "parse(llm(prompt))" },
+    { id: "extract", b: 3, x: 492, y: 200, w: 164, h: 64, name: "extract_company", sub: "CRM · MCP", xr: "crm_find_company" },
+    { id: "web", b: 3, x: 700, y: 40, w: 196, h: 92, name: "web_research",
+      subs: { 3: "the model picks a tool", 4: "the agent: a loop", 5: "loop · small context", 6: "loop · read-only tools", 7: "3 researchers at once" },
+      xr: "for turn: llm → tool" },
+    { id: "calendar", b: 3, x: 700, y: 200, w: 196, h: 64, name: "calendar", sub: "meetings · MCP", xr: "calendar_meetings" },
+    { id: "company_info", b: 2, x: 700, y: 330, w: 196, h: 92, name: "company_info",
+      subs: { 2: "our notes · RAG", 3: "notes · RAG + CRM · MCP" }, xr: "recall() + crm_*" },
+    { id: "memory", b: 5, x: 940, y: 40, w: 206, h: 64, name: "memory_agent", sub: "merge, each fact once", xr: "dict.fromkeys(facts)" },
+    { id: "report", b: 2, x: 940, y: 150, w: 206, h: 72, name: "report_agent", sub: "1 LLM call writes the brief", xr: "llm(brief_prompt())" },
+    { id: "check", b: 6, x: 940, y: 262, w: 206, h: 58, name: "check_brief", sub: "no leaks", xr: "if leaks(brief):", kind: "harness" },
+    { id: "approval", b: 6, x: 940, y: 352, w: 206, h: 70, name: "human_approval", sub: "a draft + a link · a person", xr: "save_draft; mail.send", kind: "harness" }
   ];
 
-  // from · to · beat · label · route ("v" = vertical)
+  // from · to · first layer · last layer (0: still there) · label · "v": top/bottom
   var EDGES = [
-    { a: "user", b: "prompt", beat: 1 },
-    { a: "prompt", b: "llm", beat: 1 },
-    { a: "llm", b: "parser", beat: 1 },
-    { a: "parser", b: "answer", beat: 1 },
-    { a: "docs", b: "retriever", beat: 2, label: "embed" },
-    { a: "retriever", b: "prompt", beat: 2, label: "top-k", v: true },
-    { a: "llm", b: "tools", beat: 3, label: "tool call", v: true, dx: -40 },
-    { a: "tools", b: "llm", beat: 3, label: "result", v: true, dx: 40 },
-    { a: "tools", b: "mcp", beat: 3, label: "tools/call" },
-    { a: "memory", b: "context", beat: 5 },
-    { a: "context", b: "llm", beat: 5, label: "what the model sees", v: true, dx: 60 },
-    { a: "team", b: "answer", beat: 7, label: "merge", v: true }
+    { a: "email", b: "email_agent", from: 1, to: 5 },
+    { a: "email", b: "screen", from: 6 },
+    { a: "screen", b: "email_agent", from: 6, label: "ok" },
+    { a: "email_agent", b: "company_info", from: 2, to: 2, label: "lead" },
+    { a: "email_agent", b: "extract", from: 3, label: "lead" },
+    { a: "extract", b: "web", from: 3 },
+    { a: "extract", b: "calendar", from: 3 },
+    { a: "extract", b: "company_info", from: 3 },
+    { a: "company_info", b: "report", from: 2, to: 4 },
+    { a: "calendar", b: "report", from: 3, to: 4 },
+    { a: "web", b: "report", from: 3, to: 4 },
+    { a: "web", b: "memory", from: 5 },
+    { a: "calendar", b: "memory", from: 5 },
+    { a: "company_info", b: "memory", from: 5 },
+    { a: "memory", b: "report", from: 5, v: true },
+    { a: "report", b: "check", from: 6, v: true },
+    { a: "check", b: "approval", from: 6, v: true, label: "clean" }
   ];
-
-  var HARNESS = ["screen(): the gate", "guard(): every tool call", "allowed tools", "a log line per call"];
 
   var NS = "http://www.w3.org/2000/svg";
   function el(tag, attrs, text) {
@@ -83,26 +88,29 @@
   }
   var byId = {};
   PARTS.forEach(function (p) { byId[p.id] = p; });
+  function subOf(p, beat) {
+    if (!p.subs) return p.sub;
+    var s = null;
+    Object.keys(p.subs).forEach(function (k) { if (+k <= beat) s = p.subs[k]; });
+    return s;
+  }
+  function live(e, beat) { return beat >= e.from && (!e.to || beat <= e.to); }
 
   function edgePath(e) {
     var A = byId[e.a], B = byId[e.b];
-    if (e.v) {                                   // vertical: bottom/top centres, offset by dx
-      var x = (e.a === "retriever" ? A.x + A.w / 2 : A.x + A.w / 2 + (e.dx || 0));
-      var up = A.y > B.y;
-      var y1 = up ? A.y : A.y + A.h, y2 = up ? B.y + B.h : B.y;
-      return { d: "M" + x + " " + y1 + " L" + x + " " + y2, lx: x + 8, ly: (y1 + y2) / 2 + 4 };
+    if (e.v) {
+      var x = A.x + A.w / 2;
+      return { d: "M" + x + " " + (A.y + A.h) + " L" + x + " " + B.y, lx: x + 8, ly: (A.y + A.h + B.y) / 2 + 4 };
     }
-    var ay = A.y + A.h / 2, by = B.y + B.h / 2;
-    var x1 = A.x + A.w, x2 = B.x;
-    if (ay === by) return { d: "M" + x1 + " " + ay + " L" + x2 + " " + by, lx: (x1 + x2) / 2, ly: ay - 10, mid: true };
-    var mx = (x1 + x2) / 2;
-    return { d: "M" + x1 + " " + ay + " C" + mx + " " + ay + " " + mx + " " + by + " " + x2 + " " + by,
-             lx: mx, ly: (ay + by) / 2 - 8, mid: true };
+    var x1 = A.x + A.w, y1 = A.y + A.h / 2, x2 = B.x, y2 = B.y + B.h / 2, mx = (x1 + x2) / 2;
+    if (y1 === y2) return { d: "M" + x1 + " " + y1 + " L" + x2 + " " + y2, lx: mx, ly: y1 - 8, mid: true };
+    return { d: "M" + x1 + " " + y1 + " C" + mx + " " + y1 + " " + mx + " " + y2 + " " + x2 + " " + y2,
+             lx: mx, ly: (y1 + y2) / 2 - 8, mid: true };
   }
 
   function draw(root, beat, xray) {
     var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img",
-      "aria-label": "Agent anatomy, beat " + beat + ": " + BEATS[beat - 1].name });
+      "aria-label": "The meeting-prep flow after layer " + beat + ": " + BEATS[beat - 1].name });
     svg.classList.add("an-svg");
     if (xray) svg.classList.add("xray");
     var defs = el("defs", {});
@@ -113,73 +121,52 @@
       defs.appendChild(m);
     });
     svg.appendChild(defs);
+    var top = el("g", { transform: "translate(0 " + TOP + ")" });
+    svg.appendChild(top);
 
-    // beat 6: the harness frame around everything
-    if (beat >= 6) {
-      var g = el("g", { "class": "an-harness" + (beat === 6 ? " new" : ""), "data-id": "harness" });
-      g.appendChild(el("rect", { x: 18, y: 40, width: W - 36, height: H - 58, rx: 22 }));
-      g.appendChild(el("text", { x: 40, y: 72, "class": "an-hname" }, xray ? "if · retry · log · test" : "Harness"));
-      var cx = 230;
-      HARNESS.forEach(function (h) {
-        var w = h.length * 7.4 + 26;
-        g.appendChild(el("rect", { x: cx, y: 28, width: w, height: 26, rx: 13, "class": "an-hchip" }));
-        g.appendChild(el("text", { x: cx + w / 2, y: 46, "text-anchor": "middle", "class": "an-hchipt" }, h));
-        cx += w + 10;
-      });
-      svg.appendChild(g);
+    // layer 7: the three boxes that run side by side
+    if (beat >= 7) {
+      var G = el("g", { "class": "an-par" + (beat === 7 ? " new" : "") });
+      G.appendChild(el("rect", { x: 688, y: -14, width: 220, height: 474, rx: 18 }));
+      G.appendChild(el("text", { x: 798, y: 452, "text-anchor": "middle" }, xray ? "ThreadPoolExecutor()" : "side by side"));
+      top.appendChild(G);
     }
 
     EDGES.forEach(function (e) {
-      if (e.beat > beat) return;
-      var p = edgePath(e), isNew = e.beat === beat;
+      if (!live(e, beat)) return;
+      var p = edgePath(e), isNew = e.from === beat;
       var g = el("g", { "class": "an-edge" + (isNew ? " new" : "") });
       g.appendChild(el("path", { d: p.d, "marker-end": "url(#an-arr-" + (isNew ? "g" : "n") + ")" }));
       if (e.label) g.appendChild(el("text", { x: p.lx, y: p.ly, "text-anchor": p.mid ? "middle" : "start" }, e.label));
-      svg.appendChild(g);
+      top.appendChild(g);
     });
 
-    // beat 4: the loop — results go back into the next call
+    // layer 4: the loop, on web_research only
     if (beat >= 4) {
-      var L = el("g", { "class": "an-loop" + (beat === 4 ? " new" : ""), "data-id": "loop" });
-      var t = byId.tools, l = byId.llm;
-      // a tight arc on the right of the LLM ↔ tools pair: result → next call
-      var x0 = t.x + t.w, y0 = t.y + 24, y1 = l.y + l.h - 20;
-      L.appendChild(el("path", { d: "M" + x0 + " " + y0 + " C" + (x0 + 55) + " " + y0 + " " + (x0 + 55) + " " + y1 +
-        " " + (x0 + 4) + " " + y1, "marker-end": "url(#an-arr-" + (beat === 4 ? "g" : "n") + ")" }));
-      L.appendChild(el("text", { x: x0 + 50, y: 420, "class": "an-loopt" },
-        xray ? "for turn in range(8):" : "research()"));
-      L.appendChild(el("text", { x: x0 + 50, y: 438, "class": "an-loops" },
-        xray ? "" : "until the model answers"));
-      svg.appendChild(L);
+      var w = byId.web, L = el("g", { "class": "an-loop" + (beat === 4 ? " new" : ""), "data-id": "loop" });
+      var x0 = w.x + 44, x1 = w.x + w.w - 44;
+      L.appendChild(el("path", { d: "M" + x1 + " " + w.y + " C" + x1 + " " + (w.y - 34) + " " + x0 + " " + (w.y - 34) + " " + x0 + " " + (w.y - 2),
+        "marker-end": "url(#an-arr-" + (beat === 4 ? "g" : "n") + ")" }));
+      L.appendChild(el("text", { x: w.x + w.w / 2, y: w.y - 30, "text-anchor": "middle", "class": "an-loopt" }, xray ? "for turn in range(8)" : "↻ loop"));
+      top.appendChild(L);
     }
 
     PARTS.forEach(function (p) {
       if (p.b > beat) return;
-      var isNew = p.b === beat;
-      var g = el("g", { "class": "an-part" + (isNew ? " new" : "") + (p.big ? " big" : ""), "data-id": p.id });
-      g.appendChild(el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: p.big ? 16 : 32 }));
-      var cy = p.chips && !xray ? p.y + 30 : p.y + p.h / 2 + (p.sub && !xray ? -2 : 5);
-      g.appendChild(el("text", { x: p.x + p.w / 2, y: cy, "text-anchor": "middle", "class": "an-name" }, xray ? p.xr : p.name));
-      if (p.sub && !xray && !p.chips)
-        g.appendChild(el("text", { x: p.x + p.w / 2, y: cy + 18, "text-anchor": "middle", "class": "an-sub" + (/\(\)$/.test(p.sub) ? " fn" : "") }, p.sub));
-      if (p.chips && !xray) {
-        var widths = p.chips.map(function (c) { return c.length * 6.6 + 18; });
-        var total = widths.reduce(function (s, w) { return s + w; }, 0) + 6 * (p.chips.length - 1);
-        var scale = Math.min(1, (p.w - 16) / total);
-        var x = p.x + (p.w - total * scale) / 2;
-        var rows = total * scale < p.w - 16 ? 1 : 1;
-        p.chips.forEach(function (c, i) {
-          var w = widths[i] * scale;
-          g.appendChild(el("rect", { x: x, y: p.y + p.h - 40, width: w, height: 24, rx: 12, "class": "an-chip" }));
-          g.appendChild(el("text", { x: x + w / 2, y: p.y + p.h - 24, "text-anchor": "middle", "class": "an-chipt",
-            "font-size": (11.5 * scale).toFixed(1) }, c));
-          x += w + 6 * scale;
+      var isNew = p.b === beat || (p.subs && p.subs[beat]);
+      var g = el("g", { "class": "an-part" + (isNew ? " new" : "") + (p.kind ? " " + p.kind : ""), "data-id": p.id });
+      // layer 7: three researchers, drawn as a stack
+      if (p.id === "web" && beat >= 7) {
+        [10, 5].forEach(function (d) {
+          g.appendChild(el("rect", { x: p.x + d, y: p.y + d, width: p.w, height: p.h, rx: 14, "class": "an-stack" }));
         });
-        void rows;
       }
-      if (p.id === "llm" && beat >= 4 && !xray)
-        g.appendChild(el("text", { x: p.x + p.w - 14, y: p.y + 22, "text-anchor": "end", "class": "an-badge" }, "× N"));
-      svg.appendChild(g);
+      g.appendChild(el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: p.kind === "io" ? 30 : 14 }));
+      var sub = subOf(p, beat);
+      g.appendChild(el("text", { x: p.x + p.w / 2, y: p.y + p.h / 2 - (sub ? 2 : -5), "text-anchor": "middle", "class": "an-name" },
+        xray ? p.xr : p.name));
+      if (sub && !xray) g.appendChild(el("text", { x: p.x + p.w / 2, y: p.y + p.h / 2 + 16, "text-anchor": "middle", "class": "an-sub" }, sub));
+      top.appendChild(g);
     });
     return svg;
   }
@@ -251,10 +238,12 @@
       svg.querySelectorAll(".hot").forEach(function (x) { x.classList.remove("hot"); });
       g.classList.add("lit", "hot");
       counts[id] = (counts[id] || 0) + 1;
-      var r = g.querySelector("rect"), t = g.querySelector(".an-count");
+      var r = g.querySelector("rect:not(.an-stack)"), t = g.querySelector(".an-count");
       if (counts[id] < 2 || !r) return;
       if (!t) {
-        t = el("text", { x: +r.getAttribute("x") + +r.getAttribute("width") - 8, y: +r.getAttribute("y") - 6,
+        // web_research has the loop above it: its count goes below
+        var below = id === "web", y = +r.getAttribute("y");
+        t = el("text", { x: +r.getAttribute("x") + +r.getAttribute("width") - 8, y: below ? y + +r.getAttribute("height") + 30 : y - 6,
                          "text-anchor": "end", "class": "an-count" });
         g.appendChild(t);
       }

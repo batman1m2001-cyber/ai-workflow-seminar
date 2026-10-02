@@ -37,22 +37,21 @@
     ""
   ].join("\n");
 
-  // which part of the agent diagram (anatomy.js) each agent.py function lights
+  // which box of the flow (anatomy.js) each agent.py function lights; a model call
+  // lights the box that made it, so web_research counts its turns
   var PART = {
-    read_email: "user", build_prompt: "prompt", llm: "llm", parse: "parser", brief_prompt: "answer",
-    embed: "docs", recall: "retriever",
-    tools_prompt: "tools", parse_tool_call: "tools", run_tool: "tools", web_search: "tools", fetch_page: "tools",
-    start_mcp: "mcp", list_tools: "mcp", call_tool: "mcp", mcp_request: "mcp",
-    research: "loop", assemble_context: "context", screen: "harness", guard: "harness",
-    research_team: "team", merge: "team"
+    read_email: "email", screen: "screen", email_agent: "email_agent", extract_company: "extract",
+    calendar: "calendar", company_info: "company_info", memory_agent: "memory", report_agent: "report",
+    check_brief: "check", human_approval: "approval"
   };
+  var LLM_BY = { email_agent: "email_agent", report_agent: "report", web_research: "web", research: "web" };
+  function boxOf(ev) { return ev.fn === "llm" ? LLM_BY[ev.by] : PART[ev.fn]; }
 
   // and back: clicking a part shows the code that is it
   var CODE = {
-    user: "def read_email(", prompt: "def build_prompt(", llm: "def llm(", parser: "def parse(",
-    answer: "def brief_prompt(", docs: "def recall(", retriever: "def recall(", tools: "def tools_prompt(",
-    mcp: "def call_tool(", loop: "def research(", context: "def assemble_context(", memory: "MEMORY = ",
-    harness: "def guard(", team: "def research_team("
+    email: "def read_email(", screen: "def screen(", email_agent: "def email_agent(", extract: "def extract_company(",
+    web: "def web_research(", loop: "def research(", calendar: "def calendar(", company_info: "def company_info(",
+    memory: "def memory_agent(", report: "def report_agent(", check: "def check_brief(", approval: "def human_approval("
   };
 
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
@@ -115,7 +114,7 @@
     });
     el.querySelector(".pj-reset").onclick = function () { if (cm) cm.setValue(original); };
 
-    function light(ev) { if (graph && graph.flash && PART[ev.fn]) graph.flash(PART[ev.fn]); }
+    function light(ev) { var id = boxOf(ev); if (graph && graph.flash && id) graph.flash(id); }
 
     function wireItem(call, ret) {
       var a = call.args || {}, title, req, rep;

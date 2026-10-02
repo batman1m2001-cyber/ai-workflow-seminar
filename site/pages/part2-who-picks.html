@@ -219,7 +219,7 @@ class State(TypedDict):
 
 # a node reads the dict, returns an update
 def triage(state: State) -&gt; dict:
-    return {&quot;lead&quot;: parse(llm(build_prompt(state[&quot;email&quot;])))}
+    return {&quot;lead&quot;: parse(llm(triage_prompt(state[&quot;email&quot;])))}
 
 g = StateGraph(State)
 g.add_node(&quot;triage&quot;, triage)
@@ -243,7 +243,7 @@ app = g.compile(checkpointer=InMemorySaver())</pre>
 <pre class="static"># a node: a function that owns its outputs
 @op
 def triage(email: dict) -&gt; dict:
-    return {&quot;lead&quot;: parse(llm(build_prompt(email)))}
+    return {&quot;lead&quot;: parse(llm(triage_prompt(email)))}
 
 @graph
 def prepare(email):
