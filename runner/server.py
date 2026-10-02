@@ -77,6 +77,8 @@ def _backend(body: dict, kind: str) -> tuple:
     openai = (real.get("OPENAI_BASE_URL", "https://api.openai.com/v1"), real.get("OPENAI_API_KEY", ""))
     if kind == "embeddings":
         return (*openai, real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
+    if str(body.get("model", "")).startswith("openai:"):   # a caller that picks its OpenAI model
+        return (*openai, body["model"].split(":", 1)[1])
     if body.get("tools") or body.get("functions") or not real.get("INHOUSE_BASE_URL"):
         return (*openai, real.get("SEMINAR_TOOLS_MODEL", "gpt-4o-mini"))
     return real["INHOUSE_BASE_URL"], real.get("INHOUSE_API_KEY", ""), real.get("INHOUSE_MODEL", "google/gemma-4-E2B-it")

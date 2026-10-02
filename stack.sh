@@ -58,10 +58,11 @@ up() {
   echo "  seeded"
   start mocks 8100 "$PREP/meeting-prep-world" env "${MODEL_ENV[@]}" uv run prep-mocks
   start app 8200 "$PREP/meeting-prep-operonx" env "${MODEL_ENV[@]}" uv run operonx-serve
-  # its own accounts: the first start makes "seminar" the admin, with the password
+  # its own accounts: the first start makes "seminar" the admin, with the password;
+  # jobs and services it starts inherit the model settings
   OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
     start studio "$STUDIO_PORT" "$STUDIO_DIR" \
-    uv run operonx-studio "$PREP/meeting-prep-operonx" --port "$STUDIO_PORT" --no-open
+    env "${MODEL_ENV[@]}" uv run operonx-studio "$PREP/meeting-prep-operonx" --port "$STUDIO_PORT" --no-open
   status
 }
 
