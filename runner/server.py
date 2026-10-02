@@ -191,6 +191,7 @@ def run(req: Run):
         # through the router: the code never sees a real key, and tool calls reach gpt-4o-mini
         env.update(OPENAI_API_KEY=ROUTER_KEY, OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/llm/v1",
                    SEMINAR_MODEL="gpt-4o-mini",
+                   AGENT_MODEL="openai:gpt-4o-mini",   # agent.py writes its tools into the prompt: keep it on OpenAI
                    SEMINAR_EMBED_MODEL=real.get("SEMINAR_EMBED_MODEL", "text-embedding-3-small"))
     else:
         env.update(OPENAI_API_KEY="mock-key", OPENAI_BASE_URL=f"http://127.0.0.1:{PORT}/mock/v1",

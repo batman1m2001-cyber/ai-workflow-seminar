@@ -28,7 +28,100 @@
 <h1>Monday morning, and the engine</h1>
 <p class="lead">Part II was Friday's benchmark. On Monday at 8 am, 50 emails arrive at once. Some are attacks, the search API is slow, the provider has a rate limit, and nobody can say why a brief says what it says.</p>
 
-<!--SPEECH-->
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 15 phút</summary>
+<div class="speech">
+<p class="cue">[Trước buổi nói: <code>./stack.sh up</code> (mail, database, mocks, runner, <code>operonx-serve</code> :8200, Studio :8766) rồi <code>./stack.sh tunnel</code>. Tab 5 "The whole system, live" chạy live; luôn để sẵn bản ghi hình dự phòng. Mở sẵn Mailpit (http://127.0.0.1:8025) ở cửa sổ bên cạnh.]</p>
+
+<h4>1 · Thứ Hai, 8 giờ sáng <small>(~1 phút · mở đầu trang, tab "Monday breaks it")</small></h4>
+<p>Part II kết thúc ở benchmark của chiều thứ Sáu. Trên giấy, mọi thứ đẹp: workflow pass nhiều hơn, rẻ hơn, nhanh hơn.</p>
+<p>Rồi sáng thứ Hai tới. 8 giờ sáng, 50 email đổ vào inbox cùng lúc. Trong đó có vài email là tấn công. Cái search API hôm nay chậm. Provider thì có rate limit. Và khi một cái brief nói sai, không ai trả lời được câu: tại sao nó lại nói vậy?</p>
+<p>Chương 11 tên là "Monday breaks it". Mình sẽ không nói lý thuyết. Mình lấy con agent ở Part I, cho nó cầm thêm một tool là <code>send_email</code>, bỏ hết harness đi, và phá nó ngay tại đây, từng thẻ một, chạy thật với inbox thật, web thật, và model thật.</p>
+<p class="cue">[Đang ở tab "Monday breaks it". Chỉ vào sơ đồ: 50 emails → for email in inbox → agent(email) → search · read · send → brief.]</p>
+<p>Đây là con agent naive: một vòng for chạy qua inbox, mỗi email gọi agent một lần, và agent cầm mọi tool. Search, read, send. Không có harness gì hết. Mười lăm dòng code.</p>
+
+<h4>2 · Thẻ 1: Một email ra lệnh <small>(~1,5 phút · pipeline "Monday, 8 am", thẻ ✉)</small></h4>
+<p>Thẻ đầu tiên: một email ra lệnh. Đây chính là kiểu tấn công mà đề bài khóa học đã nêu. Một email gửi vào inbox sales, nhưng nội dung của nó không phải là hỏi mua hàng. Nó ra lệnh cho agent. Và agent thì đang cầm tool gửi email.</p>
+<p>Các bạn đoán xem chuyện gì xảy ra?</p>
+<p class="cue">[Bấm Step ở pipeline "Monday, 8 am" để chạy thẻ "An email gives orders". Chờ dòng ✗ màu đỏ.]</p>
+<p>Đây. Dấu gạch chéo đỏ: email đã được gửi đi. Vì sao? Vì có một email bảo nó làm vậy. Không có ai hack server, không có ai lấy được mật khẩu. Chỉ là một đoạn văn bản, và model làm theo.</p>
+<p class="cue">[Chuyển sang Mailpit, mở email vừa thật sự được gửi tới abc@company.com. Để khán giả nhìn vài giây.]</p>
+<p>Đây không phải là log giả lập. Email này thật sự đã đi ra, tới abc@company.com. Nếu đây là production, thì nó đã rời khỏi công ty rồi.</p>
+
+<h4>3 · Thẻ 2: Một trang web ra lệnh <small>(~1 phút · thẻ ⚠)</small></h4>
+<p>Các bạn sẽ nói: thế thì đừng cho agent đọc email lạ nữa. Nhưng agent còn phải đi đọc web. Thẻ thứ hai: một trang web ra lệnh.</p>
+<p>Ở đây mình làm đúng cái việc mà rất nhiều code ngoài kia đang làm: tải trang web của Red River Textiles về, lấy nguyên cái HTML thô, rồi dán thẳng vào prompt để viết brief.</p>
+<p class="cue">[Bấm Step để chạy thẻ "A page gives orders".]</p>
+<p>Các bạn xem brief bây giờ chứa gì. Trang web đó có giấu sẵn chỉ dẫn bên trong, và vì mình dán nguyên trang thô, model ngoan ngoãn đưa nó vào brief. Điều đáng sợ là cái brief nhìn vẫn rất ổn. Không ai để ý cả.</p>
+<p class="cue">[Đọc đúng cái thẻ vừa in ra. Nếu nó in <code>✗ the brief now contains: []</code> thì lần này model không mắc bẫy: nói thẳng là may, không phải được bảo vệ. Không thể trông vào may mắn khi có 10.000 email, nên vẫn phải đọc trang như người đọc và kiểm tra brief.]</p>
+
+<h4>4 · Thẻ 3 và 4: Search chậm, JSON lắm lời <small>(~2 phút · thẻ ⏱ và thẻ { })</small></h4>
+<p>Thẻ thứ ba không liên quan gì tới security. Chỉ là một ngày bình thường. Inbox có ba công ty: Lotus Logistics, Halong Robotics, Mekong Microfinance. Riêng lần search cho Halong Robotics bị chậm, ba giây. Code đặt timeout một giây, và không có gì xử lý timeout cả.</p>
+<p class="cue">[Bấm Step để chạy thẻ "A slow search".]</p>
+<p>Batch sập ngay ở email số hai. Xong được một công ty, mất hai email. Một cái call chậm, và cả batch chết theo. Đó là kiểu lỗi "total": hoặc mọi thứ chạy, hoặc không có gì chạy.</p>
+<p>Thẻ thứ tư là cái mình thích nhất, vì nó rất đời thường. Mình hỏi model: email này có phải lead không, trả lời bằng JSON. Model trả lời: "Sure! Here is the JSON you asked for", rồi mới tới cái JSON. Code parse thì viết kiểu "an toàn": parse lỗi thì trả về <code>None</code>. Mà <code>None</code> thì đọc ra thành gì?</p>
+<p class="cue">[Bấm Step để chạy thẻ "Chatty JSON".]</p>
+<p><code>is_lead</code> bằng False. Email của Linh, một lead thật, bị xếp vào "không phải lead". Và không có gì báo cả. Không exception, không log, không ai biết. Lead cứ thế biến mất.</p>
+<p>Chuyện này có thật. Khi mình chuyển cả site sang chạy với model in-house, model đó có thói quen bọc JSON trong code fence, ba dấu backtick rồi chữ json. Thế là đoạn code nào gọi thẳng <code>json.loads</code> đều gãy. Lỗi của model, hay việc của harness? Mình nghĩ là việc của harness: router bây giờ tự gỡ cái fence ra, sửa một chỗ, mọi bước đều được hưởng.</p>
+
+<h4>5 · Thẻ 5 và 6: 50 cùng lúc, và "tại sao nó nói vậy?" <small>(~1,5 phút · thẻ ▤, thẻ ?, callout "Every one of these is silent or total")</small></h4>
+<p>Thẻ thứ năm: 50 email cùng lúc. Provider chỉ cho phép 10 request một lúc. Nhưng không ai nói điều đó cho vòng lặp cả. Vòng lặp cứ bắn hết 50.</p>
+<p class="cue">[Bấm Step để chạy thẻ "50 at once".]</p>
+<p>40 trên 50 call bị từ chối với lỗi 429, Too Many Requests. Bốn phần năm công việc buổi sáng, bay mất.</p>
+<p>Và thẻ cuối cùng. Một cái brief đã được gửi đi với một fact sai. Sếp hỏi: model đã nhìn thấy gì mà nói vậy? Các bạn mở log ra xem…</p>
+<p class="cue">[Bấm Step để chạy thẻ "Why did it say that?".]</p>
+<p>Số bước được ghi lại cho run đó: không. Không có input, không có output, không có thời gian. Vì chẳng ai viết trace cả.</p>
+<p class="cue">[Chỉ vào callout vàng "Every one of these is silent or total".]</p>
+<p>Nhìn lại cả sáu thẻ. Email của kẻ tấn công đã được gửi. Brief bị đầu độc nhưng nhìn vẫn ổn. Một timeout làm mất hai email. Một lead biến mất thành chữ "không". Bốn mươi call bị từ chối. Và không ai giải thích được chuyện gì. Mỗi lỗi hoặc là im lặng, hoặc là sập toàn bộ. Không có lỗi nào lịch sự báo cho mình biết cả.</p>
+
+<h4>6 · Tự vá bằng tay: tảng băng chìm <small>(~2,5 phút · tab "The iceberg", bảng wound / the fix / lines, pipeline "The attacks from the course brief, as a test")</small></h4>
+<p class="cue">[Bấm "Next: 2 · The iceberg →" hoặc chuyển sang tab "The iceberg".]</p>
+<p>Tin tốt là: vết thương nào cũng đã có cách chữa, ai cũng biết. Email ra lệnh: đặt một cái gate trước mọi model, và tool thì cấp theo least privilege. Trang web ra lệnh: đọc trang như một người nhìn thấy nó, và kiểm tra lại brief. Timeout: có timeout, có retry, và lỗi là một giá trị chứ không phải một vụ nổ. JSON lắm lời: parse thì phải fail cho to, không bao giờ âm thầm trả về <code>None</code>. 50 cùng lúc: giới hạn concurrency, có backoff. "Tại sao nó nói vậy": một trace cho mỗi run, mỗi bước. Thêm hai cái mà sáng thứ Hai nào cũng gặp: "prompt mới có tốt hơn không" thì cần một golden set và một cái gate; và khi một con người phải nói "đồng ý" thì cần một bản nháp, một đường link, và một lần chạy thứ hai.</p>
+<p>Các bạn để ý cột bên phải. Cộng lại, 15 dòng thành 150 dòng. Và 135 dòng mới đó là y hệt nhau ở mọi team. Team nào cũng tự viết lại đúng những dòng đó.</p>
+<p>Và không có cách chữa nào liên quan tới model cả. Không có cái nào là "đổi sang model xịn hơn".</p>
+<p>Mình chạy thử cách chữa đầu tiên, như một bài test. Lấy đúng những email tấn công trong golden set, những cái mà đề bài khóa học nêu ra, và cho chúng đi qua một cái gate chạy trước mọi model.</p>
+<p class="cue">[Bấm ▶ Run ở pipeline "The attacks from the course brief, as a test". Đọc dòng "… blocked before a model saw them".]</p>
+<p>Gate này là một rule, không phải một prompt. Nó không thể bị thuyết phục bỏ việc của mình, vì nó không đọc lời thuyết phục. Model chưa từng nhìn thấy những email này.</p>
+<p>Cái vòng lặp agent chỉ là phần nổi của tảng băng. Phần chìm bên dưới là một <b>execution system</b>: timeout, retry, lỗi là giá trị, parallelism có giới hạn, gate, trace, eval, approval, durable state.</p>
+<p class="cue">[Chỉ vào callout "The truth".]</p>
+<p>Và cái danh sách đó có một cái tên. Nó gọi là <b>workflow engine</b>.</p>
+<p>Không chỉ mình nghĩ vậy. Những team đang build agent framework cũng đâm vào đúng tảng băng đó, và câu trả lời giống hệt. Microsoft Agent Framework được xây quanh workflow dạng graph. OpenAI Agents SDK chạy trên các engine durable execution ở bên dưới. Còn LangGraph thì từ đầu tới giờ vẫn luôn là một workflow engine.</p>
+
+<h4>7 · Một engine phải làm được gì <small>(~2 phút · tab "What an engine must do")</small></h4>
+<p class="cue">[Bấm "Next: 3 · What an engine must do →" hoặc chuyển sang tab "What an engine must do". Chỉ từng dòng bên trái rồi sang cột "Monday's wound".]</p>
+<p>Chương 12. Bên trái là thứ engine cho mình. Bên phải là vết thương của sáng thứ Hai mà nó chữa. Dòng nào cũng trả lời một vết thương.</p>
+<p>Dòng đầu: step và edge, branch, loop, state. Đó là hình dạng của mọi hệ thống mình đã xem ở Part I và Part II.</p>
+<p>Bounded parallelism: trả lời vụ 50 cùng lúc, 40 bị từ chối. Failure là giá trị, có timeout, có retry: trả lời vụ một timeout làm mất cả batch. Parsing fail cho to: trả lời vụ JSON lắm lời biến thành chữ "không". Gate và least privilege, làm thành những step thật sự trong graph: trả lời vụ một email và một trang web ra lệnh cho agent.</p>
+<p>Trace cho mỗi run, mỗi step: trả lời câu "tại sao nó nói vậy?". Eval làm deploy gate: trả lời câu "prompt mới có tốt hơn không?". Trigger, approval và durable state: một webhook, đúng 8 giờ sáng, và một cái "đồng ý" của con người. Và dòng cuối: job và service chạy từ cùng một graph, vì cái batch buổi sáng và cái inbox live thật ra là một hệ thống.</p>
+<p>Không có dòng nào nói về model. Toàn bộ là chuyện thực thi: chạy cái gì, khi nào, song song bao nhiêu, lỗi thì sao, ai được phép làm gì, và ghi lại những gì.</p>
+<p>Danh sách này engine-agnostic. Các bạn dùng engine nào cũng được, nhưng hãy cầm cái danh sách này mà đòi engine đó. Nếu agent của các bạn chạy production, thì chắc chắn có một thứ gì đó đang làm hết những việc này. Câu hỏi duy nhất là: thứ đó là một engine, hay là 150 dòng code cho mỗi con agent?</p>
+
+<h4>8 · Bức tranh toàn cảnh, nói cho công bằng <small>(~1,5 phút · tab "The landscape")</small></h4>
+<p class="cue">[Bấm "Next: 4 · The landscape →" hoặc chuyển sang tab "The landscape".]</p>
+<p>Vậy chọn engine nào? Ba lựa chọn, nói thật lòng, và cái nào cũng mạnh nhất ở một chỗ.</p>
+<p>LangGraph là một engine tốt, và là engine được hỗ trợ tốt nhất: hệ sinh thái agent lớn nhất, tài liệu tốt, tuyển người dễ, có checkpoint, interrupt, LangSmith. Điểm yếu: state dict cộng reducer ở mọi step, graph nối bằng string, overhead mỗi step nặng hơn, và trigger, eval gate, job thì các bạn tự build.</p>
+<p>Nhóm Temporal, Restate, DBOS là vua của durable execution. Nếu một run phải sống sót qua nhiều ngày, đây là bên thắng. Nhưng chúng không được thiết kế cho LLM step, và hơi nặng cho mấy cái pipeline của một team.</p>
+<p>Còn OperonX là cái tụi mình tự build. Mạnh ở tốc độ, cú pháp gọn, job, eval và trigger có sẵn, và Studio vẽ ra đúng cái graph thật đang chạy. Cái giá thì mình nói luôn: cộng đồng nhỏ, phục vụ một team, và tụi mình phải tự maintain nó.</p>
+<p>Câu hỏi đúng không phải là "engine nào tốt nhất", mà là "team mình đang vật lộn với cái gì nhiều nhất". Số đo overhead và cùng một hệ thống build bằng cả hai engine nằm ở phần appendix, ai quan tâm thì xem sau buổi nói.</p>
+
+<h4>9 · Cả hệ thống, chạy live <small>(~3 phút · tab "The whole system, live")</small></h4>
+<p class="cue">[Bấm "Next: 5 · The whole system, live →" hoặc chuyển sang tab "The whole system, live". Bấm "Open the inbox" và "Open Studio", xếp hai cửa sổ cạnh trang.]</p>
+<p>Nói đủ rồi. Giờ mình cho các bạn xem cả hệ thống chạy thật. Một email của khách hàng, gửi đi ngay từ trang này. Các bạn nhìn hai chỗ: inbox, và Studio.</p>
+<p class="cue">[Chọn email của Linh (loại ✉, không phải ⚠ attack hay "not a lead") trong danh sách, bấm "Send as customer".]</p>
+<p>Email đi qua SMTP vào inbox. Webhook của inbox khởi động graph. Và các bạn nhìn Studio, nó sáng lên, từng zone một, với đúng tên các ô trong đề bài: email, extract company, rồi web research chạy cạnh calendar và company info, rồi memory gộp lại, report viết brief, và cuối cùng là human approval. Đó chính là cái sơ đồ bảy agent ở Part II, giờ đang chạy thật.</p>
+<p>Chỉ có web research là agent thật: mở nó ra, các bạn thấy ba research agent chạy song song, mỗi con một vòng lặp.</p>
+<p class="cue">[Chuyển sang inbox, mở email "[Approve?] Brief: …", bấm Approve.]</p>
+<p>Đây, email "Approve?" đã vào inbox. Một con người đọc brief, và bấm Approve. Brief đi tới đội sales, và được ghi vào memory. Đó là "a human must say yes" ở tảng băng, nhưng lần này là một step trong engine, chứ không phải hai mươi dòng viết tay.</p>
+<p class="cue">[Quay lại trang, chọn một email ⚠ attack, bấm "Send as customer". Chỉ vào Studio.]</p>
+<p>Bây giờ mình gửi một email tấn công, đúng loại email ở thẻ đầu tiên sáng nay. Các bạn xem: nó bị chặn ngay ở gate, trong vài mili giây. Không có gì được gửi đi. Không có model nào được đụng vào.</p>
+<p class="cue">[Nếu demo live lỗi: mở bản ghi hình dự phòng và kể tiếp theo đúng thứ tự trên. Chỉ vào callout "The truth".]</p>
+<p>Và các bạn để ý điều này. Con agent mà mình build từ đầu ở Chương 4, cái vòng for quanh một LLM call, bây giờ chỉ là <b>một node</b> trong graph này. Nó vẫn là agent. Nhưng mọi thứ xung quanh nó là workflow, và engine chạy workflow đó: trigger, gate, các step song song, cái "đồng ý" của con người, một trace cho mỗi run.</p>
+
+<h4>10 · Chốt lại <small>(~30 giây · chuyển sang Epilogue)</small></h4>
+<p>Tóm lại Part III. Sáng thứ Hai không làm vỡ model, nó làm vỡ mọi thứ xung quanh model. Thứ chữa nó là một workflow engine, engine nào cũng được, miễn là làm đủ cái danh sách đó.</p>
+<p>Nhưng meeting prep vẫn là một demo. Phần cuối, mình cho các bạn thấy cùng pattern này trong những hệ thống chạy mỗi ngày, rồi mình trả lời câu hỏi lúc mở đầu.</p>
+<p class="cue">[Bấm "Next →" ở cuối trang để sang Epilogue · The decoder.]</p>
+</div>
+</details>
 
 <div class="tabs">
   <div class="tab" data-name="Monday breaks it" data-chapter="11" data-say="Six ways a hand-written agent fails at 8 am. Each one is <b>silent</b> or <b>total</b>.">
@@ -66,6 +159,40 @@
       <tr><td>jobs and services from the same graph</td><td>the batch and the live inbox are one system</td></tr>
     </table>
   </div>
+  <div class="tab" data-name="OperonX" data-chapter="12" data-say="The same steps, twice. Left: Part I's <code>prepare()</code>, plain Python, one call after another. Right: the real system's <b>OperonX graph</b>: the steps are nodes, the wiring is <code>&gt;&gt;</code>, and the engine runs it.">
+    <div class="sbs">
+      <div><h4>agent.py (Part I): Python runs the steps in order</h4><pre class="static">def prepare(email):
+    &quot;&quot;&quot;The whole job, step by step.&quot;&quot;&quot;
+    if attack := screen(email):
+        return f&quot;held at the gate ({attack!r}): no model saw this email&quot;
+    lead = parse(llm(build_prompt(email)))
+    notes = recall(f&quot;{lead[&#x27;company&#x27;]}: {lead[&#x27;intent&#x27;]}&quot;)
+    crm = start_mcp()
+    tools = list_tools(crm) + LOCAL_TOOLS
+    findings = merge(research_team(crm, tools, lead))
+    return llm(brief_prompt(lead, notes, findings))</pre></div>
+      <div><h4>meeting-prep (OperonX): the steps as a graph, run by the engine</h4><pre class="static">@graph
+def prepare(mail, deliver):
+    email = email_agent(email=mail)
+    extract_company = extract_company_name(email=mail)
+    web_research = web_research_agent(company=extract_company[&quot;company&quot;])
+    calendar = calendar_agent(company_id=extract_company[&quot;company_id&quot;])
+    company_info = company_info_agent(company=extract_company[&quot;company&quot;], company_id=extract_company[&quot;company_id&quot;])
+    memory = memory_agent(
+        email=mail, company=extract_company[&quot;company&quot;], contacts=company_info[&quot;contacts&quot;],
+        history=company_info[&quot;history&quot;], meetings=calendar[&quot;meetings&quot;], notes=company_info[&quot;memory&quot;],
+        website=web_research[&quot;website&quot;], news=web_research[&quot;news&quot;], people=web_research[&quot;people&quot;],
+    )
+    report = report_agent(company=extract_company[&quot;company&quot;], company_name=extract_company[&quot;name&quot;],
+                          evidence=memory[&quot;text&quot;])
+    human_approval = human_approval_gate(email=mail, deliver=deliver, company=extract_company[&quot;company&quot;],
+                                         brief=report[&quot;brief&quot;], ok=report[&quot;ok&quot;], problems=report[&quot;problems&quot;])
+    done = ops.settle(a=email[&quot;outcome&quot;], b=human_approval[&quot;outcome&quot;])
+
+    START &gt;&gt; email &gt;&gt; if_(email[&quot;lead&quot;] == True, extract_company).else_(done)  # noqa: E712
+    extract_company &gt;&gt; [web_research, calendar, company_info] &gt;&gt; memory &gt;&gt; report &gt;&gt; human_approval &gt;&gt; done &gt;&gt; END</pre></div>
+    </div>
+  </div>
   <div class="tab" data-name="The landscape" data-chapter="12" data-say="Three honest options. Each is <b>strongest</b> somewhere.">
     <table class="plain" style="margin:0">
       <tr><th></th><th>strongest at</th><th>weaker at</th></tr>
@@ -88,7 +215,7 @@
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="1">
 <h2>Chapter 11 · Monday breaks it</h2>
-<p>The agent from Part I, with one more tool, <code>send_email</code>, and no harness. Each card is one Monday-morning event, run for real against the inbox, the web and the model.</p>
+<p>The agent from Part I with its harness taken off: a loop with every tool, <code>send_email</code> included, run over the whole inbox. Each card is one Monday-morning event, run for real against the inbox, the web and the model.</p>
 <div class="pipeline" data-title="Monday, 8 am">
   <div class="step" data-icon="✉" data-title="An email gives orders" data-desc="The course brief's own attack. The agent has a send tool.">
 <script type="text/plain">
@@ -143,7 +270,7 @@ print("✗ is_lead =", (lead or {}).get("is_lead", False), "→ Linh's email is 
 </script></div>
   <div class="step" data-icon="▤" data-title="50 at once" data-desc="The provider allows 10 at a time; nobody told the loop.">
 <script type="text/plain">
-async def provider(i, slots=asyncio.Semaphore(10), busy=[0]):
+async def provider(i, busy=[0]):              # allows 10 at a time
     if busy[0] >= 10:
         raise RuntimeError("429 Too Many Requests")
     busy[0] += 1
@@ -195,26 +322,42 @@ print(f"{len(caught)}/{len(attacks)} blocked before a model saw them")
 <section class="beat" data-beat="3" hidden>
 <h2>Chapter 12 · What an engine must do</h2>
 <p>Every line of this list answers a Monday wound. Hold <b>any</b> engine to it. If your agent runs in production, something does all of this: the only choice is whether it's an engine, or 150 lines per agent.</p>
-<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · The landscape →</button></div>
+<div class="beat-nav"><button class="beat-next" data-go="4">Next: 4 · OperonX →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="4" hidden>
-<h2>The landscape, fairly</h2>
-<p>LangGraph is a good engine and the best supported. Temporal-class engines win when a run must survive for days. We built <b>OperonX</b> for speed and terse graphs, and we pay for it: we maintain it, and it serves one team. The measured numbers and the same system built in both are in the <a href="appendix.html">appendix</a>.</p>
-<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · The whole system, live →</button></div>
+<h2>OperonX: the workflow, given to an engine</h2>
+<p>Part I ended on a picture: <code>agent.py</code>'s functions joined by arrows. <b>OperonX</b> is a Python workflow engine that takes that picture literally:</p>
+<table class="plain">
+  <tr><td><b><code>@op</code></b></td><td>a plain function becomes a step: <code>recall</code>, <code>screen</code>, <code>request_approval</code></td></tr>
+  <tr><td><b><code>@graph</code> and <code>&gt;&gt;</code></b></td><td>the wiring is written once: <code>a &gt;&gt; [b, c, d] &gt;&gt; e</code> runs b, c and d side by side, then e</td></tr>
+  <tr><td><b><code>if_(…)</code></b></td><td>a branch the <b>code</b> picks; an agent node is where the <b>model</b> picks</td></tr>
+  <tr><td><b>the engine</b></td><td>each step runs the moment its inputs are ready; failures are values; timeouts, retries, bounded parallelism</td></tr>
+  <tr><td><b>around it</b></td><td>webhooks and schedules start runs, a golden set gates deploys, every run is a trace, and <b>Studio</b> draws the graph from the code</td></tr>
+</table>
+<p>Every Monday wound from tab 1 has a line in that list. That's the difference between <code>agent.py</code> and a system: not the model, the engine around it.</p>
+<div class="beat-nav"><button class="beat-next" data-go="5">Next: 5 · The landscape →</button></div>
 </section>
 
 <!-- ─────────────────────────────────────────────────────────────── -->
 <section class="beat" data-beat="5" hidden>
+<h2>The landscape, fairly</h2>
+<p>LangGraph is a good engine and the best supported. Temporal-class engines win when a run must survive for days. We built <b>OperonX</b> for speed and terse graphs, and we pay for it: we maintain it, and it serves one team. The measured numbers and the same system built in both are in the <a href="appendix.html">appendix</a>.</p>
+<div class="beat-nav"><button class="beat-next" data-go="6">Next: 6 · The whole system, live →</button></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────── -->
+<section class="beat" data-beat="6" hidden>
 <h2>The whole system, live</h2>
 <ol>
   <li>Pick Linh's email above and press <b>Send as customer</b>. It goes over SMTP to the inbox.</li>
-  <li>The inbox's webhook starts the graph, and <b>Studio</b> lights it up, zone by zone, with the brief's own box names: email, extract company, then web research (three agents) beside calendar and company info, then memory, report, human approval.</li>
+  <li>The inbox's webhook starts the graph, and <b>Studio</b> lights it up, zone by zone, with the brief's own box names: email, extract company, then web research (the one agent, three questions in parallel) beside calendar and company info, then memory, report, human approval.</li>
   <li><b>“[Approve?] Brief: …”</b> lands in the inbox. Click <b>Approve</b>: the brief goes to sales and into memory.</li>
   <li>Now send an <b>attack</b>. It's held at the gate in milliseconds, and nothing is sent.</li>
 </ol>
 <div class="callout key"><b class="t">The truth</b><p>The Chapter 4 agent is <b>one node</b> in this graph. Everything around it is the workflow, and the engine runs it: triggers, the gate, parallel steps, the human's yes, a trace per run.</p></div>
+<div class="handoff"><span>Still missing</span><p>Nothing, for Linh's email. Now the same pattern in production, and the decoder, full.</p></div>
 </section>
 
 </main>

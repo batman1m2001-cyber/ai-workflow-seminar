@@ -22,7 +22,8 @@
     btn.type = "button";
     btn.className = "sp-ref";
     btn.setAttribute("aria-expanded", "false");
-    btn.innerHTML = '<span class="sp-ref-k">▶ Playground</span>' + esc(el.getAttribute("data-title") || "Run it");
+    var title = el.getAttribute("data-title") || "Run it", lc = /^LangChain: /.test(title);
+    btn.innerHTML = '<span class="sp-ref-k">' + (lc ? "＋ The same in LangChain" : "▶ Playground") + "</span>" + esc(title.replace(/^LangChain: /, ""));
     var body = document.createElement("div");
     body.className = "pg-body";
     body.hidden = true;
@@ -35,7 +36,7 @@
       body.hidden = !open;
       box.classList.toggle("open", open);
       btn.setAttribute("aria-expanded", open ? "true" : "false");
-      btn.firstChild.textContent = open ? "▼ Playground" : "▶ Playground";
+      if (!lc) btn.firstChild.textContent = open ? "▼ Playground" : "▶ Playground";
       if (open) body.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
     };
   }

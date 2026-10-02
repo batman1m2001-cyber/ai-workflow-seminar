@@ -21,7 +21,7 @@
       xray: "A function, a string template, and json.loads with a check." },
     { n: 2, name: "Knowledge", terms: "RAG",
       say: "The model doesn't know our history with this company, so we fetch our notes and put them in the prompt.",
-      xray: "Embed, dot product, top-k: then paste the hits into the f-string." },
+      xray: "Embed, cosine distance, top-k: then paste the hits into the f-string." },
     { n: 3, name: "Tools", terms: "function calling · MCP",
       say: "The model asks for actions: search the web, read a page, look the company up in the CRM over MCP.",
       xray: "A JSON schema pasted into the prompt, and a parser that reads the reply. Your code runs the tool." },
@@ -244,7 +244,6 @@
         if (on) s.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
       });
       if (history.replaceState) history.replaceState(null, "", "#beat-" + beat);
-      document.dispatchEvent(new CustomEvent("beatchange", { detail: { beat: beat } }));   // decoder.js listens
     }
     root.goto = function (n) { beat = n; render(); };
     if (sections.length) window.addEventListener("hashchange", function () {

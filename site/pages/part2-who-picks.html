@@ -17,7 +17,63 @@
 <h1>Who picks the next step?</h1>
 <p class="lead">Part I ended on a picture: functions joined by arrows. At each arrow, either <b>your code</b> picks the next step or <b>the model</b> does. Ask that one question of Linh's email, of the products you know, and of the course brief's seven agents. Then measure.</p>
 
-<!--SPEECH-->
+<details class="notes speech"><summary>🎤 Kịch bản thuyết trình · khoảng 12 phút</summary>
+<div class="speech">
+<h4>1 · Ai chọn bước tiếp theo? <small>(~3 phút · tab "Who picks?")</small></h4>
+<p>Part I mình dừng lại ở tấm X-ray: bỏ hết tên gọi đi, bên trong chỉ còn các function nối với nhau bằng mũi tên. Tấm hình đó có tên: một workflow. Và mình để lại đúng một câu hỏi: ở mỗi mũi tên, ai chọn bước tiếp theo? Code của các bạn, hay model? Part II hỏi câu đó với email của Linh, với những sản phẩm các bạn đang dùng, và với bảy agent trong đề bài của khoá học. Rồi mình đo.</p>
+<p>Câu hỏi này không phải mình nghĩ ra. Anthropic, trong bài "Building effective agents", vạch ranh giới bằng đúng câu đó. Mình đọc gần như nguyên văn. Workflows là những hệ thống mà LLM và tool được điều phối qua những code path định sẵn. Agents là những hệ thống mà LLM tự điều hướng quy trình và cách dùng tool của chính nó.</p>
+<p class="cue">[Đang ở tab "Who picks?". Chỉ vào khung xanh trích Anthropic ở phần dưới, rồi chỉ lên hai sơ đồ ở trên.]</p>
+<p>Hai sơ đồ, cùng một email. Bên trái, "Workflow: code picks the path": triage xong là một câu if, lead thì search và read rồi viết brief, không thì skip. Bên phải, "Agent: the model picks the path": ở mỗi lượt, model tự hỏi: web search? Đọc một trang? Tra CRM? Hay xong rồi? Mấy dấu hỏi trên mũi tên là những chỗ model đang quyết định, lượt này qua lượt khác.</p>
+<p>Đừng tin mình. Mình chạy email của Linh theo cả hai cách, rồi mình đếm số lần gọi model.</p>
+<p class="cue">[Kéo xuống pipeline "Workflow: code picks the path", chạy lần lượt Triage → Route and research → Brief.]</p>
+<p>Triage: đúng một LLM call, hỏi có phải lead không, công ty nào. Route and research: một câu if, rồi một công thức cố định: search tên công ty kèm chữ "news", đọc kết quả đầu tiên. Không ai hỏi model nên làm gì tiếp. Brief: thêm một LLM call để viết. Dòng cuối in ra số model calls, và "path picked by: code". Con số đó do code quyết: các bạn chạy lại bao nhiêu lần thì nó vẫn vậy.</p>
+<p class="cue">[Chạy pipeline "Agent: the model picks the path": Tools → The loop → Answer. Đọc to từng dòng "model picked: …" khi nó in ra.]</p>
+<p>Giờ sang bên agent. Mình đưa cho model ba tool: web_search, fetch_page và crm_lookup. Rồi vào vòng lặp, đúng cái vòng for của Chương 4. Mỗi dòng "model picked" là model đang chọn một mũi tên. Ở bước Answer, mình hỏi một câu hơi khó chịu: model nói xong rồi, nhưng nó có tra CRM không? Các bạn đọc dòng "CRM checked". True hay False là do model quyết, không phải do mình. Số model calls cũng vậy: hôm nay chạy model thật, các bạn đọc đúng con số nó in ra, chạy lại có thể ra số khác.</p>
+<p>Và đây là điểm mình muốn các bạn mang về. Cả hai đều là steps và mũi tên. Khác biệt thật sự chỉ là ai chọn từng mũi tên. Đó là thuộc tính của từng mũi tên, chứ không phải của cả hệ thống. Và hầu hết hệ thống thật đều trộn cả hai. Nên lần tới có ai hỏi "cái này là agent hay workflow?", câu hỏi đúng hơn là: mũi tên nào do model chọn?</p>
+<p class="cue">[Bấm "Next: 2 · The map →".]</p>
+
+<h4>2 · Tấm bản đồ <small>(~2 phút · tab "The map")</small></h4>
+<p>Tới đây có thể các bạn đang hình dung một đường thẳng: bên trái là workflow, bên phải là agent. Không phải vậy. Nó là một tấm bản đồ, có hai trục.</p>
+<p>Trục ngang: structure cố định tới mức nào. Bên trái là cố định trong code, bên phải là model chọn từng bước. Trục dọc: bao nhiêu phần việc là LLM call. Dưới là code thuần, trên là LLM calls. Một nightly ETL job nằm góc dưới bên trái. Một ReAct agent nằm phía trên bên phải. Còn phần lớn những gì đang ship thật thì nằm ở giữa: mấy điểm màu xanh lá là hybrid, như workflow with an agent node, hay orchestrator–workers, chính là cái mình làm ở Chương 7.</p>
+<p>Giờ tới lượt các bạn. Bên dưới bản đồ có sáu sản phẩm. Mình sẽ bấm từng cái. Nhưng trước mỗi lần bấm, các bạn đoán giúp mình: nó rơi vào đâu?</p>
+<p class="cue">[Bài tập với khán giả: làm 4–5 cái, không cần cả sáu. Thứ tự gợi ý: "Copilot autocomplete" → "RAG chatbot" → "Deep Research" → "Claude Code" → "our meeting-prep bot" để cuối. Hỏi trước, chờ khán giả trả lời, rồi mới bấm nút tương ứng dưới bản đồ.]</p>
+<p>Copilot autocomplete: các bạn đoán ở đâu? … Phía trên, bên trái. Gần như toàn bộ việc là LLM, nhưng structure cố định hoàn toàn: gõ phím, gọi model một lần, hiện gợi ý. Nhiều LLM không có nghĩa là agent. RAG chatbot: … Nằm trong vùng WORKFLOWS. Chương 2 rồi: một query, rồi format string. Deep Research: … Lên vùng AGENTS, cạnh orchestrator–workers. Claude Code: … Góc trên bên phải, model chọn gần như mọi mũi tên. Và cuối cùng, our meeting-prep bot, chính cái mình đang build: … Nó nằm ở mép vùng workflow, sát chỗ "workflow with an agent node". Một workflow có một agent bên trong. Các bạn nhớ vị trí đó, vì ở tab sau mình vẽ lại đúng cái này.</p>
+<p>Không chỉ mình nhìn thấy vậy. HumanLayer, trong "12-factor agents", nói rằng agent chạy production phần lớn là code deterministic, rắc thêm vài bước LLM. Nên lời khuyên của họ là: own your control flow.</p>
+<p class="cue">[Mở pill "Decoder" ở góc dưới bên phải, chỉ dòng mới của Chương 8: "agent vs workflow → who picks each arrow: your code, or the model". Đóng lại, bấm "Next: 3 · The brief, redrawn →".]</p>
+
+<h4>3 · Đề bài, vẽ lại <small>(~2,5 phút · tab "The brief, redrawn")</small></h4>
+<p>Giờ mình đem câu hỏi đó áp lên một thiết kế mà các bạn rất quen: đề bài final project của chính khoá học này. Đề bài vẽ trợ lý chuẩn bị meeting brief thành bảy agent: Email Agent, Web Research, Calendar, Company Info, Memory, Report, và Human Approval. Hình bên trái là đúng hình trong đề, mình không sửa gì.</p>
+<p>Mình nói rõ trước: đây không phải để chê đề bài. Vẽ như vậy rất dễ hiểu, và đây cũng là cách cả thế giới agent đang vẽ. Mình chỉ hỏi từng hộp đúng một câu: ai chọn bước tiếp theo của hộp này?</p>
+<p class="cue">[Chỉ hình bên trái, rồi sơ đồ bên phải "Who picks each box's next step" và legend của nó. Sau đó kéo xuống bảng ba cột, đọc từng dòng.]</p>
+<p>Email Agent: một cổng chặn viết bằng code, rồi một LLM call nói lead hay không. Đó là một step có một LLM call. Extract Company Name: lấy domain của người gửi, tra trong CRM. Một step. Calendar Agent: một query, lọc theo công ty. Một tool call. Company Info Agent: query CRM và knowledge base. Mấy tool call. Memory Agent: merge và bỏ trùng các fact. Việc đó viết bằng code, là một step. Report Agent: một LLM call viết brief, rồi một check đọc lại. Và Human Approval: không phải model. Một người bấm Approve hoặc Reject. Đó là một gate: một bản nháp và một đường link.</p>
+<p>Còn lại Web Research Agent. Tìm gì, đọc trang nào, khi nào biết đủ: không ai viết trước được. Đây là hộp duy nhất mà model phải tự chọn đường. Bên phải các bạn thấy nó có ký hiệu vòng lặp. Đây là chỗ agent thật sự thuộc về. Và nếu muốn, ba agent chạy song song như Chương 7 cũng nằm gọn trong hộp này.</p>
+<p>Vậy bảy agent trên giấy. Hỏi từng hộp một câu, thì còn một agent, một con người, và phần còn lại là code hoặc một LLM call. Và công bằng mà nói: chính đề bài yêu cầu tool harness, eval harness, security harness. Đó chính xác là những gì một workflow cho các bạn. Ở những thứ quan trọng nhất, đề bài đã đúng. Mình chỉ hỏi lại các mũi tên.</p>
+<p class="cue">[Bấm "Next: 4 · When to use an agent →".]</p>
+
+<h4>4 · Khi nào dùng agent? <small>(~1,5 phút · tab "When to use an agent")</small></h4>
+<p>Vậy làm sao biết một hộp nên là agent? Mình dùng năm câu hỏi.</p>
+<p class="cue">[Kéo xuống bảng năm câu hỏi ở phần dưới, đọc từng câu. Chưa chỉ vào bảng ✓/✗ ở trên tab.]</p>
+<p>Một: đường đi có open-ended không? Tức là các bạn không viết trước được các bước. Hai: mỗi lần chạy có đáng giá nhiều không? Tức là vài model call vẫn rẻ so với kết quả. Ba: kết quả có dễ kiểm tra không? Một người, một test hay một rule có phân biệt được tốt với xấu không. Bốn: chậm có sao không? Vài giây tới vài phút, chứ không phải mili giây. Năm: blast radius có nhỏ không? Tức là tool của nó không tự gửi, tự trả tiền, hay tự xoá được.</p>
+<p>Quy tắc là: chỉ giao một bước cho agent khi cả năm câu đều đúng. Không phải bốn trên năm. Cả năm. Các bạn vote giúp mình: Calendar có nên là agent không? … Còn Memory?</p>
+<p class="cue">[Chờ khán giả vote 2 hộp, rồi mới chỉ vào bảng ✓/✗ trên tab.]</p>
+<p>Đáp án đây. Calendar: không open-ended, giá trị mỗi lần thấp, và không ai muốn nó chậm. Workflow. Memory: trượt cả năm câu, và nó còn ghi vào knowledge base, nên blast radius không nhỏ. Workflow. Report: đáng giá, dễ kiểm tra, chậm cũng được, nhưng đường đi không open-ended. Một LLM call. Approval: nó dẫn tới việc gửi email đi. Đó là một gate, không bao giờ là một model.</p>
+<p>Còn research thì qua cả năm. Không ai liệt kê trước được trang nào quan trọng. Một brief tốt đáng vài model call. Đằng nào sales cũng đọc nó trước buổi họp. Không ai ngồi chờ nó. Và tool của nó chỉ đọc. Mọi hộp khác đều trượt ít nhất một câu, mà thường là trượt ngay câu đầu tiên.</p>
+<p class="cue">[Mở pill "Decoder": dòng Chương 9, "“seven agents” → one agent where the path is open; code, one LLM call or a person everywhere else". Bấm "Next: 5 · Measured →".]</p>
+
+<h4>5 · Đo thật <small>(~3 phút · tab "Measured")</small></h4>
+<p>Nói thì dễ. Nên mình build cả hai, thật. Bản thứ nhất là meeting-prep-brd: đề bài đúng như vẽ. Sáu LLM agent, mỗi agent có MCP tool riêng, đi qua đúng cái harness sáu bước của Chương 6. Tám MCP server. Extract Company Name là một LLM call. Human Approval là một người. Bản thứ hai là meeting-prep-operonx: một agent, là web research, còn lại là các step của workflow. Cả hai chạy trên cùng 19 golden email, cùng model, cùng scorer. Chạy thật, không phải mock.</p>
+<p class="cue">[Bấm link "Studio" trong đoạn text bên dưới. Mở meeting-prep-brd → on_email, rồi meeting-prep-operonx → prepare. Đặt hai graph cạnh nhau, chỉ vào các tên hộp giống nhau.]</p>
+<p>Cùng tên hộp, cùng thứ tự. Bên brd, gần như hộp nào cũng là một agent. Bên operonx, chỉ hộp research là agent.</p>
+<p class="cue">[Quay lại tab "Measured", đọc từng hàng của bảng.]</p>
+<p>Kết quả. Brief pass: 16 trên 19, so với 18 trên 19. LLM calls mỗi email: 12,1 so với 8,4. Workflow vẫn có 8,4 call, vì agent research vẫn loop, và đó là chỗ đáng tiêu. Tokens mỗi email: 13 nghìn 390 so với 4 nghìn 659, gần gấp ba. Thời gian median: 25,2 giây so với 9,6 giây; p95 là 35,4 so với 17,2. Chi phí cho 1.000 email: 2,52 đô so với 1,08 đô, tính theo giá gpt-4o-mini cho cả hai. Mà bên workflow, các call không dùng tool thật ra chạy trên model in-house, nên thực tế còn rẻ hơn nữa.</p>
+<p>Và hàng cuối, bảo mật: bốn email tấn công, cả hai bản đều pass hết. Chỗ này mình muốn công bằng: harness mà đề bài yêu cầu làm đúng việc của nó. Bảy agent không thua ở bảo mật.</p>
+<p>Vậy bảy agent thua ở đâu? Ba brief trượt đều cùng một kiểu: thiếu fact. Mà các fact đó có tìm thấy. Research, Calendar, Company Info agent đều trả về, nằm ngay trong trace. Rồi Memory Agent, một LLM, viết lại tất cả thành một bản tóm tắt, và vài fact không sống sót. Email saigonfresh-followup: lịch sử pilot trong CRM bị rơi mất. Email lotus-it: người viết là Bao Do, IT manager của Lotus. Nhưng brief lại ghi tên chị Linh, COO, người mà memory còn nhớ từ email trước. Sales gọi điện mà chuẩn bị cho nhầm người.</p>
+<p>Một LLM tóm tắt thì mất thông tin là chuyện đương nhiên, nó được thiết kế để làm vậy. Một merge viết bằng code thì không làm rơi fact. Còn workflow cũng trượt một email, và đó là lý do mình luôn cần eval.</p>
+<p>Vậy chốt Part II: agents là thật. Dùng chúng ở chỗ không biết trước được đường đi, và chạy chúng bên trong một workflow.</p>
+<p class="cue">[Mở pill "Decoder": dòng Chương 10, "“more agents is better” → measured: more calls, more tokens, slower, and facts lost in the merge". Rồi chỉ vào khung "Still missing" cuối trang.]</p>
+<p>Nhưng đó là benchmark ngày thứ Sáu: 19 email, từng cái một, trong phòng thí nghiệm. Giờ là sáng thứ Hai, 8 giờ, và 50 email đến cùng lúc.</p>
+</div>
+</details>
 
 <div class="tabs">
   <div class="tab" data-name="Who picks?" data-chapter="8" data-say="The same email twice. Left: <b>code</b> picks the path. Right: the <b>model</b> picks it, each turn (and loops on the results).">

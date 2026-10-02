@@ -138,7 +138,6 @@
         if (on) s.querySelectorAll(".CodeMirror").forEach(function (cm) { cm.CodeMirror && cm.CodeMirror.refresh(); });
       });
       if (history.replaceState) history.replaceState(null, "", "#beat-" + n);
-      document.dispatchEvent(new CustomEvent("beatchange", { detail: { beat: n, chapter: +tabs[n - 1].getAttribute("data-chapter") || 0 } }));   // decoder.js
     }
     root.addEventListener("keydown", function (e) {
       if (e.key === "ArrowRight" && cur < tabs.length) { go(cur + 1); e.preventDefault(); }

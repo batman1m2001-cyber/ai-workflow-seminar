@@ -1,9 +1,9 @@
 /* The decoder: every buzzword, as what it really is, one line per chapter.
  *
- * A card in the corner fills up as the talk goes. Part I unlocks a line per
- * chapter (anatomy.js fires "beatchange"); a later page unlocks up to its
- * <body data-chapter="N">, and a tab with data-chapter="N" (tabs.js) a little
- * further. <div class="decoder-full"></div> draws the whole table in place
+ * A card in the corner fills up as the talk goes: a chapter's line unlocks when
+ * its truth (the green callout) comes into view. A later page starts with the
+ * chapters before its <body data-chapter="N"> unlocked; a tab's data-chapter
+ * (tabs.js) says which chapter a beat belongs to. <div class="decoder-full"></div> draws the whole table in place
  * (the epilogue), with no corner card.
  */
 (function () {
@@ -14,7 +14,7 @@
     { ch: 2, term: "RAG · vector store", truth: "a query, then string formatting; the vector store is a table" },
     { ch: 3, term: "function calling · MCP", truth: "the model proposes JSON, your code runs it; two messages between programs" },
     { ch: 4, term: "agent", truth: "a <code>for</code> loop around an LLM call" },
-    { ch: 5, term: "context engineering · memory · skills", truth: "a function that builds the prompt under a budget; memory is a file" },
+    { ch: 5, term: "context engineering · memory · skills · sub-agents", truth: "a function that builds the prompt under a budget; memory is a file; a sub-agent is a tool that runs another loop" },
     { ch: 6, term: "harness engineering · guardrails", truth: "everything that isn't the model: <code>if</code>s, retries, logs, tests" },
     { ch: 7, term: "multi-agent · orchestrator", truth: "agents as nodes, run in parallel, then merged: a workflow" },
     { ch: 8, term: "agent vs workflow", truth: "who picks each arrow: your code, or the model" },
@@ -46,20 +46,32 @@
     pill.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
   };
 
+  // a line unlocks when its chapter's truth (a green .callout.key in a beat) comes into view,
+  // never before: the card must not give the truth away. Earlier chapters are unlocked already.
   var shown = 0;
   function upTo(n) {
-    n = Math.max(base, n);
-    var fresh = n > shown;
+    if (n <= shown) return;
     shown = n;
     list.innerHTML = LINES.filter(function (l) { return l.ch <= n; }).map(function (l) {
       return '<li class="' + (l.ch === n ? "new" : "") + '"><b>' + l.term + "</b><span>" + l.truth + "</span></li>";
     }).join("");
     box.querySelector(".dc-n").textContent = LINES.filter(function (l) { return l.ch <= n; }).length + " / " + LINES.length;
-    if (fresh) { pill.classList.remove("ping"); void pill.offsetWidth; pill.classList.add("ping"); }
+    pill.classList.remove("ping"); void pill.offsetWidth; pill.classList.add("ping");
   }
-  document.addEventListener("beatchange", function (e) {
-    var d = e.detail || {};
-    upTo(+(d.chapter || (onPart1 ? d.beat : 0)) || 0);
-  });
-  upTo(base);
+  function chapterOf(section) {
+    var beat = +section.getAttribute("data-beat");
+    if (onPart1) return beat;
+    var tab = document.querySelectorAll(".tab")[beat - 1];
+    return tab ? +tab.getAttribute("data-chapter") || 0 : 0;
+  }
+  if ("IntersectionObserver" in window) {
+    var seen = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) upTo(chapterOf(e.target.closest("section.beat")));
+      });
+    }, { threshold: 0.6 });
+    document.querySelectorAll("section.beat .callout.key").forEach(function (c) { seen.observe(c); });
+  }
+  box.querySelector(".dc-n").textContent = "0 / " + LINES.length;
+  upTo(base - 1);
 })();
