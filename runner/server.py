@@ -26,7 +26,7 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -124,6 +124,30 @@ def run(req: Run):
         out, err, code = (exc.stdout or ""), f"Stopped after {TIMEOUT_S} s.", 124
         out = out if isinstance(out, str) else out.decode("utf-8", "replace")
     return {"stdout": out, "stderr": err, "exit": code, "ms": round((time.perf_counter() - t0) * 1000)}
+
+
+PASSWORD = os.environ.get("SEMINAR_PASSWORD", "")
+
+
+@app.middleware("http")
+async def password(request: Request, call_next):
+    """With SEMINAR_PASSWORD set (a public tunnel), every request needs it — a tunnel
+    arrives from 127.0.0.1, so the address can't tell the room from the internet.
+    /mock/v1 stays open: the demo app calls it, and it only answers scripted text."""
+    if PASSWORD and not request.url.path.startswith("/mock/"):
+        import base64
+        import secrets
+        given = ""
+        auth = request.headers.get("authorization", "")
+        if auth.startswith("Basic "):
+            try:
+                given = base64.b64decode(auth[6:]).decode().partition(":")[2]
+            except ValueError:
+                pass
+        if not secrets.compare_digest(given, PASSWORD):
+            return Response("Password needed.", status_code=401,
+                            headers={"WWW-Authenticate": 'Basic realm="seminar"'})
+    return await call_next(request)
 
 
 @app.middleware("http")

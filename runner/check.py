@@ -9,7 +9,9 @@ Needs the runner up (`uv run python -m runner.server`).
 """
 from __future__ import annotations
 
+import base64
 import html
+import os
 import textwrap
 import json
 import re
@@ -46,7 +48,10 @@ def main(argv: list) -> int:
                 continue
             title = re.search(r'data-title="([^"]*)"', attrs)
             body = json.dumps({"code": code.lstrip("\n"), "mode": mode, "page": page.stem}).encode()
-            req = urllib.request.Request("http://127.0.0.1:8000/api/run", body, {"content-type": "application/json"})
+            headers = {"content-type": "application/json"}
+            if os.environ.get("SEMINAR_PASSWORD"):    # the runner is behind the tunnel's password
+                headers["authorization"] = "Basic " + base64.b64encode(b"seminar:" + os.environ["SEMINAR_PASSWORD"].encode()).decode()
+            req = urllib.request.Request("http://127.0.0.1:8000/api/run", body, headers)
             res = json.load(urllib.request.urlopen(req, timeout=120))
             ok = (res["exit"] != 0) if 'data-expect="error"' in attrs else (res["exit"] == 0)
             failed += not ok

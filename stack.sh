@@ -5,6 +5,12 @@
 #   ./stack.sh status   # what answers where
 #   ./stack.sh check    # every playground (mock model) + the meeting-prep golden eval
 #   ./stack.sh down     # stop what `up` started (the docker services keep running)
+#   ./stack.sh tunnel   # public https URLs for the site and Studio (cloudflared quick tunnels)
+#
+# Everything is behind one password, so a tunnel never exposes the code runner or
+# Studio's assistant: SEMINAR_PASSWORD, or a generated one kept in .stack/password.
+#   site:   any user name + the password (browser prompt)
+#   Studio: user "seminar" + the password
 #
 # Expects the sibling checkouts:
 #   ../meeting-prep-projects   (MEETING_PREP_DIR)
@@ -20,13 +26,15 @@ export PREP_DB_PORT="${PREP_DB_PORT:-5433}"
 export PREP_DB_URL="${PREP_DB_URL:-postgresql://prep:prep@127.0.0.1:$PREP_DB_PORT/prep}"
 RUN="$ROOT/.stack"
 mkdir -p "$RUN"
+[ -s "$RUN/password" ] || { umask 077; head -c 12 /dev/urandom | base64 | tr -d '/+=' >"$RUN/password"; }
+export SEMINAR_PASSWORD="${SEMINAR_PASSWORD:-$(cat "$RUN/password")}"
 
 listening() { ss -ltn 2>/dev/null | grep -q ":$1 "; }
 
 start() {   # name port dir command...
   local name=$1 port=$2 dir=$3; shift 3
   if listening "$port"; then echo "  $name: :$port already in use, left as is"; return; fi
-  (cd "$dir" && nohup "$@" >"$RUN/$name.log" 2>&1 & echo $! >"$RUN/$name.pid")
+  (cd "$dir" && exec "$@" >"$RUN/$name.log" 2>&1 </dev/null) & echo $! >"$RUN/$name.pid"
   for _ in $(seq 60); do listening "$port" && { echo "  $name: :$port"; return; }; sleep 1; done
   echo "  $name: did not come up on :$port, see $RUN/$name.log"; return 1
 }
@@ -41,7 +49,9 @@ up() {
   start runner 8000 "$ROOT" uv run python -m runner.server
   start mocks 8100 "$PREP/meeting-prep-world" uv run prep-mocks
   start app 8200 "$PREP/meeting-prep-operonx" uv run operonx-serve
-  OPERONX_STUDIO_AUTH=off start studio "$STUDIO_PORT" "$STUDIO_DIR" \
+  # its own accounts: the first start makes "seminar" the admin, with the password
+  OPERONX_STUDIO_STATE_DIR="$RUN/studio-state" OPERONX_STUDIO_USER=seminar OPERONX_STUDIO_PASS="$SEMINAR_PASSWORD" \
+    start studio "$STUDIO_PORT" "$STUDIO_DIR" \
     uv run operonx-studio "$PREP/meeting-prep-operonx" --port "$STUDIO_PORT" --no-open
   status
 }
@@ -59,6 +69,20 @@ status() {
            "OperonX app:8200" "Studio:$STUDIO_PORT"; do
     if listening "${p##*:}"; then echo "  ok   ${p%:*}  http://127.0.0.1:${p##*:}"; else echo "  DOWN ${p%:*}  :${p##*:}"; fi
   done
+}
+
+tunnel() {
+  for t in "site 8000" "studio $STUDIO_PORT"; do
+    set -- $t
+    [ -e "$RUN/tunnel-$1.pid" ] && kill -0 "$(cat "$RUN/tunnel-$1.pid")" 2>/dev/null && continue
+    cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$2" >"$RUN/tunnel-$1.log" 2>&1 </dev/null &
+    echo $! >"$RUN/tunnel-$1.pid"
+  done
+  for t in site studio; do
+    for _ in $(seq 30); do grep -qo 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" && break; sleep 1; done
+    echo "  $t: $(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$RUN/tunnel-$t.log" | head -1)"
+  done
+  echo "  password: $SEMINAR_PASSWORD   (Studio user: seminar)"
 }
 
 check() {
