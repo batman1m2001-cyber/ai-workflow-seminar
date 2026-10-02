@@ -13,8 +13,7 @@
     { id: "part1-build-the-agent", n: "I", title: "Build the agent from scratch", part: "Part I · The agent, as it is" },
     { id: "part2-who-picks", n: "II", title: "An agent is a workflow with a loop", part: "Part II · Workflow engines" },
     { id: "part3-monday-morning", n: "III", title: "The engine at work", part: "Part III · Production" },
-    { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" },
-    { id: "appendix", n: "+", title: "Engine numbers", part: "Appendix" }
+    { id: "epilogue", n: "✓", title: "The decoder", part: "Epilogue" }
   ];
 
   var body = document.body;

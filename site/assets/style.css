@@ -256,3 +256,5 @@ section.beat > p, section.beat > ul, section.beat > ol { max-width: 80ch; }
 .handoff + .beat-nav { margin-top: 14px; }
 .pl-tabs button[data-v="alt"] { color: var(--grey); font-weight: 600; }
 @media (max-width: 640px) { .handoff { flex-direction: column; gap: 4px; } }
+.dc-list li.dc-part, .decoder-t tr.dc-part td { list-style: none; margin: 12px 0 6px -20px; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--green-dk); }
+.decoder-t tr.dc-part td { background: var(--soft); padding: 6px 10px; margin: 0; }
