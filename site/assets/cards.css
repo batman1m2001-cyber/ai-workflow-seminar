@@ -454,3 +454,11 @@ table.sdt td:first-child { font-weight: 700; color: var(--navy); white-space: no
   .st-graph { gap: 10px 22px; }
   .st-node b { font-size: 11px; }
 }
+@media (max-width: 600px) {
+  .stepper { padding: 8px 6px 2px; }
+  .st-graph { gap: 8px 16px; }
+  .st-node { padding: 6px 4px; }
+  .st-node b { white-space: normal; text-align: center; font-size: 10.5px; }
+  .st-badge { font-size: 10px; }
+  .st-state td, .st-dict { font-size: 11px; word-break: break-word; }
+}
