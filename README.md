@@ -6,13 +6,17 @@ The seminar as a website: one page per topic, each with code you can edit and ru
 
 ## Run it
 
-```powershell
-uv sync
-uv run python -m runner.server        # http://127.0.0.1:8000
+```bash
+./stack.sh up        # mail + db (docker), seed, mocks, runner, the OperonX app, Studio
+./stack.sh status    # site http://127.0.0.1:8000 · inbox :8025 · Studio :8766
+./stack.sh down
 ```
 
-Every playground runs in this project's venv — real `operonx`, `openai`, LangChain,
-LangGraph and the OpenAI Agents SDK.
+It expects the sibling checkouts `../meeting-prep-projects` and `../../operonx-studio`
+(override with `MEETING_PREP_DIR`, `STUDIO_DIR`). If another Postgres holds 5433:
+`PREP_DB_PORT=5434 ./stack.sh up`.
+
+Just the site, no live demo: `uv sync && uv run python -m runner.server`.
 
 | mode | model | needs |
 |---|---|---|
@@ -25,18 +29,13 @@ pages need the runner.
 
 ## Before the talk
 
-```powershell
-uv run python -m runner.check          # every playground, mock model — want "0 failed"
-uv run python -m runner.check --real   # the same against your endpoint
+```bash
+./stack.sh check            # every playground (mock) + the meeting-prep golden eval — want "0 failed", 19/19
+uv run python -m runner.check --real   # the playgrounds against your endpoint
 ```
 
-OperonX playgrounds that pass `trace=["trace_local:default"]` record to `.operonx/runs`.
-Open the project in OperonX Studio to show them:
-
-```powershell
-$env:OPERONX_STUDIO_AUTH = "off"
-D:\operonx-studio\.venv\Scripts\operonx-studio.exe D:\ai-workflow-seminar   # http://127.0.0.1:8765
-```
+Studio (started by `stack.sh`, sign-in off) opens on `meeting-prep-operonx`: its graphs,
+its services (webhook, approval, the 8 am schedule) and every run, including the golden eval.
 
 ## Layout
 

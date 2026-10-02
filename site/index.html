@@ -53,13 +53,13 @@
 <h2>How to use this site</h2>
 <table class="plain">
   <tr><td>Run code</td><td>Every dark block is editable; <b>▶ Run</b> or <code>Ctrl + Enter</code>. Pipeline cards: <b>▶ Run</b> or <b>Step</b>.</td></tr>
-  <tr><td>Start it</td><td><code>uv run python -m runner.server</code>, then <a href="http://127.0.0.1:8000">127.0.0.1:8000</a>. The meeting-prep world must be up: in <code>meeting-prep-world</code>, <code>docker compose up -d</code>, <code>uv run prep-seed</code>, <code>uv run prep-mocks</code>.</td></tr>
+  <tr><td>Start it</td><td><code>./stack.sh up</code>, then <a href="http://127.0.0.1:8000">127.0.0.1:8000</a>. It starts the meeting-prep world (mail, database, mocks), this runner, the OperonX app and Studio. Just the site: <code>uv run python -m runner.server</code>.</td></tr>
   <tr><td>Mock or real model</td><td><b>Mock</b> (default): offline, instant, free. <b>Real</b>: your endpoint from <code>.env</code>; the key stays on the runner.</td></tr>
   <tr><td>Move around</td><td>The sidebar, the Previous / Next cards, or <code>Alt + ←/→</code>; inside an act, the numbered tabs or <code>← →</code>.</td></tr>
 </table>
 
 <details class="notes"><summary>Presenter notes</summary>
-<p>Act 0, about 3 minutes. Show the buzzword chain, then the email in the inbox, and ask: how many agents does this take? Hand poll: who has an agent in production? Who has debugged one at 2 am? Before the talk: the world stack, the runner, operonx-serve in meeting-prep-operonx, Studio on port 8766.</p>
+<p>Act 0, about 3 minutes. Show the buzzword chain, then the email in the inbox, and ask: how many agents does this take? Hand poll: who has an agent in production? Who has debugged one at 2 am? Before the talk: <code>./stack.sh up</code> then <code>./stack.sh check</code>.</p>
 </details>
 
 </main>

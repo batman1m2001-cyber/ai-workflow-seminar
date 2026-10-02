@@ -22,7 +22,7 @@
 {"title": "One call, scored", "w": 900, "h": 316,
  "nodes": [["c", "call transcript", 80, 158, "io"],
            ["a", "hang-up", 330, 22, "llm"], ["b", "promise to pay", 330, 67, "llm"], ["d", "disclosure", 330, 112, "llm"],
-           ["e", "card number", 330, 157], ["f", "phone source", 330, 202], ["g", "customer tone", 330, 247, "llm"],
+           ["e", "card number", 330, 157, "llm"], ["f", "phone source", 330, 202, "llm"], ["g", "customer tone", 330, 247, "llm"],
            ["s", "agent tone ×4", 330, 292, "llm"],
            ["z", "finalize: score", 640, 158], ["o", "QC row", 820, 158, "io"]],
  "edges": [["c", "a"], ["c", "b"], ["c", "d"], ["c", "e"], ["c", "f"], ["c", "g"], ["c", "s"],
@@ -54,8 +54,10 @@
 <table class="plain">
   <tr><td><b>a failure is never a verdict</b></td><td>a model call that can't be parsed raises; the call is recorded as an error, never as “clean”</td></tr>
   <tr><td><b>an eval gates every deploy</b></td><td>90 fixture calls against their recorded verdicts; pass means at least 85% match</td></tr>
-  <tr><td><b>gate on a rate, not exact match</b></td><td>the same model flips about a quarter of final results between identical runs, so a healthy run matches about 90–93%</td></tr>
+  <tr><td><b>gate on a rate, not exact match</b></td><td>identical runs disagree on 6–8 of 90 fixture calls (on a large production batch, about a quarter of results flipped), so the gate is a rate: a healthy run matches about 90–93%</td></tr>
+  <!-- unsourced in qc-snatcher; restore only with a source:
   <tr><td><b>more agentic cost us 10 points of F1</b></td><td>splitting the decider into more autonomous agents lost to the simpler staged workflow, even on a stronger model</td></tr>
+  -->
   <tr><td><b>traces without PII</b></td><td>a trace consumer keeps every step and timing, but references the transcript instead of copying it: 1.38 MB to 0.05 MB per call</td></tr>
 </table>
 <div class="beat-nav"><button class="beat-next" data-go="2">Next: 2 · The callbot →</button></div>

@@ -5,3 +5,4 @@ __pycache__/
 playground/runs/
 *.pyc
 site/assets/py/bundle.js
+.stack/

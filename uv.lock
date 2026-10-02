@@ -40,7 +40,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26" },
     { name = "openai", specifier = ">=1.40" },
     { name = "openai-agents", specifier = ">=0.22.3" },
-    { name = "operonx", extras = ["openai"], specifier = ">=1.11.1" },
+    { name = "operonx", extras = ["openai"], specifier = ">=1.12.0" },
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "uvicorn", specifier = ">=0.29" },
 ]
@@ -1545,7 +1545,7 @@ wheels = [
 
 [[package]]
 name = "operonx"
-version = "1.11.1"
+version = "1.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "orjson" },
@@ -1553,9 +1553,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3c/6a/ebfcc53893da2ea2398e3b8387a5919e3ea8f5abb8c80ec5332c43f7af09/operonx-1.11.1.tar.gz", hash = "sha256:af0236d1b50fc2e3758624d9ed7f5e9831e94b6e4ad19d0e868061ca6365cbb3", size = 501330, upload-time = "2026-09-30T08:19:37.345Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/97/52d0a800b1e65ec4b92dc59c635bdc0650e476fbf92b8daf8fd676550b3f/operonx-1.12.0.tar.gz", hash = "sha256:ab255c40f02aec85ad77b5f708781bc0c3899f171257dcbb966bcceb5d9ac6d9", size = 508339, upload-time = "2026-10-01T09:26:04.327Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/fd/de85cd7f9d8b3f73e71e8b8b7fd0a706151469f5e460e997419d8a9cd2b6/operonx-1.11.1-py3-none-any.whl", hash = "sha256:40dfdd1cbfc59f0ab41fcfa3594d38b42753f67416fd840450aeb0937bfafe93", size = 636065, upload-time = "2026-09-30T08:19:35.962Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/98/8dac67acc035e551666e6a3282b85649253f65388769811c8495427066d3/operonx-1.12.0-py3-none-any.whl", hash = "sha256:0ec8fe62151263ead5ae7d3bccb8202b5fe00161e9d02763df4235a68fcaf93c", size = 644714, upload-time = "2026-10-01T09:26:02.316Z" },
 ]
 
 [package.optional-dependencies]
