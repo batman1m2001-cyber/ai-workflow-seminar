@@ -28,7 +28,7 @@
     { id: "skip", k: "io", name: "skip", io: "no work", x: 360, y: 430, w: 100, h: 60 },
     { id: "search", k: "tool", name: "search", io: "query → hits", x: 524, y: 56, w: 178, h: 88 },
     { id: "research", k: "agent", name: "research", io: "question → notes", x: 524, y: 226, w: 178, h: 88 },
-    { id: "enrich", k: "sub", name: "enrich", io: "id → profile", x: 524, y: 386, w: 178, h: 112 },
+    { id: "enrich", k: "sub", name: "enrich", io: "id → profile", x: 524, y: 380, w: 178, h: 128 },
     { id: "merge", k: "fn", name: "merge", io: "3 inputs → facts", x: 766, y: 226, w: 156, h: 88 },
     { id: "write", k: "llm", name: "write", io: "facts → draft", x: 982, y: 226, w: 156, h: 88 },
     { id: "approve", k: "human", name: "approve", io: "draft → ok / redo", x: 982, y: 396, w: 156, h: 88 },
@@ -168,7 +168,7 @@
         g.appendChild(el("text", { x: n.cx, y: top, "text-anchor": "middle", "class": "wg-name" }, n.name));
         g.appendChild(el("text", { x: n.cx, y: top + (K.badge ? 21 : 17), "text-anchor": "middle", "class": "wg-io" }, n.io));
         if (n.k === "sub") {   // a small graph inside the node
-          var m = [[562, 470], [606, 459], [606, 483], [650, 470]];
+          var m = [[562, 484], [606, 473], [606, 495], [650, 484]];
           [[0, 1], [0, 2], [1, 3], [2, 3]].forEach(function (l) {
             g.appendChild(el("line", { x1: m[l[0]][0] + 9, y1: m[l[0]][1], x2: m[l[1]][0] - 9, y2: m[l[1]][1], "class": "wg-mini-l" }));
           });
@@ -208,7 +208,7 @@
     root.appendChild(stage);
     var bar = document.createElement("div");
     bar.className = "wg-bar";
-    bar.innerHTML = '<button class="wg-play" type="button">⏸ Pause</button><span class="wg-say"></span>';
+    bar.innerHTML = '<button class="wg-play" type="button">❚❚ Pause</button><span class="wg-say"></span>';
     root.appendChild(bar);
     var play = bar.querySelector(".wg-play"), sayEl = bar.querySelector(".wg-say");
 
@@ -272,7 +272,7 @@
     }
     play.onclick = function () {
       paused = !paused;
-      play.textContent = paused ? "▶ Play" : "⏸ Pause";
+      play.textContent = paused ? "▶ Play" : "❚❚ Pause";
     };
     if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       paused = true; t = RUNS[0].len - 0.5; play.textContent = "▶ Play";

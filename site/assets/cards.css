@@ -569,3 +569,5 @@ details.vi-note p { margin: 0; padding: 2px 14px 10px; font-size: 15.5px; }
   .wn { grid-template-columns: 1fr; } .wn-arr { transform: rotate(90deg); justify-self: center; }
   .wk, .wr { grid-template-columns: 1fr; }
 }
+.wn-core em { display: inline-block; font-style: normal; background: #7B4FD6; color: #fff; border-radius: 999px; padding: 1px 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
