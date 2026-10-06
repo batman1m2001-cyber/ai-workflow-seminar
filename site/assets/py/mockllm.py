@@ -368,6 +368,26 @@ def chat(body: dict, sleep: bool = True) -> dict:
     }
 
 
+def chunks(response: dict, usage: bool = False) -> list:
+    """`response` (a `chat` reply) as the chunks of a streamed reply (`stream: true`):
+    the text, each tool call, then the finish reason (and the usage, when asked)."""
+    choice = response["choices"][0]
+    msg, base = choice["message"], {k: response[k] for k in ("id", "object", "created", "model") if k in response}
+    base["object"] = "chat.completion.chunk"
+
+    def chunk(delta: dict, finish=None) -> dict:
+        return {**base, "choices": [{"index": 0, "delta": delta, "finish_reason": finish}]}
+
+    out = [chunk({"role": "assistant", "content": msg.get("content") or ""})]
+    for i, call in enumerate(msg.get("tool_calls") or []):
+        out.append(chunk({"tool_calls": [{"index": i, "id": call["id"], "type": "function",
+                                          "function": call["function"]}]}))
+    out.append(chunk({}, choice.get("finish_reason") or "stop"))
+    if usage and response.get("usage"):
+        out.append({**base, "choices": [], "usage": response["usage"]})
+    return out
+
+
 def embed_one(text: str, dim: int = EMBED_DIM) -> list:
     """A bag-of-words vector: texts sharing words point the same way."""
     v = [0.0] * dim
