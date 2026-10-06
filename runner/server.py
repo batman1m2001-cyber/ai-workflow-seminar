@@ -17,6 +17,7 @@ code it is sent, so it must never listen on a network.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -159,7 +160,13 @@ async def llm_embeddings(request: Request):
 
 @app.post("/mock/v1/chat/completions")
 def mock_chat(body: dict):
-    return mockllm.chat(body)
+    reply = mockllm.chat(body)
+    if not body.get("stream"):
+        return reply
+    from fastapi.responses import StreamingResponse
+    usage = bool((body.get("stream_options") or {}).get("include_usage"))
+    lines = [f"data: {json.dumps(c)}\n\n" for c in mockllm.chunks(reply, usage)] + ["data: [DONE]\n\n"]
+    return StreamingResponse(iter(lines), media_type="text/event-stream")
 
 
 @app.post("/mock/v1/embeddings")
